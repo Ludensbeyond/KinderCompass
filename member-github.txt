@@ -1,0 +1,15 @@
+Group name: KinderCompass
+
+Member full names (as shown on student ID/NRIC/FIN/Passport):
+- Eunice Goh
+- Henry Foo Yong Jie
+- Jarebb
+- Jawad Bin Joha
+
+Member student IDs (e.g. A1234567B) or masked NRIC (e.g. S****123T):
+- [TBD]
+- [TBD]
+- [TBD]
+- [TBD]
+
+GitHub repository: https://github.com/Ludensbeyond/KinderCompass

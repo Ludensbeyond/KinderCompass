@@ -1,18 +1,25 @@
 # Docs
 
-Project documentation beyond code and notebooks.
+Working drafts and reference materials — not part of the final IRS submission structure.
 
-## Planned contents
+## Current files
 
-| Document | Purpose |
-|----------|---------|
-| Architecture | System design, data flow, engine overview |
-| Data dictionary | Column definitions for each dataset |
-| API reference | Backend endpoint documentation |
-| Graph schema | Node types, edge types, properties |
-| Meeting notes | Group decisions and progress log |
-| References | Papers, course materials, data.gov.sg citations |
+| File | Purpose |
+|---|---|
+| `KinderCompass_Proposal Draft1.docx` | Group project proposal (working draft) |
+| `NUS ISS ILS Practice Module Ideas.pptx` | IRS idea selection reference (Idea 3) |
 
-## IRS practice module
+## At final submission
 
-Include links to NUS-ISS briefing materials and assessment requirements as needed.
+Convert and move finalised documents to:
+
+- `ProjectReport/KinderCompass-Group-Report.pdf`
+- `ProjectReport/KinderCompass-User-Guide.pdf`
+- `Video/` — presentation slides and demo scripts
+
+## IRS reference PDFs
+
+Located in the parent `Practice Module/` folder:
+
+- `IRS-Intelligent-Reasoning-Systems-Practice-Module-v2.16.pdf`
+- `IRS-Intelligent-Reasoning-Systems-Practice-Module project proposal & final presentation guidelines v015.pdf`
