@@ -8,7 +8,7 @@
 ### 26.07.2026
 - Jawad created github (added collaborators)
 - Jarebb presented some architecture details
-- YJ reduced KinderCompass to 3 stages ([View Document](../arch_1/Readme.md))
+- YJ reduced KinderCompass to 3 stages ([View Document](../poc1/Readme.md))
 
 ### 17.07.2026 
 - added Jarebb to team

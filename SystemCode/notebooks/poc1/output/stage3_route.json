@@ -1,0 +1,26 @@
+{
+  "distance_method": "haversine_straight_line",
+  "total_distance_km": 10.082,
+  "schedule": [
+    {
+      "order": 0,
+      "type": "home",
+      "name": "Home",
+      "centre_code": null,
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "leg_distance_km": 0.0,
+      "cumulative_distance_km": 0.0
+    },
+    {
+      "order": 1,
+      "type": "preschool",
+      "name": "MASTERMINDS MONTESSORI SENGKANG PTE. LTD.",
+      "centre_code": "PT8718",
+      "latitude": 1.39345829455597,
+      "longitude": 103.900515298224,
+      "leg_distance_km": 10.082,
+      "cumulative_distance_km": 10.082
+    }
+  ]
+}

@@ -152,3 +152,14 @@ KinderCompass/
 ---
 
 **This project is part of the NUS-ISS Graduate Certificate in [Intelligent Reasoning Systems (IRS)](https://www.iss.nus.edu.sg/stackable-certificate-programmes/intelligent-systems).**
+
+# Python dependencies
+
+Install the complete Python environment from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+This includes the PoC backend and Stage 1-3 dependencies as well as the
+packages required to run the data-preparation and knowledge-graph notebooks.

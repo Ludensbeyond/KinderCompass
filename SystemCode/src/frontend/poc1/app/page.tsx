@@ -1,0 +1,295 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import LiveMap, { MapPoint } from "./LiveMap";
+
+type Centre = {
+  school_id: string;
+  centre_code?: string | null;
+  tp_code?: string | null;
+  name: string;
+  base_fee: number;
+  pedagogy?: string;
+  eligible?: boolean;
+  eligible_level?: string;
+  net_monthly_fee?: number;
+  distance_km?: number;
+  match_score?: number;
+  profile_confidence?: number;
+  strengths?: string[];
+  tradeoffs?: string[];
+  match_breakdown?: { attribute: string; preference: unknown; matched: boolean | null; status: "matched" | "not_matched" | "unknown"; importance: string; contribution: number; possible_contribution: number; evidence_state: "verified" | "derived" | "calculated" | "unknown"; value_state: "confirmed_yes" | "confirmed_no" | "confirmed_value" | "unknown"; source: string; source_method: string; source_reliability: string; source_date?: string | null; freshness: "current" | "stale" | "future_dated" | "unknown" }[];
+};
+
+type Stop = MapPoint & {
+  order: number;
+  centre_code?: string | null;
+  leg_distance_km: number;
+  cumulative_distance_km: number;
+};
+type Route = { total_distance_km: number; distance_method: string; schedule: Stop[] };
+type DistanceResult = { school_id: string; distance_km: number };
+type Message = { role: "assistant" | "user"; text: string };
+type PreferenceImportance = "required" | "high_priority" | "preferred" | "nice_to_have";
+type PreferenceItem = { attribute: string; value: unknown; importance: PreferenceImportance };
+type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; recognized?: string[] };
+type FamilyDetails = { dob: string; admission_date: string; gross_household_income: number; basic_subsidy: number };
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const money = new Intl.NumberFormat("en-SG", { style: "currency", currency: "SGD", maximumFractionDigits: 0 });
+function sourceDateLabel(value?: string | null): string {
+  if (!value) return "Unavailable";
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? "Unavailable"
+    : new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "long", year: "numeric" }).format(date);
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${API}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.detail ?? "Something went wrong. Please try again.");
+  return data;
+}
+
+export default function Home() {
+  const [stage, setStage] = useState<"family" | "search" | "choose">("family");
+  const [tab, setTab] = useState<"form" | "results">("form");
+  const [preference, setPreference] = useState("");
+  const [eligible, setEligible] = useState<Centre[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [routes, setRoutes] = useState<Record<string, Route>>({});
+  const [homePoint, setHomePoint] = useState<MapPoint | null>(null);
+  const [mapBusy, setMapBusy] = useState(false);
+  const [distances, setDistances] = useState<Record<string, number>>({});
+  const [distanceFilter, setDistanceFilter] = useState("none");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [homePostalCode, setHomePostalCode] = useState("");
+  const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(null);
+  const [messages, setMessages] = useState<Message[]>([
+    { role: "assistant", text: "Please complete the Family details form first. I will help with preschool preferences after it is saved." },
+  ]);
+  const [preferenceProfile, setPreferenceProfile] = useState<PreferenceProfile | null>(null);
+  const [understood, setUnderstood] = useState<string[]>([]);
+  const [readyToSearch, setReadyToSearch] = useState(false);
+
+  const mapPoints = useMemo<MapPoint[]>(() => {
+    const comparisons = Object.values(routes);
+    if (comparisons.length) {
+      return [comparisons[0].schedule[0], ...comparisons.map((comparison) => comparison.schedule[1])];
+    }
+    return homePoint ? [homePoint] : [];
+  }, [homePoint, routes]);
+
+  const visibleEligible = useMemo(() => {
+    if (distanceFilter === "none") return eligible;
+    const maximum = Number(distanceFilter);
+    return eligible.filter((centre) => distances[centre.school_id] != null && distances[centre.school_id] <= maximum);
+  }, [distanceFilter, distances, eligible]);
+
+  useEffect(() => {
+    setRoutes({});
+    if (!/^\d{6}$/.test(homePostalCode)) {
+      setHomePoint(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setMapBusy(true);
+      void post<MapPoint>("/api/geocode", { postal_code: homePostalCode })
+        .then((point) => { if (!cancelled) { setHomePoint(point); setError(""); } })
+        .catch((caught) => { if (!cancelled) { setHomePoint(null); setError((caught as Error).message); } })
+        .finally(() => { if (!cancelled) setMapBusy(false); });
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [homePostalCode]);
+
+  useEffect(() => {
+    if (!eligible.length || !/^\d{6}$/.test(homePostalCode)) {
+      setDistances({});
+      return;
+    }
+    let cancelled = false;
+    void post<{ distances: DistanceResult[] }>("/api/distances", {
+      centres: eligible,
+      home_postal_code: homePostalCode,
+    })
+      .then((result) => {
+        if (!cancelled) setDistances(Object.fromEntries(result.distances.map((item) => [item.school_id, item.distance_km])));
+      })
+      .catch((caught) => { if (!cancelled) setError((caught as Error).message); });
+    return () => { cancelled = true; };
+  }, [eligible, homePostalCode]);
+
+  useEffect(() => {
+    if (!selected.length || !/^\d{6}$/.test(homePostalCode)) {
+      setRoutes({});
+      return;
+    }
+    let cancelled = false;
+    setMapBusy(true);
+    void Promise.all(selected.map(async (schoolId) => [schoolId, await post<Route>("/api/route", {
+        eligible_centres: eligible,
+        selected_code: schoolId,
+        home_postal_code: homePostalCode,
+      })] as const))
+      .then((results) => { if (!cancelled) { setRoutes(Object.fromEntries(results)); setError(""); } })
+      .catch((caught) => { if (!cancelled) { setRoutes({}); setError((caught as Error).message); } })
+      .finally(() => { if (!cancelled) setMapBusy(false); });
+    return () => { cancelled = true; };
+  }, [eligible, homePostalCode, selected]);
+
+  async function sendPreference(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!familyDetails) return;
+    setBusy(true); setError("");
+    const question = preference.trim();
+    setMessages((items) => [...items, { role: "user", text: question }]);
+    try {
+      const selectedCentres = eligible.filter((centre) => selected.includes(centre.school_id)).map((centre) => ({ ...centre, distance_km: distances[centre.school_id] }));
+      const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string }>("/api/preferences", {
+        message: question,
+        profile: preferenceProfile,
+        selected_centres: selectedCentres,
+        eligible_centres: eligible,
+        home_postal_code: homePostalCode,
+      });
+      setPreferenceProfile(result.profile); setUnderstood(result.understood);
+      const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
+      setDistanceFilter(distancePreference ? String(distancePreference.value) : "none");
+      setReadyToSearch(result.ready_to_search);
+      setMessages((items) => [...items, { role: "assistant", text: result.question }]);
+      setPreference("");
+    } catch (caught) {
+      const message = (caught as Error).message;
+      setError(message); setMessages((items) => [...items, { role: "assistant", text: message }]);
+    } finally { setBusy(false); }
+  }
+
+  async function confirmSearch() {
+    if (!preferenceProfile || !readyToSearch || !familyDetails) return;
+    setBusy(true); setError("");
+    try {
+      const distancePreference = preferenceProfile.preference_items?.find((item) => item.attribute === "max_distance_km");
+      const requestedRadius = distancePreference ? Number(distancePreference.value) : undefined;
+      const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string } }>("/api/search", {
+        profile: preferenceProfile,
+        ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
+      });
+      const evaluationResult = await post<{ centres: Centre[] }>("/api/evaluate", {
+        shortlist: searchResult.centres,
+        family: familyDetails,
+        trace_id: searchResult.trace.trace_id,
+      });
+      setEligible(evaluationResult.centres);
+      setSelected([]); setRoutes({});
+      setMessages((items) => [...items, { role: "assistant", text: `I found ${searchResult.centres.length} ranked matches, and ${evaluationResult.centres.length} match the age and fee criteria. Choose one or more preschools to compare with home.` }]);
+      setStage("choose"); setTab("results");
+    } catch (caught) {
+      const message = (caught as Error).message;
+      setError(message); setMessages((items) => [...items, { role: "assistant", text: message }]);
+    } finally { setBusy(false); }
+  }
+
+  function saveFamilyDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setFamilyDetails({
+      dob: String(form.get("dob")),
+      admission_date: String(form.get("admission_date")),
+      gross_household_income: Number(form.get("income")),
+      basic_subsidy: Number(form.get("subsidy")),
+    });
+    setError(""); setStage("search"); setTab("form");
+    setMessages((items) => [...items, { role: "assistant", text: "Family details saved. Now tell me what matters most in a preschool. You can mention pedagogy, language, SPARK, transport, food, or full-day care." }]);
+  }
+
+  function toggleSchool(id: string) {
+    setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+  }
+
+  function updateImportance(attribute: string, value: unknown, importance: PreferenceImportance) {
+    setPreferenceProfile((profile) => profile ? {
+      ...profile,
+      preference_items: profile.preference_items?.map((item) =>
+        item.attribute === attribute && item.value === value ? { ...item, importance } : item
+      ),
+    } : profile);
+  }
+
+  return (
+    <main className="appFrame">
+      <header className="topbar">
+        <div className="brand"><span className="brandMark">K</span><span>KinderCompass</span></div>
+        <span className="status"><i /> Preschool planning workspace</span>
+      </header>
+
+      <div className="workspace">
+        <aside className="chatPanel">
+          <div className="sectionTitle"><span className="bot">✦</span><div><h1>Compass chat</h1><p>Describe the preschool you need</p></div></div>
+          {understood.length > 0 && <><details className="preferenceSummary"><summary><strong>Understood preferences</strong><span>{understood.length}</span></summary><div className="preferenceContent"><div className="preferenceChips">{understood.map((item) => <span key={item}>{item}</span>)}</div>{preferenceProfile?.preference_items?.some((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)) && <div className="importanceControls"><strong>Adjust ranking importance</strong>{preferenceProfile.preference_items.filter((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)).map((item) => <label key={`${item.attribute}-${String(item.value)}`}><span>{item.attribute.replaceAll("_", " ")}</span><select value={item.importance} onChange={(event) => updateImportance(item.attribute, item.value, event.target.value as PreferenceImportance)}><option value="required">Required</option><option value="high_priority">High priority</option><option value="preferred">Preferred</option><option value="nice_to_have">Nice to have</option></select></label>)}</div>}<small>Send another message to add or correct these preferences.</small></div></details><div className="recommendationAction"><button onClick={confirmSearch} disabled={busy || !readyToSearch}>Show recommendations</button></div></>}
+          <div className="messages" aria-live="polite">
+            {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}>{message.text}</div>)}
+            {busy && <div className="message assistant typing">Thinking…</div>}
+          </div>
+          <form className="chatComposer" onSubmit={sendPreference}>
+            <textarea required minLength={2} maxLength={500} disabled={!familyDetails || busy} value={preference} onChange={(event) => setPreference(event.target.value)} placeholder={familyDetails ? "Ask for Montessori, bilingual, play-based…" : "Complete Family details to unlock chat"} />
+            <button className="primary" disabled={!familyDetails || busy}>Send <span>↑</span></button>
+          </form>
+        </aside>
+
+        <section className="rightColumn">
+          <div className="displayPanel">
+            <div className="tabs">
+              <button className={tab === "form" ? "active" : ""} onClick={() => setTab("form")}>Form</button>
+              <button className={tab === "results" ? "active" : ""} onClick={() => setTab("results")}>Results <span>{stage === "choose" ? eligible.length : 0}</span></button>
+              <small>{stage === "family" ? "Family details first" : stage === "search" ? "Chat ready" : `${selected.length} selected`}</small>
+            </div>
+            {error && <div className="alert">{error}</div>}
+
+            <div className="displayBody">
+              {tab === "form" && stage === "family" && <form className="contentForm" onSubmit={saveFamilyDetails}>
+                <div className="contentHead"><p>Step 1</p><h2>Family details</h2><span>Complete this form to unlock Compass chat. These details are used for age eligibility, fee estimates, and home distance.</span></div>
+                <div className="formGrid">
+                  <label>Child&apos;s date of birth<input name="dob" type="date" required defaultValue={familyDetails?.dob ?? ""} /></label>
+                  <label>Admission date<input name="admission_date" type="date" required defaultValue={familyDetails?.admission_date ?? ""} /></label>
+                  <label>Gross monthly income<input name="income" type="number" min="0" required placeholder="4500" defaultValue={familyDetails?.gross_household_income} /></label>
+                  <label>Basic monthly subsidy<input name="subsidy" type="number" min="0" required placeholder="600" defaultValue={familyDetails?.basic_subsidy} /></label>
+                  <label>Home postal code<input value={homePostalCode} onChange={(e) => setHomePostalCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" pattern="[0-9]{6}" required placeholder="540231" /></label>
+                </div>
+                <button className="primary" disabled={busy}>Save and continue to chat →</button>
+              </form>}
+
+              {tab === "form" && stage === "search" && <div className="contentForm"><div className="contentHead"><p>Family details saved</p><h2>Continue in Compass chat</h2><span>Describe your preschool preferences, then click Show recommendations.</span></div><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Edit family details</button></div>}
+
+              {tab === "form" && stage === "choose" && <div className="contentForm">
+                <div className="contentHead"><p>Location ready</p><h2>Home to preschools</h2><span>Home postal code: {homePostalCode}. Select any number of preschools in Results and their distances will be calculated independently.</span></div>
+              </div>}
+
+              {tab === "results" && stage !== "choose" && <div className="emptyState"><span>⌁</span><h2>Recommendations are not ready</h2><p>{stage === "family" ? "Complete Family details first." : "Continue in Compass chat and show recommendations."}</p></div>}
+
+              {tab === "results" && stage === "choose" && <>
+                <div className="rankingSummary"><div><strong>Ranked recommendations</strong><p>Ordered by preference match, then evidence confidence.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>
+                <div className="resultToolbar"><label>Distance from home<select value={distanceFilter} onChange={(event) => setDistanceFilter(event.target.value)}><option value="none">None</option>{distanceFilter !== "none" && !["1", "2", "3", "4", "5"].includes(distanceFilter) && <option value={distanceFilter}>Within {distanceFilter} km</option>}{[1, 2, 3, 4, 5].map((km) => <option value={km} key={km}>Within {km} km</option>)}</select></label><span>Filtering preserves the original rank</span></div>
+                <div className="resultList selectable">{visibleEligible.length === 0 ? <div className="emptyState"><h2>No schools within this distance</h2><p>Increase the distance or select None.</p></div> : visibleEligible.map((centre) => <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}><button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}><span className="selectMark">✓</span><div><span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span><small>{centre.match_score?.toFixed(0) ?? "—"}% match · {((centre.profile_confidence ?? 0) * 100).toFixed(0)}% evidence · Eligible · {centre.eligible_level}</small><h3>{centre.name}</h3><p>{centre.strengths?.length ? `Strengths: ${centre.strengths.join(", ")}` : "Limited preference evidence"}{centre.tradeoffs?.length ? ` · Trade-offs: ${centre.tradeoffs.join(", ")}` : ""}</p><p>{distances[centre.school_id] != null ? `${distances[centre.school_id].toFixed(2)} km from home` : "Distance unavailable"}</p></div><div className="schoolMetrics"><strong>{money.format(centre.net_monthly_fee ?? 0)}<small>/month</small></strong>{routes[centre.school_id] && <strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>from home</small></strong>}</div></button><details className="scoreBreakdown"><summary>How this score was calculated</summary><div>{centre.match_breakdown?.length ? centre.match_breakdown.map((item) => <p key={item.attribute}><strong>{item.attribute.split(":")[0].replaceAll("_", " ")}</strong><span className={`evidenceStatus ${item.status}`}>{item.status.replaceAll("_", " ")}</span><small>{item.importance.replaceAll("_", " ")} · {item.contribution} of {item.possible_contribution} verified points</small><small>Source: {item.source} · Evidence: {item.evidence_state} · Last updated: {sourceDateLabel(item.source_date)}</small></p>) : <p>All requested features were applied as required filters. The remaining schools satisfy those verifiable requirements, but no preferred criteria were available to rank them further.</p>}</div></details></article>)}</div>
+                <div className="rankingHelp"><p><strong>Preference match</strong> means how well the school matches requested features.</p><p><strong>Evidence confidence</strong> means how much usable school data was available to evaluate those features.</p></div>
+              </>}
+            </div>
+          </div>
+
+          <div className="mapPanel">
+            <div className="mapHead"><div><span>Live map</span><h2>Home to preschools</h2></div><div className="legend"><span><i className="home" />Home</span><span><i className="school" />Preschools</span></div></div>
+            <LiveMap points={mapPoints} />
+            {mapBusy && <div className="mapHint">Updating map…</div>}
+            {!mapBusy && !mapPoints.length && <div className="mapHint">Enter a valid home postal code to display its location.</div>}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
