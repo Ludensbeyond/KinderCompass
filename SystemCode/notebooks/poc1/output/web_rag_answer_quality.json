@@ -1,0 +1,75 @@
+{
+  "mode": "deterministic",
+  "passed": true,
+  "metrics": {
+    "cases": 4,
+    "answer_accuracy": 1.0,
+    "citation_validity": 1.0,
+    "unsupported_claim_free_rate": 1.0,
+    "conciseness_rate": 1.0,
+    "llm_grounded_rate": 0.0,
+    "fallback_rate": 0.0
+  },
+  "results": [
+    {
+      "case_id": "star-learners-curriculum-answer",
+      "passed": true,
+      "answer": "According to the preschool's official webpage, Our unique literature-based curriculum immerses every child in rich and exciting worlds, and opens up plenty of opportunities... [1]",
+      "answer_method": "deterministic",
+      "fallback_reason": null,
+      "word_count": 25,
+      "citation_count": 1,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-outdoor-answer",
+      "passed": true,
+      "answer": "According to the preschool's official webpage, ...and Young Scientist A common outdoor playground outside the centre for fun, outdoor learning [1]",
+      "answer_method": "deterministic",
+      "fallback_reason": null,
+      "word_count": 21,
+      "citation_count": 1,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-fee-answer",
+      "passed": true,
+      "answer": "According to the preschool's official webpage, ...2026 full-day child care school fees (before taxes and subsidies) are as follows: Singaporeans — $650 PRs/ Foreigners... [1]",
+      "answer_method": "deterministic",
+      "fallback_reason": null,
+      "word_count": 25,
+      "citation_count": 1,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-swimming-unavailable",
+      "passed": true,
+      "answer": "I could not find relevant webpage evidence for STAR LEARNERS @ WOODLANDS CIRCLE. That means the information is unavailable, not that the answer is no.",
+      "answer_method": "deterministic",
+      "fallback_reason": null,
+      "word_count": 25,
+      "citation_count": 0,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    }
+  ]
+}

@@ -347,6 +347,23 @@ The frontend renders each citation as a source link with its retrieval date. If 
 
 When `OPENAI_WEB_RAG_ANSWERS_ENABLED=true`, the retrieved school-isolated passages are passed to an LLM for a short parent-friendly answer. Structured output requires `answer`, `evidence_available`, and exact retrieved `citation_ids`. The backend rejects invented or missing citations and falls back to deterministic extraction on validation, timeout, or API failure. The model never receives authority to alter filters, scores, ranking, or suitability.
 
+Evaluate the deterministic answer formatter without API calls:
+
+```powershell
+.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/evaluate_web_rag_answers.py `
+  --output SystemCode/notebooks/poc1/output/web_rag_answer_quality.json
+```
+
+Run the same labelled cases through the configured LLM:
+
+```powershell
+.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/evaluate_web_rag_answers.py `
+  --use-llm `
+  --output SystemCode/notebooks/poc1/output/web_rag_answer_quality_llm.json
+```
+
+Labels live in `web_rag/answer_quality_labels.json`. The evaluator reports answer accuracy, citation validity, unsupported-claim-free rate, conciseness, LLM-grounded rate, and fallback rate. The initial four-case Star Learners smoke set passes in both modes; it is a regression baseline rather than a statistically sufficient production sample.
+
 Set `WEB_RAG_INDEX_PATH` to use an index outside the default output location. The index is a generated runtime artifact and must be built or provisioned wherever the backend runs.
 
 ## Remaining Phase 9 work

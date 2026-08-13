@@ -1,0 +1,75 @@
+{
+  "mode": "llm",
+  "passed": true,
+  "metrics": {
+    "cases": 4,
+    "answer_accuracy": 1.0,
+    "citation_validity": 1.0,
+    "unsupported_claim_free_rate": 1.0,
+    "conciseness_rate": 1.0,
+    "llm_grounded_rate": 0.75,
+    "fallback_rate": 0.0
+  },
+  "results": [
+    {
+      "case_id": "star-learners-curriculum-answer",
+      "passed": true,
+      "answer": "The school uses a unique literature-based curriculum that integrates a robust activity-based approach, fostering essential skills such as problem-solving and creative thinking. Their programs aim for a holistic development of children, covering intellectual, social, physical, and emotional aspects.",
+      "answer_method": "llm_grounded",
+      "fallback_reason": null,
+      "word_count": 38,
+      "citation_count": 3,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-outdoor-answer",
+      "passed": true,
+      "answer": "Yes, Star Learners at Woodlands Circle provides outdoor learning opportunities, including access to a common outdoor playground.",
+      "answer_method": "llm_grounded",
+      "fallback_reason": null,
+      "word_count": 17,
+      "citation_count": 1,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-fee-answer",
+      "passed": true,
+      "answer": "The fees for full-day childcare at Star Learners @ Woodlands Circle are $650 for Singaporeans and $1230 for PRs/Foreigners before taxes and subsidies.",
+      "answer_method": "llm_grounded",
+      "fallback_reason": null,
+      "word_count": 23,
+      "citation_count": 1,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    },
+    {
+      "case_id": "star-learners-swimming-unavailable",
+      "passed": true,
+      "answer": "I could not find relevant webpage evidence for STAR LEARNERS @ WOODLANDS CIRCLE. That means the information is unavailable, not that the answer is no.",
+      "answer_method": "deterministic",
+      "fallback_reason": null,
+      "word_count": 25,
+      "citation_count": 0,
+      "evidence_correct": true,
+      "terms_correct": true,
+      "unsupported_claim_free": true,
+      "citations_complete": true,
+      "school_isolated": true,
+      "concise": true
+    }
+  ]
+}

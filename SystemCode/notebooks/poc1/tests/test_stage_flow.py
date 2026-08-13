@@ -20,6 +20,7 @@ from stage1 import proximity
 from stage2.engine import evaluate_preschool_eligibility, evaluate_shortlist
 from stage2.runner import run_from_file
 from scripts.evaluate_recommendations import evaluate
+from scripts.evaluate_web_rag_answers import evaluate as evaluate_web_answers
 from scripts.audit_evidence_quality import audit as audit_evidence_quality
 from scripts.build_website_inventory import build_inventory, normalize_url
 from stage1.evidence import freshness
@@ -97,6 +98,23 @@ class Stage2Tests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_phase9_answer_quality_evaluator_checks_grounding(self):
+        index = {"pages": [{"school_id": "A", "chunks": [{
+            "chunk_id": "A:1", "school_id": "A",
+            "text": "The preschool uses a literature-based curriculum for children.",
+            "source_url": "https://a.example", "title": "School A",
+            "retrieved_at": "2026-08-10", "content_hash": "a",
+        }]}]}
+        labels = {"cases": [{
+            "case_id": "curriculum", "school_id": "A", "school_name": "School A",
+            "question": "What curriculum does this school use?", "evidence_expected": True,
+            "expected_terms": ["literature-based"], "forbidden_terms": ["montessori"],
+        }]}
+        report = evaluate_web_answers(index, labels)
+        self.assertTrue(report["passed"])
+        self.assertEqual(report["metrics"]["citation_validity"], 1.0)
+        self.assertEqual(report["metrics"]["unsupported_claim_free_rate"], 1.0)
+
     def test_one_km_distance_is_numeric_not_boolean(self):
         item = make_preference_item("max_distance_km", 1.0, "required")
         self.assertEqual(item["value"], 1.0)

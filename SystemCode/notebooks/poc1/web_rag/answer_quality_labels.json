@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "case_id": "star-learners-curriculum-answer",
+      "school_id": "CENTRE:PT9148",
+      "school_name": "STAR LEARNERS @ WOODLANDS CIRCLE",
+      "question": "What curriculum does this school use?",
+      "evidence_expected": true,
+      "expected_terms": ["literature-based", "activity-based"],
+      "forbidden_terms": ["montessori", "reggio"]
+    },
+    {
+      "case_id": "star-learners-outdoor-answer",
+      "school_id": "CENTRE:PT9148",
+      "school_name": "STAR LEARNERS @ WOODLANDS CIRCLE",
+      "question": "Does this school provide outdoor learning?",
+      "evidence_expected": true,
+      "expected_terms": ["outdoor", "playground"],
+      "forbidden_terms": ["swimming pool"]
+    },
+    {
+      "case_id": "star-learners-fee-answer",
+      "school_id": "CENTRE:PT9148",
+      "school_name": "STAR LEARNERS @ WOODLANDS CIRCLE",
+      "question": "How much are this school's fees?",
+      "evidence_expected": true,
+      "expected_terms": ["$650", "$1230"],
+      "forbidden_terms": ["free"]
+    },
+    {
+      "case_id": "star-learners-swimming-unavailable",
+      "school_id": "CENTRE:PT9148",
+      "school_name": "STAR LEARNERS @ WOODLANDS CIRCLE",
+      "question": "Does this school provide swimming lessons?",
+      "evidence_expected": false,
+      "expected_terms": ["unavailable"],
+      "forbidden_terms": ["provides swimming", "offers swimming"]
+    }
+  ]
+}
