@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -27,6 +28,7 @@ load_dotenv(POC_ENV)
 from stage1.runner import run_from_profile  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
 from stage1.conversation import update_conversation  # noqa: E402
+from stage1.web_rag import load_json  # noqa: E402
 from stage1.proximity import geocode_postal_code  # noqa: E402
 from stage2.engine import evaluate_shortlist  # noqa: E402
 from stage3.optimizer import calculate_home_to_preschool  # noqa: E402
@@ -124,7 +126,19 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
     eligible = request.eligible_centres
     if eligible and request.home_postal_code:
         eligible = _attach_home_distances(eligible, request.home_postal_code)
-    return update_conversation(request.profile, request.message, request.selected_centres, eligible)
+    configured_index = os.getenv("WEB_RAG_INDEX_PATH", "").strip()
+    index_path = (
+        Path(configured_index)
+        if configured_index
+        else REPO_ROOT / "SystemCode" / "notebooks" / "poc1" / "output" / "web_rag_pilot_index.json"
+    )
+    try:
+        web_rag_index = load_json(index_path) if index_path.is_file() else None
+    except (OSError, ValueError):
+        web_rag_index = None
+    return update_conversation(
+        request.profile, request.message, request.selected_centres, eligible, web_rag_index
+    )
 
 
 @app.post("/api/evaluate")

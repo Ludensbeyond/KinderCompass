@@ -720,6 +720,15 @@ def _supports_query_intent(query: str, text: str, tokens: list[str]) -> bool:
     query_tokens = set(_search_tokens(query))
     token_set = set(tokens)
     compact_text = text.casefold()
+    specialised_evidence = {
+        "swimming": {"swimming", "swim", "pool", "aquatic"},
+        "robotics": {"robotics", "robot", "coding"},
+    }
+    for requested, evidence_terms in specialised_evidence.items():
+        if requested in query_tokens and not (token_set & evidence_terms):
+            return False
+    if "organic" in query_tokens and "organic" not in token_set:
+        return False
     if query_tokens & {"language", "languages", "bilingual", "duallanguage"}:
         return bool(token_set & LANGUAGE_EVIDENCE)
     if "outdoor" in query_tokens:

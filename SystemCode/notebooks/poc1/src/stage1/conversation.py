@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from stage1.nlp_mapper import (
     LANGUAGE_KEYWORDS,
     PEDAGOGY_KEYWORDS,
@@ -13,6 +15,7 @@ from stage1.preference_schema import sync_preference_schema
 from stage1.llm_extractor import merge_preference_profile_with_llm
 from stage1.grounded_explainer import explain_school_comparison, explain_school_decision
 from stage1.intent_router import classify_intent
+from stage1.web_rag import retrieve
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
@@ -138,6 +141,111 @@ def _explain_provenance(centres: list[dict]) -> tuple[str, list[dict]]:
     return " ".join(sections), centres
 
 
+def _answer_web_evidence(
+    text: str, centres: list[dict], web_rag_index: dict | None
+) -> tuple[str, list[dict]]:
+    if not centres:
+        return "Select one preschool in the Results panel so I can search its official webpage.", []
+    if len(centres) > 1:
+        return "Select only one preschool so webpage evidence cannot be mixed between schools.", []
+    school = centres[0]
+    school_id = school.get("school_id")
+    if not school_id or not web_rag_index:
+        return "Webpage evidence is unavailable for this preschool.", []
+    matches = retrieve(web_rag_index, str(school_id), text, limit=3)
+    if not matches:
+        return (
+            f"I could not find relevant webpage evidence for {school.get('name') or 'this preschool'}. "
+            "That means the information is unavailable, not that the answer is no.",
+            [],
+        )
+    query_terms = {
+        token for token in re.findall(r"[a-z0-9]+", text.casefold())
+        if token not in {
+            "a", "an", "are", "does", "do", "for", "have", "how", "is", "it", "school",
+            "preschool", "selected", "the", "this", "use", "uses", "what", "which",
+        }
+    }
+    candidates: list[tuple[float, int, str, dict]] = []
+    seen: set[str] = set()
+    for match_index, match in enumerate(matches):
+        raw = " ".join(str(match.get("text") or "").split())
+        sentences = re.split(r"(?<=[.!?])\s+|\s+[|•]\s+", raw)
+        for sentence_index, sentence in enumerate(sentences):
+            sentence = sentence.strip(" -")
+            words = sentence.split()
+            if len(words) < 5:
+                continue
+            sentence_terms = set(re.findall(r"[a-z0-9]+", sentence.casefold()))
+            overlap = len(query_terms & sentence_terms)
+            intent_bonus = 0
+            if "curriculum" in query_terms:
+                intent_bonus = 2 * len(sentence_terms & {
+                    "curriculum", "montessori", "reggio", "literature", "activity", "play", "inquiry",
+                })
+            elif "outdoor" in query_terms:
+                intent_bonus = 2 * len(sentence_terms & {"outdoor", "garden", "playground"})
+            elif query_terms & {"fee", "fees", "cost", "price"}:
+                intent_bonus = 2 * int(bool(sentence_terms & {"fee", "fees", "cost", "price", "subsidies"}))
+                intent_bonus += 4 * int(bool(re.search(r"(?:\$|sgd)\s*\d", sentence.casefold())))
+            score = overlap * 3 + intent_bonus + float(match.get("relevance") or 0) - match_index * 0.1 - sentence_index * 0.01
+            if score <= 0:
+                continue
+            key = re.sub(r"\W+", " ", sentence.casefold()).strip()
+            if key in seen:
+                continue
+            seen.add(key)
+            candidates.append((score, match_index, sentence, match))
+    candidates.sort(key=lambda item: (-item[0], item[1]))
+
+    passages = []
+    citations = []
+    used_chunks: set[str] = set()
+    total_words = 0
+    for _, _, sentence, match in candidates:
+        words = sentence.split()
+        if len(words) > 18:
+            focus_terms = set(query_terms)
+            if "curriculum" in query_terms:
+                focus_terms.update({"curriculum", "montessori", "reggio", "literature-based", "activity-based", "play-based", "inquiry"})
+            elif "outdoor" in query_terms:
+                focus_terms.update({"outdoor", "garden", "playground"})
+            elif query_terms & {"fee", "fees", "cost", "price"}:
+                focus_terms.update({"fee", "fees", "cost", "price", "subsidies"})
+            anchor = next(
+                (index for index, word in enumerate(words) if word.casefold().strip(".,:;()[]") in focus_terms),
+                0,
+            )
+            start = max(0, anchor - 5)
+            end = min(len(words), start + 18)
+            start = max(0, end - 18)
+            sentence = ("..." if start else "") + " ".join(words[start:end]).rstrip(",;:") + ("..." if end < len(words) else "")
+            words = sentence.split()
+        sentence = re.sub(r"\b_?DSC\d+\b|\bpartners-[a-z-]+\b", "", sentence, flags=re.IGNORECASE)
+        if "outdoor" in query_terms:
+            sentence = re.split(r"\s+Age group:\s*", sentence, maxsplit=1, flags=re.IGNORECASE)[0]
+        sentence = re.sub(r"\s+", " ", sentence).strip()
+        if passages and total_words + len(words) > 65:
+            continue
+        citation = match["citation"]
+        chunk_id = citation["chunk_id"]
+        if chunk_id not in used_chunks:
+            citations.append({**citation, "evidence_scope": "school"})
+            used_chunks.add(chunk_id)
+        marker = citations.index(next(item for item in citations if item["chunk_id"] == chunk_id)) + 1
+        passages.append(f"{sentence} [{marker}]")
+        total_words += len(words)
+        if len(passages) == 1:
+            break
+    if not passages:
+        return (
+            f"I found a relevant page for {school.get('name') or 'this preschool'}, but not a concise passage that answers the question.",
+            [],
+        )
+    answer = "According to the preschool's official webpage, " + " ".join(passages)
+    return answer, citations
+
+
 def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: list[dict]) -> dict:
     required_ids = [str(centre["school_id"]) for centre in centres if centre.get("school_id")]
     grounded, method, fallback = explain_school_comparison(
@@ -245,7 +353,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -282,6 +390,20 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
         answer, context = _explain_provenance(selected_centres or [])
         return _comparison_turn(profile, text, "provenance", answer, context)
+    if intent.intent == "ask_selected_school_evidence":
+        profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
+        profile["intent"], profile["intent_method"] = intent.intent, intent.method
+        answer, citations = _answer_web_evidence(text, selected_centres or [], web_rag_index)
+        return {
+            "profile": profile,
+            "understood": summarize_profile(profile),
+            "status": "web_evidence",
+            "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
+            "question": answer,
+            "citations": citations,
+            "evidence_scope": "school" if citations else "unavailable",
+            "ranking_affected": False,
+        }
     if intent.intent == "recommend_selected_preschool" or _is_selected_school_question(lowered):
         contextual_answer = _recommend_selected(selected_centres or [])
         contextual_task = "recommendation"

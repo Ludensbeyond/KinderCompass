@@ -334,6 +334,19 @@ The first automated run checked three candidates. Two Star Learners branch pages
 
 The generated index is explanation-only. It is not connected to the scorer, hard constraints, Neo4j query, recommendation ordering, or suitability verdict.
 
+## Chat answer integration
+
+The `/api/preferences` chat endpoint loads `output/web_rag_pilot_index.json` and recognises factual questions about exactly one selected preschool, for example, “What curriculum does this school use?” It retrieves only chunks belonging to that school and returns:
+
+- a concise set of matching official-page passages;
+- structured citations with source URL, title, retrieval date, and chunk ID;
+- `evidence_scope: school`; and
+- `ranking_affected: false`.
+
+The frontend renders each citation as a source link with its retrieval date. If no index, school page, or relevant passage is available, the answer says the evidence is unavailable; absence is not presented as proof that a feature is absent. Selecting zero or multiple schools prevents retrieval so evidence cannot be mixed across schools.
+
+Set `WEB_RAG_INDEX_PATH` to use an index outside the default output location. The index is a generated runtime artifact and must be built or provisioned wherever the backend runs.
+
 ## Remaining Phase 9 work
 
 After the initial pilot:

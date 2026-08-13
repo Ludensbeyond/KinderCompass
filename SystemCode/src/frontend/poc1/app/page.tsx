@@ -29,7 +29,8 @@ type Stop = MapPoint & {
 };
 type Route = { total_distance_km: number; distance_method: string; schedule: Stop[] };
 type DistanceResult = { school_id: string; distance_km: number };
-type Message = { role: "assistant" | "user"; text: string };
+type Citation = { url: string; title: string; retrieved_at: string; chunk_id: string; evidence_scope: string };
+type Message = { role: "assistant" | "user"; text: string; citations?: Citation[] };
 type PreferenceImportance = "required" | "high_priority" | "preferred" | "nice_to_have";
 type PreferenceItem = { attribute: string; value: unknown; importance: PreferenceImportance };
 type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; recognized?: string[] };
@@ -69,7 +70,7 @@ export default function Home() {
   const [distanceFilter, setDistanceFilter] = useState("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [homePostalCode, setHomePostalCode] = useState("");
+  const [homePostalCode, setHomePostalCode] = useState("731764");
   const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", text: "Please complete the Family details form first. I will help with preschool preferences after it is saved." },
@@ -152,7 +153,7 @@ export default function Home() {
     setMessages((items) => [...items, { role: "user", text: question }]);
     try {
       const selectedCentres = eligible.filter((centre) => selected.includes(centre.school_id)).map((centre) => ({ ...centre, distance_km: distances[centre.school_id] }));
-      const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string }>("/api/preferences", {
+      const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string; citations?: Citation[] }>("/api/preferences", {
         message: question,
         profile: preferenceProfile,
         selected_centres: selectedCentres,
@@ -163,7 +164,7 @@ export default function Home() {
       const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
       setDistanceFilter(distancePreference ? String(distancePreference.value) : "none");
       setReadyToSearch(result.ready_to_search);
-      setMessages((items) => [...items, { role: "assistant", text: result.question }]);
+      setMessages((items) => [...items, { role: "assistant", text: result.question, citations: result.citations }]);
       setPreference("");
     } catch (caught) {
       const message = (caught as Error).message;
@@ -234,7 +235,7 @@ export default function Home() {
           <div className="sectionTitle"><span className="bot">✦</span><div><h1>Compass chat</h1><p>Describe the preschool you need</p></div></div>
           {understood.length > 0 && <><details className="preferenceSummary"><summary><strong>Understood preferences</strong><span>{understood.length}</span></summary><div className="preferenceContent"><div className="preferenceChips">{understood.map((item) => <span key={item}>{item}</span>)}</div>{preferenceProfile?.preference_items?.some((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)) && <div className="importanceControls"><strong>Adjust ranking importance</strong>{preferenceProfile.preference_items.filter((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)).map((item) => <label key={`${item.attribute}-${String(item.value)}`}><span>{item.attribute.replaceAll("_", " ")}</span><select value={item.importance} onChange={(event) => updateImportance(item.attribute, item.value, event.target.value as PreferenceImportance)}><option value="required">Required</option><option value="high_priority">High priority</option><option value="preferred">Preferred</option><option value="nice_to_have">Nice to have</option></select></label>)}</div>}<small>Send another message to add or correct these preferences.</small></div></details><div className="recommendationAction"><button onClick={confirmSearch} disabled={busy || !readyToSearch}>Show recommendations</button></div></>}
           <div className="messages" aria-live="polite">
-            {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}>{message.text}</div>)}
+            {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.text}</span>{message.citations?.length ? <div className="messageSources"><strong>Sources</strong>{message.citations.map((citation, sourceIndex) => <a href={citation.url} target="_blank" rel="noreferrer" key={citation.chunk_id}>[{sourceIndex + 1}] {citation.title}<small>Retrieved {sourceDateLabel(citation.retrieved_at)}</small></a>)}</div> : null}</div>)}
             {busy && <div className="message assistant typing">Thinking…</div>}
           </div>
           <form className="chatComposer" onSubmit={sendPreference}>
@@ -256,10 +257,10 @@ export default function Home() {
               {tab === "form" && stage === "family" && <form className="contentForm" onSubmit={saveFamilyDetails}>
                 <div className="contentHead"><p>Step 1</p><h2>Family details</h2><span>Complete this form to unlock Compass chat. These details are used for age eligibility, fee estimates, and home distance.</span></div>
                 <div className="formGrid">
-                  <label>Child&apos;s date of birth<input name="dob" type="date" required defaultValue={familyDetails?.dob ?? ""} /></label>
-                  <label>Admission date<input name="admission_date" type="date" required defaultValue={familyDetails?.admission_date ?? ""} /></label>
-                  <label>Gross monthly income<input name="income" type="number" min="0" required placeholder="4500" defaultValue={familyDetails?.gross_household_income} /></label>
-                  <label>Basic monthly subsidy<input name="subsidy" type="number" min="0" required placeholder="600" defaultValue={familyDetails?.basic_subsidy} /></label>
+                  <label>Child&apos;s date of birth<input name="dob" type="date" required defaultValue={familyDetails?.dob ?? "2023-06-10"} /></label>
+                  <label>Admission date<input name="admission_date" type="date" required defaultValue={familyDetails?.admission_date ?? "2026-09-01"} /></label>
+                  <label>Gross monthly income<input name="income" type="number" min="0" required defaultValue={familyDetails?.gross_household_income ?? 4500} /></label>
+                  <label>Basic monthly subsidy<input name="subsidy" type="number" min="0" required defaultValue={familyDetails?.basic_subsidy ?? 600} /></label>
                   <label>Home postal code<input value={homePostalCode} onChange={(e) => setHomePostalCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" pattern="[0-9]{6}" required placeholder="540231" /></label>
                 </div>
                 <button className="primary" disabled={busy}>Save and continue to chat →</button>

@@ -17,6 +17,7 @@ IntentName = Literal[
     "compare_selected_preschools",
     "explain_selected_tradeoffs",
     "explain_evidence_provenance",
+    "ask_selected_school_evidence",
     "reset_preferences",
     "needs_clarification",
 ]
@@ -43,6 +44,16 @@ def _rules(text: str) -> IntentResult | None:
         return IntentResult(intent="explain_selected_tradeoffs", confidence=1)
     if any(phrase in lowered for phrase in ("where did", "where does", "source of", "how reliable", "information missing", "evidence missing")):
         return IntentResult(intent="explain_evidence_provenance", confidence=1)
+    asks_about_school = any(
+        phrase in lowered for phrase in ("this school", "this preschool", "selected school", "selected preschool")
+    )
+    asks_for_fact = lowered.startswith(("does ", "do ", "is ", "are ", "what ", "which ", "how ", "tell me "))
+    asks_for_decision = any(
+        phrase in lowered
+        for phrase in ("suitable", "good fit", "right for me", "recommend", "best", "choose", "pick")
+    )
+    if asks_about_school and asks_for_fact and not asks_for_decision:
+        return IntentResult(intent="ask_selected_school_evidence", confidence=1)
     if any(word in lowered for word in ("compare", "difference", "versus", " vs ")):
         return IntentResult(intent="compare_selected_preschools", confidence=1)
     if ("why" in lowered and any(phrase in lowered for phrase in ("ranked first", "ranked highest", "top ranked", "top-ranked"))) or "why is this first" in lowered:
@@ -76,6 +87,7 @@ def _classify_with_openai(text: str) -> IntentResult:
             "compare_selected_preschools compares two or more selected results; "
             "explain_selected_tradeoffs asks about drawbacks of selected results. "
             "explain_evidence_provenance asks where selected-school facts came from, how reliable they are, or what evidence is missing. "
+            "ask_selected_school_evidence asks a factual question about exactly one selected school, such as its curriculum, languages, fees, facilities, or philosophy. "
             "Use needs_clarification when meaning is genuinely ambiguous and provide one short question."
         ),
         input=text,

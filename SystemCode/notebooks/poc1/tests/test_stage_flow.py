@@ -11,7 +11,7 @@ from stage1.query_builder import build_stage1_query
 from stage1.nlp_mapper import map_text_to_filters, merge_preference_profile, summarize_profile
 from stage1.scorer import rank_schools, score_school
 from stage1.conversation import update_conversation
-from stage1.preference_schema import validate_preference_profile
+from stage1.preference_schema import make_preference_item, validate_preference_profile
 from stage1.llm_extractor import ExtractedPreference, ExtractionResult
 from stage1.grounded_explainer import GroundedExplanation
 from stage1.intent_router import IntentResult, classify_intent
@@ -97,6 +97,78 @@ class Stage2Tests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_one_km_distance_is_numeric_not_boolean(self):
+        item = make_preference_item("max_distance_km", 1.0, "required")
+        self.assertEqual(item["value"], 1.0)
+
+    def test_exact_rag_search_preference_does_not_crash(self):
+        turn = update_conversation(
+            None, "I prefer Chinese, SPARK certification, and full-day care within 1 km."
+        )
+        self.assertEqual(turn["profile"]["hard_constraints"]["max_distance_km"], 1.0)
+
+    def test_phase9_selected_school_question_returns_isolated_citations(self):
+        index = {"purpose": "explanation_only", "pages": [
+            {"school_id": "A", "chunks": [{
+                "chunk_id": "A:1", "school_id": "A",
+                "text": "Children learn through a literature-based and activity-based curriculum.",
+                "source_url": "https://a.example/curriculum", "title": "School A curriculum",
+                "retrieved_at": "2026-08-10", "content_hash": "a",
+            }]},
+            {"school_id": "B", "chunks": [{
+                "chunk_id": "B:1", "school_id": "B", "text": "A Montessori curriculum.",
+                "source_url": "https://b.example", "title": "School B",
+                "retrieved_at": "2026-08-10", "content_hash": "b",
+            }]},
+        ], "operator_pages": []}
+        turn = update_conversation(
+            None, "What curriculum does this school use?",
+            [{"school_id": "A", "name": "School A"}], web_rag_index=index,
+        )
+        self.assertEqual(turn["status"], "web_evidence")
+        self.assertIn("literature-based", turn["question"])
+        self.assertNotIn("Montessori", turn["question"])
+        self.assertEqual(turn["citations"][0]["url"], "https://a.example/curriculum")
+        self.assertEqual(turn["evidence_scope"], "school")
+        self.assertFalse(turn["ranking_affected"])
+
+    def test_phase9_web_answer_summarises_noisy_chunks(self):
+        index = {"pages": [{"school_id": "A", "chunks": [{
+            "chunk_id": "A:1", "school_id": "A",
+            "text": (
+                "Experience this centre Awards and navigation labels before the useful evidence "
+                "A common outdoor playground outside the centre supports outdoor learning "
+                "Age group links partners-partneroperator _DSC4863 How to reach us and more navigation labels"
+            ),
+            "source_url": "https://a.example", "title": "School A",
+            "retrieved_at": "2026-08-10", "content_hash": "a",
+        }]}]}
+        turn = update_conversation(
+            None, "Does this school provide outdoor learning?",
+            [{"school_id": "A", "name": "School A"}], web_rag_index=index,
+        )
+        self.assertIn("outdoor playground", turn["question"])
+        self.assertLess(len(turn["question"]), 500)
+        self.assertNotIn("_DSC4863", turn["question"])
+        self.assertEqual(len(turn["citations"]), 1)
+
+    def test_phase9_selected_school_question_reports_unavailable_evidence(self):
+        turn = update_conversation(
+            None, "Does this school have an outdoor playground?",
+            [{"school_id": "A", "name": "School A"}], web_rag_index={"pages": []},
+        )
+        self.assertEqual(turn["citations"], [])
+        self.assertEqual(turn["evidence_scope"], "unavailable")
+        self.assertIn("unavailable, not that the answer is no", turn["question"])
+
+    def test_phase9_web_evidence_requires_exactly_one_selected_school(self):
+        turn = update_conversation(
+            None, "What curriculum does this school use?",
+            [{"school_id": "A"}, {"school_id": "B"}], web_rag_index={"pages": []},
+        )
+        self.assertIn("Select only one", turn["question"])
+        self.assertEqual(turn["citations"], [])
+
     def test_phase9_normalizes_webpage_candidates(self):
         url, error = normalize_url("www.example.edu.sg/curriculum/?utm_source=test#section")
         self.assertIsNone(error)

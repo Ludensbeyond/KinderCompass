@@ -373,6 +373,25 @@ class WebRagPilotTests(unittest.TestCase):
         )
         self.assertEqual(retrieve(report, "A", "is this the school"), [])
 
+    def test_retrieval_swimming_query_rejects_generic_learning_language(self):
+        report = ingest_allowlist(
+            [approved()],
+            fetcher=lambda url: page(
+                url,
+                "Using stories and authentic context, children have ample opportunities to apply what they have learnt.",
+            ),
+            delay_seconds=0,
+        )
+        self.assertEqual(retrieve(report, "A", "Does this school provide swimming lessons?"), [])
+
+    def test_retrieval_swimming_query_accepts_concrete_pool_evidence(self):
+        report = ingest_allowlist(
+            [approved()],
+            fetcher=lambda url: page(url, "Weekly swimming lessons take place in the onsite pool."),
+            delay_seconds=0,
+        )
+        self.assertTrue(retrieve(report, "A", "Does this school provide swimming lessons?"))
+
     def test_retrieval_ignores_possessive_suffix(self):
         index = {"operator_pages": [{"linked_school_ids": ["A"], "chunks": [{
             "chunk_id": "OP:1", "operator_id": "OP", "school_id": None,

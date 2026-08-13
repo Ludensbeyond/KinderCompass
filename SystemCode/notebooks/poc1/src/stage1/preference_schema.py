@@ -130,7 +130,8 @@ def make_preference_item(
         allowed_values = {value}
     else:
         allowed_values = ALLOWED_VALUES[attribute]
-    if allowed_values <= {True, False} and type(value) is not bool:
+    boolean_attributes = {"spark_certified", "transport", "full_day"}
+    if attribute in boolean_attributes and type(value) is not bool:
         raise ValueError(f"Value for {attribute} must be boolean")
     try:
         allowed = value in allowed_values
