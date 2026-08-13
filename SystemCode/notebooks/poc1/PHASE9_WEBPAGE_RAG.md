@@ -345,6 +345,8 @@ The `/api/preferences` chat endpoint loads `output/web_rag_pilot_index.json` and
 
 The frontend renders each citation as a source link with its retrieval date. If no index, school page, or relevant passage is available, the answer says the evidence is unavailable; absence is not presented as proof that a feature is absent. Selecting zero or multiple schools prevents retrieval so evidence cannot be mixed across schools.
 
+When `OPENAI_WEB_RAG_ANSWERS_ENABLED=true`, the retrieved school-isolated passages are passed to an LLM for a short parent-friendly answer. Structured output requires `answer`, `evidence_available`, and exact retrieved `citation_ids`. The backend rejects invented or missing citations and falls back to deterministic extraction on validation, timeout, or API failure. The model never receives authority to alter filters, scores, ranking, or suitability.
+
 Set `WEB_RAG_INDEX_PATH` to use an index outside the default output location. The index is a generated runtime artifact and must be built or provisioned wherever the backend runs.
 
 ## Remaining Phase 9 work
@@ -355,7 +357,7 @@ After the initial pilot:
 2. audit extraction quality across different site designs, including JavaScript-rendered pages;
 3. add scheduled execution around the implemented freshness-based refresh command;
 4. expand retrieval evaluation beyond the initial golden cases to a larger labelled question set;
-5. integrate cited passages into the grounded explanation layer without changing deterministic decisions; and
-6. add UI treatment for source links, retrieval dates, and unavailable webpage evidence.
+5. compare LLM-synthesised answer quality against the deterministic formatter on a labelled answer set; and
+6. add monitoring for synthesis fallback rate and invalid citation attempts.
 
 No webpage evidence should affect ranking until this evaluation passes.

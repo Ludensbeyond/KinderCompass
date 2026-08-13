@@ -116,6 +116,9 @@ OPENAI_PREFERENCE_TIMEOUT_SECONDS=8
 OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
 OPENAI_EXPLANATION_MODEL=gpt-4o-mini
 OPENAI_EXPLANATION_TIMEOUT_SECONDS=8
+OPENAI_WEB_RAG_ANSWERS_ENABLED=false
+OPENAI_WEB_RAG_MODEL=gpt-4o-mini
+OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
 ```
 
 Do not commit this `.env` file because it contains private credentials.
@@ -125,6 +128,10 @@ the deterministic keyword extractor.
 Grounded selected-school explanations are controlled independently by
 `OPENAI_GROUNDED_EXPLANATIONS_ENABLED` and use deterministic recommendation
 and suitability decisions as their fixed basis.
+Grounded webpage answers are controlled separately by
+`OPENAI_WEB_RAG_ANSWERS_ENABLED`. The model receives only school-isolated
+retrieved passages and must return exact retrieved chunk IDs. Invalid citations,
+timeouts, and API failures fall back to the deterministic concise formatter.
 
 ## Launch the UI and backend together
 

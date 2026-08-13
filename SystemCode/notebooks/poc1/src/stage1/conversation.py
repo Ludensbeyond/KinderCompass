@@ -13,7 +13,7 @@ from stage1.nlp_mapper import (
 )
 from stage1.preference_schema import sync_preference_schema
 from stage1.llm_extractor import merge_preference_profile_with_llm
-from stage1.grounded_explainer import explain_school_comparison, explain_school_decision
+from stage1.grounded_explainer import explain_school_comparison, explain_school_decision, synthesize_web_evidence
 from stage1.intent_router import classify_intent
 from stage1.web_rag import retrieve
 
@@ -143,21 +143,21 @@ def _explain_provenance(centres: list[dict]) -> tuple[str, list[dict]]:
 
 def _answer_web_evidence(
     text: str, centres: list[dict], web_rag_index: dict | None
-) -> tuple[str, list[dict]]:
+) -> tuple[str, list[dict], str, str | None]:
     if not centres:
-        return "Select one preschool in the Results panel so I can search its official webpage.", []
+        return "Select one preschool in the Results panel so I can search its official webpage.", [], "deterministic", None
     if len(centres) > 1:
-        return "Select only one preschool so webpage evidence cannot be mixed between schools.", []
+        return "Select only one preschool so webpage evidence cannot be mixed between schools.", [], "deterministic", None
     school = centres[0]
     school_id = school.get("school_id")
     if not school_id or not web_rag_index:
-        return "Webpage evidence is unavailable for this preschool.", []
+        return "Webpage evidence is unavailable for this preschool.", [], "deterministic", None
     matches = retrieve(web_rag_index, str(school_id), text, limit=3)
     if not matches:
         return (
             f"I could not find relevant webpage evidence for {school.get('name') or 'this preschool'}. "
             "That means the information is unavailable, not that the answer is no.",
-            [],
+            [], "deterministic", None,
         )
     query_terms = {
         token for token in re.findall(r"[a-z0-9]+", text.casefold())
@@ -238,12 +238,17 @@ def _answer_web_evidence(
         if len(passages) == 1:
             break
     if not passages:
-        return (
-            f"I found a relevant page for {school.get('name') or 'this preschool'}, but not a concise passage that answers the question.",
-            [],
+        fallback = (
+            f"I found a relevant page for {school.get('name') or 'this preschool'}, "
+            "but not a concise passage that answers the question."
+        )
+        return synthesize_web_evidence(
+            text, str(school_id), school.get("name") or "this preschool", matches, fallback, []
         )
     answer = "According to the preschool's official webpage, " + " ".join(passages)
-    return answer, citations
+    return synthesize_web_evidence(
+        text, str(school_id), school.get("name") or "this preschool", matches, answer, citations
+    )
 
 
 def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: list[dict]) -> dict:
@@ -393,7 +398,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     if intent.intent == "ask_selected_school_evidence":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
-        answer, citations = _answer_web_evidence(text, selected_centres or [], web_rag_index)
+        answer, citations, answer_method, fallback_reason = _answer_web_evidence(text, selected_centres or [], web_rag_index)
         return {
             "profile": profile,
             "understood": summarize_profile(profile),
@@ -403,6 +408,8 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "citations": citations,
             "evidence_scope": "school" if citations else "unavailable",
             "ranking_affected": False,
+            "web_answer_method": answer_method,
+            "web_answer_fallback_reason": fallback_reason,
         }
     if intent.intent == "recommend_selected_preschool" or _is_selected_school_question(lowered):
         contextual_answer = _recommend_selected(selected_centres or [])

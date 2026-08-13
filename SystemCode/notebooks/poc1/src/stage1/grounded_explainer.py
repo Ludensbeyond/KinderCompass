@@ -18,8 +18,91 @@ class GroundedExplanation(BaseModel):
     referenced_school_ids: list[str]
 
 
+class WebEvidenceAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answer: str = Field(min_length=1, max_length=800)
+    citation_ids: list[str]
+    evidence_available: bool
+
+
 def grounded_explanations_enabled() -> bool:
     return os.getenv("OPENAI_GROUNDED_EXPLANATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def web_rag_answers_enabled() -> bool:
+    return os.getenv("OPENAI_WEB_RAG_ANSWERS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _answer_web_evidence_with_openai(
+    question: str, school_id: str, school_name: str, matches: list[dict]
+) -> WebEvidenceAnswer:
+    from openai import OpenAI
+
+    model = os.getenv(
+        "OPENAI_WEB_RAG_MODEL", os.getenv("OPENAI_EXPLANATION_MODEL", "gpt-4o-mini")
+    ).strip() or "gpt-4o-mini"
+    timeout = float(os.getenv("OPENAI_WEB_RAG_TIMEOUT_SECONDS", "8"))
+    passages = [
+        {
+            "citation_id": item["citation"]["chunk_id"],
+            "text": item.get("text", ""),
+            "source_title": item["citation"].get("title"),
+            "source_url": item["citation"].get("url"),
+        }
+        for item in matches
+    ]
+    response = OpenAI(timeout=timeout).responses.parse(
+        model=model,
+        instructions=(
+            "Answer the parent's question using only the supplied official-webpage passages. "
+            "Write at most two short, direct sentences. Do not mention facts absent from the passages, "
+            "do not infer that missing evidence means no, and do not discuss another school. "
+            "When evidence answers the question, set evidence_available true and cite every supporting "
+            "passage by its exact citation_id. If the passages do not answer it, set evidence_available "
+            "false, use no citation IDs, and say the webpage evidence is unavailable."
+        ),
+        input=json.dumps({
+            "question": question,
+            "school_id": school_id,
+            "school_name": school_name,
+            "passages": passages,
+        }, ensure_ascii=False),
+        text_format=WebEvidenceAnswer,
+        store=False,
+    )
+    if response.output_parsed is None:
+        raise ValueError("The model did not return a parsed webpage-evidence answer")
+    return response.output_parsed
+
+
+def synthesize_web_evidence(
+    question: str,
+    school_id: str,
+    school_name: str,
+    matches: list[dict],
+    deterministic_answer: str,
+    deterministic_citations: list[dict],
+) -> tuple[str, list[dict], str, str | None]:
+    """Generate a cited answer, falling back safely on any failure."""
+    if not web_rag_answers_enabled():
+        return deterministic_answer, deterministic_citations, "deterministic", None
+    try:
+        result = _answer_web_evidence_with_openai(question, school_id, school_name, matches)
+        allowed = {item["citation"]["chunk_id"]: item["citation"] for item in matches}
+        if not result.evidence_available:
+            if result.citation_ids:
+                raise ValueError("Unavailable evidence cannot include citations")
+            return result.answer, [], "llm_grounded", None
+        if not result.citation_ids:
+            raise ValueError("An evidence answer requires at least one citation")
+        if any(citation_id not in allowed for citation_id in result.citation_ids):
+            raise ValueError("The model cited a passage outside the retrieved context")
+        citation_ids = list(dict.fromkeys(result.citation_ids))
+        citations = [{**allowed[citation_id], "evidence_scope": "school"} for citation_id in citation_ids]
+        return result.answer, citations, "llm_grounded", None
+    except Exception as exc:
+        return deterministic_answer, deterministic_citations, "deterministic_fallback", type(exc).__name__
 
 
 def _school_facts(centres: list[dict]) -> list[dict]:

@@ -13,7 +13,7 @@ from stage1.scorer import rank_schools, score_school
 from stage1.conversation import update_conversation
 from stage1.preference_schema import make_preference_item, validate_preference_profile
 from stage1.llm_extractor import ExtractedPreference, ExtractionResult
-from stage1.grounded_explainer import GroundedExplanation
+from stage1.grounded_explainer import GroundedExplanation, WebEvidenceAnswer
 from stage1.intent_router import IntentResult, classify_intent
 from stage1.proximity import filter_within_radius
 from stage1 import proximity
@@ -151,6 +151,47 @@ class PipelineTests(unittest.TestCase):
         self.assertLess(len(turn["question"]), 500)
         self.assertNotIn("_DSC4863", turn["question"])
         self.assertEqual(len(turn["citations"]), 1)
+
+    def test_phase9_llm_synthesises_only_retrieved_web_evidence(self):
+        index = {"pages": [{"school_id": "A", "chunks": [{
+            "chunk_id": "A:1", "school_id": "A", "text": "A literature-based curriculum.",
+            "source_url": "https://a.example", "title": "School A",
+            "retrieved_at": "2026-08-10", "content_hash": "a",
+        }]}]}
+        generated = WebEvidenceAnswer(
+            answer="The preschool uses a literature-based curriculum.",
+            citation_ids=["A:1"], evidence_available=True,
+        )
+        with patch.dict(os.environ, {"OPENAI_WEB_RAG_ANSWERS_ENABLED": "true"}), patch(
+            "stage1.grounded_explainer._answer_web_evidence_with_openai", return_value=generated
+        ):
+            turn = update_conversation(
+                None, "What curriculum does this school use?",
+                [{"school_id": "A", "name": "School A"}], web_rag_index=index,
+            )
+        self.assertEqual(turn["question"], generated.answer)
+        self.assertEqual(turn["citations"][0]["chunk_id"], "A:1")
+        self.assertEqual(turn["web_answer_method"], "llm_grounded")
+
+    def test_phase9_llm_invalid_citation_uses_deterministic_fallback(self):
+        index = {"pages": [{"school_id": "A", "chunks": [{
+            "chunk_id": "A:1", "school_id": "A", "text": "A literature-based curriculum.",
+            "source_url": "https://a.example", "title": "School A",
+            "retrieved_at": "2026-08-10", "content_hash": "a",
+        }]}]}
+        invalid = WebEvidenceAnswer(
+            answer="An unsupported answer.", citation_ids=["B:1"], evidence_available=True,
+        )
+        with patch.dict(os.environ, {"OPENAI_WEB_RAG_ANSWERS_ENABLED": "true"}), patch(
+            "stage1.grounded_explainer._answer_web_evidence_with_openai", return_value=invalid
+        ):
+            turn = update_conversation(
+                None, "What curriculum does this school use?",
+                [{"school_id": "A", "name": "School A"}], web_rag_index=index,
+            )
+        self.assertIn("relevant page", turn["question"])
+        self.assertEqual(turn["web_answer_method"], "deterministic_fallback")
+        self.assertEqual(turn["web_answer_fallback_reason"], "ValueError")
 
     def test_phase9_selected_school_question_reports_unavailable_evidence(self):
         turn = update_conversation(
