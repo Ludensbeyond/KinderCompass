@@ -272,7 +272,7 @@ The application had no curated webpage source inventory for enriching unsupporte
 
 ### After
 
-An offline inventory normalises both catalogue website fields, removes tracking parameters, detects shared URLs, classifies candidate scope, and exports JSON or CSV for review. Every candidate remains explicitly unverified. This creates an auditable allowlist workflow before any webpage is fetched, chunked, embedded, or used in a grounded answer.
+An offline inventory normalises both catalogue website fields, removes tracking parameters, detects shared URLs, and classifies scope. A deterministic verifier approves strong school matches, while shared URLs remain operator evidence. Processing is incremental, with atomic checkpoints and age-based refresh. Structured failure codes distinguish policy refusal, rate limits, timeouts, DNS/network/server errors, missing pages, unsafe targets, unsupported content, oversized responses, and JavaScript-only pages. Temporary failures use scheduled exponential-backoff retries; permanent failures are skipped. URLs and hashes distinguish webpage changes, while last-known evidence survives temporary refresh failures with an explicit error and freshness label. School-isolated BM25 retrieval remains explanation-only and disconnected from ranking.
 
 See [`PHASE9_WEBPAGE_RAG.md`](../../SystemCode/notebooks/poc1/PHASE9_WEBPAGE_RAG.md).
 
