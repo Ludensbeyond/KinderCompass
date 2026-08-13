@@ -163,7 +163,8 @@ def _answer_web_evidence(
         token for token in re.findall(r"[a-z0-9]+", text.casefold())
         if token not in {
             "a", "an", "are", "does", "do", "for", "have", "how", "is", "it", "school",
-            "preschool", "selected", "the", "this", "use", "uses", "what", "which",
+            "preschool", "selected", "the", "this", "use", "uses", "what", "which", "branch",
+            "centre", "center", "kind", "taught",
         }
     }
     candidates: list[tuple[float, int, str, dict]] = []
@@ -188,6 +189,10 @@ def _answer_web_evidence(
             elif query_terms & {"fee", "fees", "cost", "price"}:
                 intent_bonus = 2 * int(bool(sentence_terms & {"fee", "fees", "cost", "price", "subsidies"}))
                 intent_bonus += 4 * int(bool(re.search(r"(?:\$|sgd)\s*\d", sentence.casefold())))
+            elif query_terms & {"language", "languages"}:
+                intent_bonus = 4 * len(sentence_terms & {
+                    "english", "chinese", "mandarin", "malay", "tamil", "bilingual",
+                })
             score = overlap * 3 + intent_bonus + float(match.get("relevance") or 0) - match_index * 0.1 - sentence_index * 0.01
             if score <= 0:
                 continue
@@ -212,6 +217,8 @@ def _answer_web_evidence(
                 focus_terms.update({"outdoor", "garden", "playground"})
             elif query_terms & {"fee", "fees", "cost", "price"}:
                 focus_terms.update({"fee", "fees", "cost", "price", "subsidies"})
+            elif query_terms & {"language", "languages"}:
+                focus_terms.update({"english", "chinese", "mandarin", "malay", "tamil", "bilingual"})
             anchor = next(
                 (index for index, word in enumerate(words) if word.casefold().strip(".,:;()[]") in focus_terms),
                 0,
@@ -245,7 +252,10 @@ def _answer_web_evidence(
         return synthesize_web_evidence(
             text, str(school_id), school.get("name") or "this preschool", matches, fallback, []
         )
-    answer = "According to the preschool's official webpage, " + " ".join(passages)
+    lead = "According to the preschool's official webpage, "
+    if "curriculum" in query_terms:
+        lead += "its curriculum includes the following: "
+    answer = lead + " ".join(passages)
     return synthesize_web_evidence(
         text, str(school_id), school.get("name") or "this preschool", matches, answer, citations
     )

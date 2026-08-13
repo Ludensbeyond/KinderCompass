@@ -362,7 +362,9 @@ Run the same labelled cases through the configured LLM:
   --output SystemCode/notebooks/poc1/output/web_rag_answer_quality_llm.json
 ```
 
-Labels live in `web_rag/answer_quality_labels.json`. The evaluator reports answer accuracy, citation validity, unsupported-claim-free rate, conciseness, LLM-grounded rate, and fallback rate. The initial four-case Star Learners smoke set passes in both modes; it is a regression baseline rather than a statistically sufficient production sample.
+The focused four-case smoke labels live in `web_rag/answer_quality_labels.json`. By default, the evaluator consumes the independently reviewed school-scoped cases in `production_audit_labels.json`; 41 currently apply to indexed school pages. It reports answer accuracy, citation validity, unsupported-claim-free rate, conciseness, school isolation, LLM-grounded rate, and fallback rate.
+
+Production gates require at least 30 cases, answer accuracy of at least 90%, 100% citation validity, 100% school isolation, 100% unsupported-claim-free answers, at least 95% concise answers, and at most 10% LLM fallback. On the expanded 41-case set, the intent-aware deterministic formatter achieves 70.73% answer accuracy. The combined LLM and validated deterministic fallback achieves 90.24% answer accuracy, 100% evidence-availability accuracy, citation validity, isolation, unsupported-claim-free answers, and conciseness, with a 7.32% fallback rate. Every answer-quality gate therefore passes. Three reviewed cases still expose upstream indexed-evidence gaps, so passing the aggregate gates does not remove the need to refresh and improve individual page extraction.
 
 Set `WEB_RAG_INDEX_PATH` to use an index outside the default output location. The index is a generated runtime artifact and must be built or provisioned wherever the backend runs.
 

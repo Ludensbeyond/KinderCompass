@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -34,6 +35,49 @@ def web_rag_answers_enabled() -> bool:
     return os.getenv("OPENAI_WEB_RAG_ANSWERS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _focused_web_passage(question: str, text: str, *, window_words: int = 28) -> str:
+    """Keep evidence-rich windows so facts are not buried in long mixed-content chunks."""
+    lowered = question.casefold()
+    if "language" in lowered or "languages" in lowered:
+        anchors = r"\b(?:english|chinese|mandarin|malay|tamil|bilingual|dual-language|speech\s*&\s*drama)\b"
+    elif any(term in lowered for term in ("fee", "fees", "cost", "subsid")):
+        anchors = r"(?:\$|sgd)\s*\d|\b(?:fees?|subsid(?:y|ies)|full day|half day)\b"
+    elif any(term in lowered for term in ("outdoor", "playground", "garden")):
+        anchors = r"\b(?:outdoor|playground|garden)\b"
+    elif "curriculum" in lowered:
+        anchors = r"\b(?:curriculum|literature-based|activity-based|play-based|thematic|montessori|reggio|learn through play)\b"
+    elif any(term in lowered for term in ("enrichment", "activities", "activity", "experience")):
+        anchors = r"\b(?:enrichment|s\.t\.e\.a\.m|steam|coding|robotics|field trips?|electrical circuits?|activities)\b"
+    else:
+        return text
+    words = text.split()
+    folded_words = [word.casefold() for word in words]
+    joined = " ".join(folded_words)
+    spans = []
+    character_starts = []
+    offset = 0
+    for word in folded_words:
+        character_starts.append(offset)
+        offset += len(word) + 1
+    for match in re.finditer(anchors, joined, flags=re.IGNORECASE):
+        anchor_index = max(
+            (index for index, start in enumerate(character_starts) if start <= match.start()),
+            default=0,
+        )
+        start = max(0, anchor_index - window_words // 2)
+        end = min(len(words), start + window_words)
+        spans.append((start, end))
+    if not spans:
+        return text
+    merged: list[tuple[int, int]] = []
+    for start, end in spans:
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return " ... ".join(" ".join(words[start:end]) for start, end in merged[:4])
+
+
 def _answer_web_evidence_with_openai(
     question: str, school_id: str, school_name: str, matches: list[dict]
 ) -> WebEvidenceAnswer:
@@ -46,7 +90,7 @@ def _answer_web_evidence_with_openai(
     passages = [
         {
             "citation_id": item["citation"]["chunk_id"],
-            "text": item.get("text", ""),
+            "text": _focused_web_passage(question, item.get("text", "")),
             "source_title": item["citation"].get("title"),
             "source_url": item["citation"].get("url"),
         }
@@ -58,6 +102,8 @@ def _answer_web_evidence_with_openai(
             "Answer the parent's question using only the supplied official-webpage passages. "
             "Write at most two short, direct sentences. Do not mention facts absent from the passages, "
             "do not infer that missing evidence means no, and do not discuss another school. "
+            "Prefer concrete evidence over generic summaries. Preserve exact named curriculum methods, "
+            "programme names, languages, activities, fee amounts, and subsidy wording when they answer the question. "
             "When evidence answers the question, set evidence_available true and cite every supporting "
             "passage by its exact citation_id. If the passages do not answer it, set evidence_available "
             "false, use no citation IDs, and say the webpage evidence is unavailable."
@@ -91,9 +137,7 @@ def synthesize_web_evidence(
         result = _answer_web_evidence_with_openai(question, school_id, school_name, matches)
         allowed = {item["citation"]["chunk_id"]: item["citation"] for item in matches}
         if not result.evidence_available:
-            if result.citation_ids:
-                raise ValueError("Unavailable evidence cannot include citations")
-            return result.answer, [], "llm_grounded", None
+            raise ValueError("The model rejected evidence that passed retrieval")
         if not result.citation_ids:
             raise ValueError("An evidence answer requires at least one citation")
         if any(citation_id not in allowed for citation_id in result.citation_ids):

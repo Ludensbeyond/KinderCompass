@@ -13,14 +13,14 @@ from stage1.scorer import rank_schools, score_school
 from stage1.conversation import update_conversation
 from stage1.preference_schema import make_preference_item, validate_preference_profile
 from stage1.llm_extractor import ExtractedPreference, ExtractionResult
-from stage1.grounded_explainer import GroundedExplanation, WebEvidenceAnswer
+from stage1.grounded_explainer import GroundedExplanation, WebEvidenceAnswer, _focused_web_passage
 from stage1.intent_router import IntentResult, classify_intent
 from stage1.proximity import filter_within_radius
 from stage1 import proximity
 from stage2.engine import evaluate_preschool_eligibility, evaluate_shortlist
 from stage2.runner import run_from_file
 from scripts.evaluate_recommendations import evaluate
-from scripts.evaluate_web_rag_answers import evaluate as evaluate_web_answers
+from scripts.evaluate_web_rag_answers import evaluate as evaluate_web_answers, _expected_term_matches
 from scripts.audit_evidence_quality import audit as audit_evidence_quality
 from scripts.build_website_inventory import build_inventory, normalize_url
 from stage1.evidence import freshness
@@ -98,6 +98,21 @@ class Stage2Tests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_phase9_answer_evaluator_normalises_dotted_acronyms(self):
+        self.assertTrue(_expected_term_matches("An immersive S.T.E.A.M. curriculum.", "STEAM"))
+
+    def test_phase9_llm_context_focuses_on_named_language_evidence(self):
+        text = " ".join(["generic"] * 80) + " English and Chinese are taught through bilingual activities."
+        focused = _focused_web_passage("What languages are taught in this school?", text)
+        self.assertIn("English and Chinese", focused)
+        self.assertLess(len(focused.split()), len(text.split()))
+
+    def test_phase9_llm_context_focuses_on_fee_amounts(self):
+        text = "Welcome and programme details. Full Day: $880 Half Day: $595 Maximum Possible Subsidies apply."
+        focused = _focused_web_passage("How much are this school's fees and subsidies?", text)
+        self.assertIn("$880", focused)
+        self.assertIn("$595", focused)
+
     def test_phase9_answer_quality_evaluator_checks_grounding(self):
         index = {"pages": [{"school_id": "A", "chunks": [{
             "chunk_id": "A:1", "school_id": "A",
@@ -110,7 +125,7 @@ class PipelineTests(unittest.TestCase):
             "question": "What curriculum does this school use?", "evidence_expected": True,
             "expected_terms": ["literature-based"], "forbidden_terms": ["montessori"],
         }]}
-        report = evaluate_web_answers(index, labels)
+        report = evaluate_web_answers(index, labels, thresholds={"minimum_cases": 1})
         self.assertTrue(report["passed"])
         self.assertEqual(report["metrics"]["citation_validity"], 1.0)
         self.assertEqual(report["metrics"]["unsupported_claim_free_rate"], 1.0)
@@ -210,6 +225,26 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("relevant page", turn["question"])
         self.assertEqual(turn["web_answer_method"], "deterministic_fallback")
         self.assertEqual(turn["web_answer_fallback_reason"], "ValueError")
+
+    def test_phase9_llm_cannot_reject_retrieved_evidence(self):
+        index = {"pages": [{"school_id": "A", "chunks": [{
+            "chunk_id": "A:1", "school_id": "A", "text": "English Speech and Drama is available.",
+            "source_url": "https://a.example", "title": "School A",
+            "retrieved_at": "2026-08-10", "content_hash": "a",
+        }]}]}
+        rejected = WebEvidenceAnswer(
+            answer="Evidence is unavailable.", citation_ids=[], evidence_available=False,
+        )
+        with patch.dict(os.environ, {"OPENAI_WEB_RAG_ANSWERS_ENABLED": "true"}), patch(
+            "stage1.grounded_explainer._answer_web_evidence_with_openai", return_value=rejected
+        ):
+            turn = update_conversation(
+                None, "What languages are taught in this school?",
+                [{"school_id": "A", "name": "School A"}], web_rag_index=index,
+            )
+        self.assertEqual(turn["web_answer_method"], "deterministic_fallback")
+        self.assertIn("English", turn["question"])
+        self.assertEqual(turn["citations"][0]["chunk_id"], "A:1")
 
     def test_phase9_selected_school_question_reports_unavailable_evidence(self):
         turn = update_conversation(
