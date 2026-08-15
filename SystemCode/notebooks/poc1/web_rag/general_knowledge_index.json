@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "purpose": "general_early_childhood_guidance",
+  "evidence_scope": "general",
+  "chunks": [
+    {
+      "chunk_id": "GENERAL:nel-framework:0",
+      "topic": "Nurturing Early Learners framework",
+      "text": "Singapore's Nurturing Early Learners framework guides preschool education for children aged four to six. It emphasises holistic development, positive relationships, active construction of knowledge, meaningful and authentic learning, quality interactions, and integrated development across learning areas.",
+      "source_url": "https://www.moe.gov.sg/-/media/files/mk/nurturing-early-learners-nel-framework-2022.pdf",
+      "title": "Nurturing Early Learners: A Curriculum Framework for Preschool Education in Singapore",
+      "authority": "Singapore Ministry of Education",
+      "source_type": "government_framework",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:eydf:0",
+      "topic": "Early Years Development Framework",
+      "text": "Singapore's Early Years Development Framework guides centre-based care and education from birth to age three. EYDF 2023 is child-centred and supports cognitive, communication and language, physical, and social-emotional development through developmentally appropriate experiences, secure relationships, exploration and play.",
+      "source_url": "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework",
+      "title": "Early Years Development Framework 2023",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_framework",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:play-based:0",
+      "topic": "play-based learning",
+      "text": "Play-based learning uses active, hands-on and often child-directed experiences to support learning. Through play, young children can practise physical, social-emotional, cognitive and language skills, solve problems, take manageable risks, negotiate with others and express ideas creatively. Quality play can be purposeful without relying heavily on worksheets.",
+      "source_url": "https://www.ecda.gov.sg/beanstalk/parents-portal/get-involved/partnering-preschools/drawing-the-line-at-overteaching",
+      "title": "Drawing the Line at Overteaching",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_parent_guidance",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:outdoor-learning:0",
+      "topic": "outdoor learning",
+      "text": "Outdoor learning gives children time, space and choices to explore, experiment and revisit ideas. Educators can value the process of trying as well as the outcome, while providing an appropriate and safe environment. Outdoor experiences can support agency, problem-solving, physical development and reflection.",
+      "source_url": "https://www.ecda.gov.sg/beanstalk/educators-portal/professional-development/pedagogical-practices/educators-connect--learning-communities-to-foster-professional-growth",
+      "title": "Learning Communities to Foster Professional Growth",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_educator_guidance",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:montessori:0",
+      "topic": "Montessori",
+      "text": "Montessori education supports children's natural development through a carefully prepared environment, accessible materials, freedom within clear limits and guidance from a trained adult. Children engage in hands-on, self-directed and often self-correcting activity intended to build independence, concentration, confidence and practical as well as intellectual capabilities.",
+      "source_url": "https://montessori-ami.org/about-montessori/montessori-environments",
+      "title": "Montessori Environments",
+      "authority": "Association Montessori Internationale",
+      "source_type": "pedagogy_primary_source",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:reggio-emilia:0",
+      "topic": "Reggio Emilia",
+      "text": "The Reggio Emilia Approach views children as capable people with rights and strong developmental potential who learn through many forms of expression and through relationships. Its foundations include collaborative work, participation by families, documentation of learning, creative ateliers and treating the environment as an educator.",
+      "source_url": "https://www.reggiochildren.it/en/reggio-emilia-approach/?lang=en",
+      "title": "Reggio Emilia Approach",
+      "authority": "Reggio Children",
+      "source_type": "pedagogy_primary_source",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:quality-teaching:0",
+      "topic": "quality preschool teaching",
+      "text": "ECDA's Quality Teaching Tool describes quality teaching as supporting children's well-being, learning and holistic development. It provides domains, subdomains and indicators for educator reflection and improvement, aligned with Singapore's Early Years Development Framework and Nurturing Early Learners framework.",
+      "source_url": "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/professional-development-resources/quality-teaching-tool",
+      "title": "Quality Teaching Tool",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_quality_guidance",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:spark-2:0",
+      "topic": "SPARK 2.0",
+      "text": "SPARK 2.0 is Singapore's preschool quality-improvement framework. It focuses on child-centred quality, preschool ownership of improvement, and empowered reflective practitioners. SPARK recognition concerns quality-improvement practices; it should not be treated as proof that every programme or outcome at a preschool is superior.",
+      "source_url": "https://www.ecda.gov.sg/sparkinfo/introduction-spark-2",
+      "title": "Singapore Preschool Accreditation Framework SPARK 2.0",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_quality_framework",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-overview:0",
+      "topic": "Singapore preschool Basic Subsidy and Additional Subsidy",
+      "text": "As of 14 August 2026, Singapore Citizen children enrolled in an ECDA-licensed infant-care or childcare centre are eligible for Basic Subsidy. Additional Subsidy is means-tested. It generally applies when the main applicant is working and gross monthly household income is $12,000 or below, or PCI is $3,000 or below for an eligible household of five or more members. Actual awards are assessed by ECDA using verified circumstances and programme fees.",
+      "source_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "title": "Overview of the Infant and Childcare Subsidy Scheme",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_subsidy_policy",
+      "effective_from": "2025-01-01",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-working-applicant:0",
+      "topic": "working mother and working main applicant conditions",
+      "text": "For preschool subsidy purposes, the main applicant is normally the mother, or a single father in divorced, separated or widowed cases. A working main applicant works at least 56 hours per month; full-time, part-time and freelance arrangements can qualify. Certain non-working applicants may seek time-limited higher support through Special Approval. From 9 December 2024, qualifying lower-income childcare families may receive full childcare subsidies regardless of the main applicant's working status, subject to ECDA's conditions.",
+      "source_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "title": "Overview of the Infant and Childcare Subsidy Scheme",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_subsidy_policy",
+      "effective_from": "2024-12-09",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-income:0",
+      "topic": "household income and per capita income thresholds",
+      "text": "The Additional Subsidy income bands effective from 1 January 2025 use gross monthly household-income thresholds of $3,000, $4,500, $6,000, $7,500, $9,000, $10,500 and $12,000. The corresponding PCI thresholds are $750, $1,125, $1,500, $1,875, $2,250, $2,625 and $3,000. PCI is available for qualifying larger households. ECDA defines HHI as the combined average gross monthly income of both parents, or the applicant for a single-parent household, and applies detailed household-member and income-assessment rules.",
+      "source_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/assessment-of-household-income",
+      "title": "Assessment of Household Income",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_income_policy",
+      "effective_from": "2025-01-01",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-care-caps:0",
+      "topic": "infant-care versus childcare subsidy caps",
+      "text": "For full-day care as of 14 August 2026, a working main applicant may receive Basic Subsidy of $600 for infant care or $300 for childcare. Maximum Additional Subsidy is $710 for infant care and $467 for childcare. A non-working main applicant ordinarily receives $150 Basic Subsidy and no Additional Subsidy, except where newer lower-income childcare provisions or Special Approval apply. Half-day and flexi-care use different rates. The actual subsidy cannot ignore the applicable minimum co-payment or programme fee.",
+      "source_url": "https://www.ecda.gov.sg/docs/default-source/default-document-library/parents/child-care-infant-care-subsidy-cc-subsidy-tables-%28current-and-new-rates-wef-jan-2025%29.pdf",
+      "title": "Childcare and Infant Care Subsidy Tables from 1 January 2025",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_subsidy_table",
+      "effective_from": "2025-01-01",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:kifas:0",
+      "topic": "Kindergarten Fee Assistance Scheme KiFAS",
+      "text": "KiFAS is a separate means-tested scheme for Singapore Citizen children enrolled in an Anchor Operator or MOE kindergarten; private kindergartens are not eligible. The income ceiling is gross monthly household income of $12,000 or less, or PCI of $3,000 or less for a qualifying larger household. Subsidy is paid to the kindergarten and is subject to a minimum co-payment. KiFAS should not be combined with infant-care or childcare subsidy rates when estimating fees.",
+      "source_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "title": "Overview of the Kindergarten Fee Assistance Scheme (KiFAS)",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_fee_assistance_policy",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-assessment:0",
+      "topic": "subsidy effective dates reassessment and official outcome",
+      "text": "Preschool subsidy eligibility is reassessed at fixed points: enrolment in a new preschool, progression from infant care to childcare, and promotion from Nursery 2 to Kindergarten 1. A family can request reassessment when circumstances change. Published tables provide estimates only; ECDA determines the official amount after verifying income, work status, household circumstances, programme type, fee and minimum co-payment. The chatbot must not represent an estimate as an approval or guaranteed amount.",
+      "source_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/fixed-points-of-subsidy-assessment",
+      "title": "Fixed Points of Subsidy Assessment",
+      "authority": "Early Childhood Development Agency Singapore",
+      "source_type": "government_assessment_policy",
+      "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:subsidy-announced-2027:0",
+      "topic": "announced preschool subsidy income ceiling from January 2027",
+      "text": "MSF announced that from January 2027 the gross monthly household-income ceiling for the childcare Additional Subsidy and KiFAS will rise from $12,000 to $15,000. As of 14 August 2026 this is a future change, not the current eligibility ceiling. The chatbot should use the $12,000 current ceiling for assessments before January 2027 and identify the $15,000 figure as announced future policy until detailed ECDA tables take effect.",
+      "source_url": "https://www.msf.gov.sg/media-room/article/speech-by-minister-of-state-goh-pei-ming-at-the-msf-committee-of-supply-2026",
+      "title": "Speech at the MSF Committee of Supply 2026",
+      "authority": "Singapore Ministry of Social and Family Development",
+      "source_type": "government_policy_announcement",
+      "effective_from": "2027-01-01",
+      "retrieved_at": "2026-08-14"
+    }
+  ]
+}

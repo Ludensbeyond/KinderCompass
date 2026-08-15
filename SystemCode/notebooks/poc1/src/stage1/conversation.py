@@ -15,7 +15,7 @@ from stage1.preference_schema import sync_preference_schema
 from stage1.llm_extractor import merge_preference_profile_with_llm
 from stage1.grounded_explainer import explain_school_comparison, explain_school_decision, synthesize_web_evidence
 from stage1.intent_router import classify_intent
-from stage1.web_rag import retrieve
+from stage1.web_rag import retrieve, retrieve_general_evidence
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
@@ -261,6 +261,26 @@ def _answer_web_evidence(
     )
 
 
+def _answer_general_knowledge(text: str, general_knowledge_index: dict | None) -> tuple[str, list[dict]]:
+    if not general_knowledge_index:
+        return "General early-childhood guidance is unavailable.", []
+    lowered = text.lower()
+    pedagogy_names = ("montessori", "reggio emilia", "play-based", "play based")
+    is_comparison = (
+        ("difference between" in lowered or "compare" in lowered)
+        and sum(name in lowered for name in pedagogy_names) >= 2
+    )
+    matches = retrieve_general_evidence(
+        general_knowledge_index, text, limit=2, min_relevance=0.1 if is_comparison else 0.25
+    )
+    if not matches:
+        return "I could not find relevant guidance in the curated early-childhood knowledge base.", []
+    selected = matches[:2] if is_comparison else matches[:1]
+    answer = " ".join(str(item.get("text") or "").strip() for item in selected)
+    citations = [{**item["citation"], "evidence_scope": "general"} for item in selected]
+    return answer, citations
+
+
 def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: list[dict]) -> dict:
     required_ids = [str(centre["school_id"]) for centre in centres if centre.get("school_id")]
     grounded, method, fallback = explain_school_comparison(
@@ -368,7 +388,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -420,6 +440,30 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "ranking_affected": False,
             "web_answer_method": answer_method,
             "web_answer_fallback_reason": fallback_reason,
+        }
+    if intent.intent == "ask_general_knowledge":
+        profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
+        profile["intent"], profile["intent_method"] = intent.intent, intent.method
+        answer, citations = _answer_general_knowledge(text, general_knowledge_index)
+        return {
+            "profile": profile, "understood": summarize_profile(profile), "status": "general_knowledge",
+            "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
+            "question": answer, "citations": citations,
+            "evidence_scope": "general" if citations else "unavailable", "ranking_affected": False,
+        }
+    if intent.intent == "ask_combined_evidence":
+        profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
+        profile["intent"], profile["intent_method"] = intent.intent, intent.method
+        school_answer, school_citations, method, fallback = _answer_web_evidence(text, selected_centres or [], web_rag_index)
+        general_answer, general_citations = _answer_general_knowledge(text, general_knowledge_index)
+        citations = school_citations + general_citations
+        return {
+            "profile": profile, "understood": summarize_profile(profile), "status": "combined_evidence",
+            "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
+            "question": f"School evidence: {school_answer} General guidance: {general_answer}",
+            "citations": citations, "evidence_scope": "combined" if citations else "unavailable",
+            "ranking_affected": False, "web_answer_method": method,
+            "web_answer_fallback_reason": fallback,
         }
     if intent.intent == "recommend_selected_preschool" or _is_selected_school_question(lowered):
         contextual_answer = _recommend_selected(selected_centres or [])

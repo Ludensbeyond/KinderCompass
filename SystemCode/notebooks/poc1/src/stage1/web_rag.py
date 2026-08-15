@@ -941,6 +941,32 @@ def retrieve_operator_evidence(
     return matches
 
 
+def retrieve_general_evidence(
+    index: dict[str, Any], query: str, *, limit: int = 3, min_relevance: float = 0.25
+) -> list[dict[str, Any]]:
+    """Return cited, authoritative general early-childhood knowledge."""
+    chunks = list(index.get("chunks", []))
+    matches = _rank_chunks(chunks, query, limit=len(chunks), min_relevance=min_relevance)
+    query_tokens = set(_search_tokens(query))
+    for item in matches:
+        topic_overlap = len(query_tokens & set(_search_tokens(str(item.get("topic") or ""))))
+        item["relevance"] = round(float(item["relevance"]) + 0.1 * topic_overlap, 4)
+    matches.sort(key=lambda item: (-float(item["relevance"]), str(item.get("chunk_id") or "")))
+    matches = matches[:max(0, limit)]
+    for item in matches:
+        item["evidence_scope"] = "general"
+        item["citation"] = {
+            "url": item["source_url"],
+            "title": item.get("title") or item["source_url"],
+            "retrieved_at": item["retrieved_at"],
+            "chunk_id": item["chunk_id"],
+            "evidence_scope": "general",
+            "authority": item.get("authority"),
+            "effective_from": item.get("effective_from"),
+        }
+    return matches
+
+
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 

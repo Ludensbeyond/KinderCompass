@@ -18,6 +18,8 @@ IntentName = Literal[
     "explain_selected_tradeoffs",
     "explain_evidence_provenance",
     "ask_selected_school_evidence",
+    "ask_general_knowledge",
+    "ask_combined_evidence",
     "reset_preferences",
     "needs_clarification",
 ]
@@ -52,8 +54,27 @@ def _rules(text: str) -> IntentResult | None:
         phrase in lowered
         for phrase in ("suitable", "good fit", "right for me", "recommend", "best", "choose", "pick")
     )
+    general_topics = (
+        "montessori", "reggio", "play-based", "play based", "pedagogy", "curriculum approach",
+        "early years development framework", "eydf", "nurturing early learners", "nel framework",
+        "outdoor learning", "child-led", "child led", "spark 2.0", "curriculum", "literature-based",
+        "basic subsidy", "additional subsidy", "preschool subsidy", "childcare subsidy",
+        "infant care subsidy", "infant-care subsidy", "kifas", "fee assistance",
+        "household income", "per capita income", "working mother", "working applicant",
+        "january 2027", "$15,000 income ceiling", "subsidy income ceiling",
+    )
+    subsidy_topics = general_topics[16:]
+    asks_for_explanation = any(
+        phrase in lowered for phrase in ("what is", "what does that mean", "explain", "difference between", "how does it work")
+    )
+    if asks_about_school and asks_for_explanation and any(topic in lowered for topic in general_topics):
+        return IntentResult(intent="ask_combined_evidence", confidence=1)
     if asks_about_school and asks_for_fact and not asks_for_decision:
         return IntentResult(intent="ask_selected_school_evidence", confidence=1)
+    if not asks_about_school and any(topic in lowered for topic in subsidy_topics):
+        return IntentResult(intent="ask_general_knowledge", confidence=1)
+    if asks_for_explanation and any(topic in lowered for topic in general_topics):
+        return IntentResult(intent="ask_general_knowledge", confidence=1)
     if any(word in lowered for word in ("compare", "difference", "versus", " vs ")):
         return IntentResult(intent="compare_selected_preschools", confidence=1)
     if ("why" in lowered and any(phrase in lowered for phrase in ("ranked first", "ranked highest", "top ranked", "top-ranked"))) or "why is this first" in lowered:
@@ -88,6 +109,8 @@ def _classify_with_openai(text: str) -> IntentResult:
             "explain_selected_tradeoffs asks about drawbacks of selected results. "
             "explain_evidence_provenance asks where selected-school facts came from, how reliable they are, or what evidence is missing. "
             "ask_selected_school_evidence asks a factual question about exactly one selected school, such as its curriculum, languages, fees, facilities, or philosophy. "
+            "ask_general_knowledge explains an early-childhood curriculum, pedagogy, framework, or educational concept without making a claim about one school. "
+            "ask_combined_evidence combines a selected school's verified claim with a separately sourced general explanation. "
             "Use needs_clarification when meaning is genuinely ambiguous and provide one short question."
         ),
         input=text,
