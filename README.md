@@ -76,6 +76,32 @@ guide PDF in `ProjectReport/`.
 - OneMap credentials for postal-code and distance features
 - optional OpenAI API credentials for enabled LLM features
 
+Create a `.env` file in the repository root and add your environment-specific
+credentials:
+
+```dotenv
+# Required for Stage 1 graph search
+NEO4J_URI=
+NEO4J_USERNAME=
+NEO4J_PASSWORD=
+NEO4J_DATABASE=neo4j
+
+# Required for postal-code and distance features
+ONEMAP_EMAIL=
+ONEMAP_PASSWORD=
+
+# Optional LLM features
+OPENAI_API_KEY=
+OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
+OPENAI_INTENT_CLASSIFICATION_ENABLED=false
+OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
+OPENAI_WEB_RAG_ANSWERS_ENABLED=false
+```
+
+Replace the blank values with your credentials. Keep any unused OpenAI features
+set to `false`, and do not commit `.env` or place backend credentials in the
+frontend `.env.local` file.
+
 ### [ 2 ] Python dependencies
 
 Create the repository virtual environment if it does not already exist, then
@@ -132,7 +158,7 @@ For normal subsequent launches:
 In short: initialize the data only when Neo4j or the source catalogue needs it;
 otherwise start directly with `run_poc1.ps1`.
 
-### [ 5 ] Repository structure
+## SECTION 6 : Repository structure
 
 ```text
 KinderCompass/
