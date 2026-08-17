@@ -157,6 +157,55 @@ npm --prefix SystemCode/src/frontend run build
 - [Evidence provenance](PHASE8_EVIDENCE_PROVENANCE.md)
 - [Official-webpage RAG](PHASE9_WEBPAGE_RAG.md)
 
+## Project materials
+
+The final report and installation/user-guide PDFs belong in `ProjectReport/`.
+The expected report coverage includes:
+
+- executive summary and business-problem background;
+- objectives and success measurements;
+- domain modelling and system design;
+- implementation and testing;
+- performance evaluation and validation;
+- findings, recommendations, and conclusions;
+- project proposal, module-to-functionality mapping, individual reflections,
+  installation guide, and references.
+
+Supporting submission material is organized as follows:
+
+| Path | Purpose |
+|---|---|
+| `ProjectReport/` | Final group report and user-guide documents. |
+| `Video/` | Promotion and system-design demonstration videos. |
+| `Miscellaneous/` | Supporting files, including source-data references. |
+| `SystemCode/data/raw/` | Original ECDA and planning-area datasets. |
+| `SystemCode/notebooks/` | Interactive pipeline and reasoning demonstrations. |
+
+## Repository structure
+
+```text
+KinderCompass/
+|-- README.md                  # Submission overview and concise user guide
+|-- requirements.txt           # Complete Python environment
+|-- run_poc1.ps1               # Backend and frontend launcher
+|-- SystemCode/
+|   |-- src/
+|   |   |-- scripts/           # Offline data and Neo4j pipeline
+|   |   |-- backend/           # FastAPI and reasoning implementation
+|   |   `-- frontend/          # Next.js interface
+|   |-- data/
+|   |   |-- raw/               # Original datasets
+|   |   `-- processed/         # Generated master catalogue
+|   `-- notebooks/             # Interactive demonstrations
+|-- docs/poc1/                 # Detailed PoC design and evaluation notes
+|-- ProjectReport/             # Report and user guide
+|-- Video/                     # Submission videos
+`-- Miscellaneous/             # Supporting material
+```
+
+KinderCompass is part of the NUS-ISS Graduate Certificate in
+[Intelligent Reasoning Systems](https://www.iss.nus.edu.sg/stackable-certificate-programmes/intelligent-systems).
+
 ## Limitations
 
 - Stage 1 depends on the expected Neo4j schema and catalogue fields.
