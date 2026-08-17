@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -58,7 +59,7 @@ class IntentResult(BaseModel):
     ] = "unknown"
 
 
-def _rules(text: str) -> IntentResult | None:
+def _rules(text: str, active_school_name: str | None = None) -> IntentResult | None:
     lowered = (text or "").strip().lower()
     if any(phrase in lowered for phrase in ("start over", "clear preferences", "reset preferences")):
         return IntentResult(intent="reset_preferences", confidence=1)
@@ -73,6 +74,8 @@ def _rules(text: str) -> IntentResult | None:
     asks_about_school = any(
         phrase in lowered for phrase in ("this school", "this preschool", "selected school", "selected preschool")
     )
+    if active_school_name and re.search(r"\b(it|its|that school|that preschool)\b", lowered):
+        asks_about_school = True
     asks_for_fact = lowered.startswith(("does ", "do ", "is ", "are ", "what ", "which ", "how ", "tell me "))
     asks_for_decision = any(
         phrase in lowered
@@ -122,7 +125,7 @@ def _llm_enabled() -> bool:
     }
 
 
-def _classify_with_openai(text: str) -> IntentResult:
+def _classify_with_openai(text: str, active_school_name: str | None = None) -> IntentResult:
     from openai import OpenAI
 
     client = OpenAI(timeout=float(os.getenv("OPENAI_INTENT_TIMEOUT_SECONDS", "8")))
@@ -135,7 +138,7 @@ def _classify_with_openai(text: str) -> IntentResult:
             "contrasts concepts that answer different questions, such as Montessori pedagogy "
             "and the SPARK quality framework. Do not treat a quality or curriculum framework "
             "as a pedagogy. "
-            "find_closest_preschool asks for the nearest current eligible result; "
+            "find_closest_preschool asks which school is geographically nearest to the user's home; "
             "update_preferences includes maximum-distance constraints such as within 1.5 km. "
             "explain_top_ranked_preschool asks why the first result ranked highest; "
             "compare_selected_preschools compares two or more selected results; "
@@ -146,7 +149,11 @@ def _classify_with_openai(text: str) -> IntentResult:
             "ask_combined_evidence combines a selected school's verified claim with a separately sourced general explanation. "
             "Use needs_clarification when meaning is genuinely ambiguous and provide one short question."
         ),
-        input=text,
+        input=(
+            f"Active school from the preceding chat turn: {active_school_name}\n"
+            f"Newest user message: {text}"
+            if active_school_name else text
+        ),
         text_format=IntentResult,
         store=False,
     )
@@ -157,16 +164,20 @@ def _classify_with_openai(text: str) -> IntentResult:
     return result
 
 
-def classify_intent(text: str) -> IntentResult:
+def classify_intent(text: str, active_school_name: str | None = None) -> IntentResult:
     """Protect explicit operations, then prioritize LLM semantics when enabled."""
-    deterministic = _rules(text)
-    llm_priority_intents = {"ask_general_knowledge", "ask_combined_evidence"}
+    deterministic = _rules(text, active_school_name)
+    llm_priority_intents = {
+        "ask_general_knowledge",
+        "ask_combined_evidence",
+        "find_closest_preschool",
+    }
     if deterministic and deterministic.intent not in llm_priority_intents:
         return deterministic
     if not _llm_enabled():
         return deterministic or IntentResult(intent="update_preferences", confidence=1)
     try:
-        result = _classify_with_openai(text)
+        result = _classify_with_openai(text, active_school_name)
         if result.confidence < 0.7:
             return IntentResult(
                 intent="needs_clarification",

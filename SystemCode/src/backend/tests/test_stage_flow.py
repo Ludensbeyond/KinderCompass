@@ -395,22 +395,27 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(turn["status"], "comparison")
         self.assertIn("School B", turn["question"])
         self.assertIn("0.45 km", turn["question"])
+        self.assertEqual(turn["profile"]["active_school"]["name"], "School B")
 
-    def test_stage1_closest_rule_takes_priority_over_llm(self):
-        conflicting = IntentResult(
-            intent="update_preferences", confidence=0.99, method="llm"
+    def test_stage1_closest_question_is_interpreted_by_llm_first(self):
+        interpreted = IntentResult(
+            intent="find_closest_preschool", confidence=0.99, method="llm"
         )
         with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": "true"}), patch(
-            "stage1.intent_router._classify_with_openai", return_value=conflicting
+            "stage1.intent_router._classify_with_openai", return_value=interpreted
         ) as mocked_llm:
             result = classify_intent("What is the nearest preschool?")
         self.assertEqual(result.intent, "find_closest_preschool")
-        self.assertEqual(result.method, "rules")
-        mocked_llm.assert_not_called()
+        self.assertEqual(result.method, "llm")
+        mocked_llm.assert_called_once()
 
-    def test_stage1_closest_requires_recommendation_results(self):
+    def test_stage1_closest_without_grounded_candidates_requests_results(self):
         turn = update_conversation(None, "Which preschool is nearest to me?", [], [])
-        self.assertIn("show recommendations first", turn["question"])
+        self.assertIn("grounded preschool records", turn["question"])
+
+    def test_stage1_pronoun_follow_up_uses_active_school_context(self):
+        result = classify_intent("What type of education does it have?", "School B")
+        self.assertEqual(result.intent, "ask_selected_school_evidence")
 
     def test_stage1_chat_recommends_from_selected_preschools(self):
         selected = [

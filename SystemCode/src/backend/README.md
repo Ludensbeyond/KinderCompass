@@ -82,12 +82,21 @@ answer formatting remain available when their LLM feature is disabled or its
 request fails.
 
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
-takes priority for explanatory, ambiguous, and mixed-topic chat. It returns a
-closed intent plus validated topic names, semantic categories, and their
-relationship. Explicit operational requests—such as resetting preferences,
-finding the nearest result, or acting on selected schools—retain deterministic
-precedence. Retrieval, ranking, eligibility, fees, and distance remain grounded
-or deterministic regardless of the routing method.
+takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.
+It returns a closed intent plus validated topic names, semantic categories, and
+their relationship. If the LLM is unavailable, deterministic intent rules are
+the fallback. Other explicit operations, such as resetting preferences or acting
+on selected schools, retain deterministic precedence. Retrieval, ranking,
+eligibility, fees, and distance remain grounded or deterministic regardless of
+the routing method.
+
+A nearest-school chat request does not require an existing recommendation list.
+With the saved postal code, the backend loads the full grounded Neo4j school
+catalogue, geocodes the home through OneMap, calculates distances against ECDA
+school coordinates, and returns the closest school. That school becomes the
+active conversational subject, so pronoun follow-ups such as “what curriculum
+does it use?” retrieve evidence for the same school without requiring a Results
+panel selection.
 
 Start the API from the repository root:
 
@@ -114,7 +123,7 @@ Stop the development server with `Ctrl+C`.
 | Method and path | Purpose |
 |---|---|
 | `GET /api/health` | Confirm that FastAPI is running. |
-| `POST /api/preferences` | Merge conversational preferences, route supported questions, and return grounded citations when available. This endpoint does not query Neo4j for a new shortlist. |
+| `POST /api/preferences` | Merge preferences and route chat questions. A nearest-school request queries the grounded catalogue for a location answer, but does not create a ranked recommendation shortlist. |
 | `POST /api/search` | Run confirmed Stage 1 constraints and preference ranking against Neo4j. |
 | `POST /api/evaluate` | Run Stage 2 care-level eligibility and estimated monthly cost calculations. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |

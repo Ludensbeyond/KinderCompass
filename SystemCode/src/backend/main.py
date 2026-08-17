@@ -26,6 +26,9 @@ if str(POC_SRC) not in sys.path:
 load_dotenv(POC_ENV)
 
 from stage1.runner import run_from_profile  # noqa: E402
+from stage1.intent_router import classify_intent  # noqa: E402
+from stage1.kg_client import get_driver, run_query, verify_connectivity  # noqa: E402
+from stage1.query_builder import build_stage1_query  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
 from stage1.conversation import update_conversation  # noqa: E402
 from stage1.web_rag import load_json  # noqa: E402
@@ -122,8 +125,15 @@ def search(request: SearchRequest) -> dict[str, Any]:
 
 @app.post("/api/preferences")
 def preferences(request: PreferenceRequest) -> dict[str, Any]:
-    """Update conversational preferences without querying Neo4j."""
+    """Handle chat turns, querying grounded school data only when the intent requires it."""
+    active_school = (request.profile or {}).get("active_school") or {}
+    intent = classify_intent(request.message, active_school.get("name"))
+    selected_centres = request.selected_centres or ([active_school] if active_school else [])
     eligible = request.eligible_centres
+    if intent.intent == "find_closest_preschool" and not eligible:
+        if not request.home_postal_code:
+            raise HTTPException(status_code=422, detail="Enter a six-digit home postal code before asking for the nearest preschool.")
+        eligible = _load_all_preschools()
     if eligible and request.home_postal_code:
         eligible = _attach_home_distances(eligible, request.home_postal_code)
     configured_index = os.getenv("WEB_RAG_INDEX_PATH", "").strip()
@@ -142,9 +152,22 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
     except (OSError, ValueError):
         general_knowledge_index = None
     return update_conversation(
-        request.profile, request.message, request.selected_centres, eligible, web_rag_index,
-        general_knowledge_index,
+        request.profile, request.message, selected_centres, eligible, web_rag_index,
+        general_knowledge_index, intent,
     )
+
+
+def _load_all_preschools() -> list[dict[str, Any]]:
+    """Load the grounded school catalogue for a location-only chat question."""
+    driver = get_driver()
+    try:
+        verify_connectivity(driver)
+        query, params = build_stage1_query()
+        return run_query(driver, query, params)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Preschool catalogue lookup failed: {exc}") from exc
+    finally:
+        driver.close()
 
 
 @app.post("/api/evaluate")

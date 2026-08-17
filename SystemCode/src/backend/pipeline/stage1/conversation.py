@@ -47,19 +47,26 @@ def _is_suitability_question(text: str) -> bool:
     return refers_to_school and asks_suitability
 
 
-def _find_closest(centres: list[dict]) -> str:
+def _find_closest(centres: list[dict]) -> tuple[str, dict | None]:
     if not centres:
-        return "Please show recommendations first so I can compare the eligible preschools near your home."
+        return "I need grounded preschool records with home distances before I can identify the nearest school.", None
     located = [centre for centre in centres if centre.get("distance_km") is not None]
     if not located:
-        return "I cannot compare the eligible preschools yet because their home distances are unavailable."
+        return "I cannot compare the preschools because their home distances are unavailable.", None
     closest = min(
         located,
         key=lambda centre: (float(centre["distance_km"]), str(centre.get("name") or "")),
     )
+    distance = float(closest["distance_km"])
+    distance_text = (
+        "at the same mapped location as your postal code"
+        if distance < 0.005
+        else f"approximately {distance:.2f} km from your home"
+    )
     return (
-        f"{closest.get('name') or 'The nearest eligible preschool'} is the closest "
-        f"eligible preschool at {float(closest['distance_km']):.2f} km from your home."
+        f"{closest.get('name') or 'The nearest preschool'} is the closest preschool "
+        f"in the grounded catalogue, {distance_text}. This is a location result, not an eligibility assessment.",
+        closest,
     )
 
 
@@ -484,13 +491,13 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
     contextual_task = None
     decided_school_id = None
-    intent = classify_intent(text)
+    intent = classified_intent or classify_intent(text)
     if intent.intent == "needs_clarification":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"] = intent.intent
@@ -500,7 +507,12 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"] = intent.intent
         profile["intent_method"] = intent.method
-        return {"profile": profile, "understood": summarize_profile(profile), "status": "comparison", "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")), "question": _find_closest(eligible_centres or [])}
+        answer, closest = _find_closest(eligible_centres or [])
+        if closest:
+            profile["active_school"] = {
+                key: closest.get(key) for key in ("school_id", "centre_code", "name") if closest.get(key) is not None
+            }
+        return {"profile": profile, "understood": summarize_profile(profile), "status": "comparison", "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")), "question": answer}
     if intent.intent == "explain_top_ranked_preschool":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
