@@ -131,3 +131,24 @@ For normal subsequent launches:
 
 In short: initialize the data only when Neo4j or the source catalogue needs it;
 otherwise start directly with `run_poc1.ps1`.
+
+### [ 5 ] Repository structure
+
+```text
+KinderCompass/
+├── README.md                 # This file (IRS Sections 1–5)
+├── member-github.txt         # Group info for Canvas submission
+├── SystemCode/               # Runnable system
+│   ├── src/
+│   │   ├── scripts/          # Offline data pipeline
+│   │   ├── backend/          # FastAPI three-stage workflow
+│   │   └── frontend/         # Next.js website
+│   ├── data/
+│   │   ├── raw/              # Original datasets
+│   │   └── processed/        # Cleaned data and graph inputs
+│   └── notebooks/            # Exploration and demonstrations
+├── ProjectReport/            # Final group report and user guide PDFs
+├── Video/                    # Promotion and system design videos
+├── Miscellaneous/            # Supporting files
+└── docs/                     # PoC documentation and working drafts
+```

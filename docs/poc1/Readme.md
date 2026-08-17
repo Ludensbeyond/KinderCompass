@@ -102,6 +102,12 @@ OPENAI_WEB_RAG_ANSWERS_ENABLED=false
 Do not commit `.env`. If an optional LLM feature is disabled or its request
 fails, deterministic behavior remains available.
 
+With `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, the LLM is the primary
+interpreter for explanatory, ambiguous, and mixed-topic questions. It returns a
+validated closed intent, topic categories, and relationships before curated
+evidence retrieval. Explicit operational commands and all recommendation,
+eligibility, cost, and distance decisions remain deterministic.
+
 Install dependencies and launch both services:
 
 ```powershell

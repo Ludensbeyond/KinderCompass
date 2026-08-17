@@ -1,7 +1,9 @@
+import os
 import unittest
+from unittest.mock import patch
 
 from stage1.conversation import update_conversation
-from stage1.intent_router import classify_intent
+from stage1.intent_router import IntentResult, TopicEntity, classify_intent
 from stage1.web_rag import retrieve_general_evidence
 
 
@@ -24,6 +26,12 @@ GENERAL_INDEX = {
             "text": "Reggio Emilia values relationships, expression and documentation.",
             "source_url": "https://authority.example/reggio", "title": "Reggio guidance",
             "authority": "Reggio Authority", "retrieved_at": "2026-08-14",
+        },
+        {
+            "chunk_id": "GENERAL:spark:0", "topic": "SPARK 2.0",
+            "text": "SPARK 2.0 is Singapore's preschool quality-improvement framework.",
+            "source_url": "https://authority.example/spark", "title": "SPARK guidance",
+            "authority": "ECDA", "retrieved_at": "2026-08-14",
         },
         {
             "chunk_id": "GENERAL:subsidy:0", "topic": "Basic Subsidy and Additional Subsidy",
@@ -68,6 +76,48 @@ class GeneralKnowledgeRagTests(unittest.TestCase):
         self.assertEqual(len(turn["citations"]), 2)
         self.assertIn("Montessori", turn["question"])
         self.assertIn("Reggio Emilia", turn["question"])
+
+    def test_montessori_and_spark_are_explained_as_different_concepts(self):
+        turn = update_conversation(
+            None, "Whats the difference between Montessori and Spark?",
+            general_knowledge_index=GENERAL_INDEX,
+        )
+        self.assertEqual(turn["status"], "general_knowledge")
+        self.assertFalse(turn["ranking_affected"])
+        self.assertEqual(len(turn["citations"]), 2)
+        self.assertEqual(
+            {citation["chunk_id"] for citation in turn["citations"]},
+            {"GENERAL:montessori:0", "GENERAL:spark:0"},
+        )
+        self.assertIn("not direct alternatives", turn["question"])
+        self.assertIn("educational approach", turn["question"])
+        self.assertIn("quality-improvement framework", turn["question"])
+
+    def test_llm_semantics_take_priority_for_mixed_general_topics(self):
+        classified = IntentResult(
+            intent="ask_general_knowledge",
+            confidence=0.98,
+            method="llm",
+            topics=[
+                TopicEntity(name="Montessori", category="pedagogy"),
+                TopicEntity(name="SPARK 2.0", category="quality_framework"),
+            ],
+            relationship="different_categories",
+        )
+        with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": "true"}), patch(
+            "stage1.intent_router._classify_with_openai", return_value=classified
+        ) as mocked_llm:
+            turn = update_conversation(
+                None,
+                "How should I compare Montessori with SPARK?",
+                general_knowledge_index=GENERAL_INDEX,
+            )
+        mocked_llm.assert_called_once()
+        self.assertEqual(turn["profile"]["intent_method"], "llm")
+        self.assertEqual(len(turn["citations"]), 2)
+        self.assertIn("not direct alternatives", turn["question"])
+        self.assertIn("educational approach", turn["question"])
+        self.assertIn("quality-improvement framework", turn["question"])
 
     def test_combined_answer_keeps_school_and_general_sources_distinct(self):
         selected = [{"school_id": "S1", "name": "Example Preschool"}]

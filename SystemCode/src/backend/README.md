@@ -81,6 +81,14 @@ preference extraction, intent routing, recommendation explanations, and RAG
 answer formatting remain available when their LLM feature is disabled or its
 request fails.
 
+When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
+takes priority for explanatory, ambiguous, and mixed-topic chat. It returns a
+closed intent plus validated topic names, semantic categories, and their
+relationship. Explicit operational requests—such as resetting preferences,
+finding the nearest result, or acting on selected schools—retain deterministic
+precedence. Retrieval, ranking, eligibility, fees, and distance remain grounded
+or deterministic regardless of the routing method.
+
 Start the API from the repository root:
 
 ```powershell
@@ -144,7 +152,7 @@ The development CORS policy accepts the frontend origins
 | `preference_schema.py` | Defines validated supported preferences, importance levels, and evidence awareness. |
 | `nlp_mapper.py` | Deterministic natural-language preference extraction and profile merging. |
 | `llm_extractor.py` | Optional structured OpenAI extraction with validation and deterministic fallback. |
-| `intent_router.py` | Closed-set deterministic and optional LLM-assisted intent classification. |
+| `intent_router.py` | Hybrid routing with deterministic operational safeguards and optional structured LLM topic/relationship interpretation. |
 | `query_builder.py` | Builds parameterized Cypher candidate queries. |
 | `kg_client.py` | Connects to Neo4j using Bolt with the supported HTTPS query fallback. |
 | `scorer.py` | Produces explainable compatibility scores, strengths, trade-offs, and confidence ordering. |

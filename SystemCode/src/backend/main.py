@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 POC_SRC = REPO_ROOT / "SystemCode" / "src" / "backend" / "pipeline"
 POC_ENV = REPO_ROOT / ".env"
 if str(POC_SRC) not in sys.path:

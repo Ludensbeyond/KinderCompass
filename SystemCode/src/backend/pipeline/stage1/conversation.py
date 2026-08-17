@@ -261,10 +261,106 @@ def _answer_web_evidence(
     )
 
 
-def _answer_general_knowledge(text: str, general_knowledge_index: dict | None) -> tuple[str, list[dict]]:
+def _answer_general_knowledge(
+    text: str,
+    general_knowledge_index: dict | None,
+    topics: list | None = None,
+    relationship: str = "unknown",
+) -> tuple[str, list[dict]]:
     if not general_knowledge_index:
         return "General early-childhood guidance is unavailable.", []
     lowered = text.lower()
+    structured_topics = topics or []
+    if relationship == "different_categories" and len(structured_topics) >= 2:
+        chunks = list(general_knowledge_index.get("chunks", []))
+        selected: list[tuple[object, dict]] = []
+        for topic in structured_topics:
+            name = str(getattr(topic, "name", "") or "").strip()
+            normalized = name.lower().replace("2.0", "").strip()
+            match = next(
+                (
+                    item for item in chunks
+                    if normalized
+                    and (
+                        normalized in str(item.get("topic") or "").lower()
+                        or str(item.get("topic") or "").lower().replace("2.0", "").strip() in normalized
+                    )
+                ),
+                None,
+            )
+            if match and all(match.get("chunk_id") != item.get("chunk_id") for _, item in selected):
+                selected.append((topic, match))
+        if len(selected) >= 2:
+            category_labels = {
+                "pedagogy": "an educational approach",
+                "curriculum_framework": "a curriculum framework",
+                "quality_framework": "a quality-improvement framework",
+                "subsidy_policy": "a subsidy policy",
+                "school_attribute": "a school attribute",
+                "other": "an early-childhood concept",
+            }
+            explanations = []
+            for topic, item in selected:
+                category = str(getattr(topic, "category", "other"))
+                label = category_labels.get(category, "an early-childhood concept")
+                explanations.append(
+                    f"{getattr(topic, 'name', item.get('topic'))} is {label}: "
+                    f"{str(item.get('text') or '').strip()}"
+                )
+            answer = (
+                "These are different kinds of things, so they are not direct alternatives. "
+                + " ".join(explanations)
+                + " Consider each on its own terms rather than treating one as a substitute for the other."
+            )
+            citations = [
+                {
+                    "url": item["source_url"],
+                    "title": item.get("title") or item["source_url"],
+                    "retrieved_at": item["retrieved_at"],
+                    "chunk_id": item["chunk_id"],
+                    "evidence_scope": "general",
+                    "authority": item.get("authority"),
+                    "effective_from": item.get("effective_from"),
+                }
+                for _, item in selected
+            ]
+            return answer, citations
+    if "montessori" in lowered and "spark" in lowered:
+        chunks = list(general_knowledge_index.get("chunks", []))
+        montessori = next(
+            (item for item in chunks if "montessori" in str(item.get("topic") or "").lower()),
+            None,
+        )
+        spark = next(
+            (item for item in chunks if "spark" in str(item.get("topic") or "").lower()),
+            None,
+        )
+        if montessori and spark:
+            answer = (
+                "Montessori and SPARK are different kinds of things, so they are not direct "
+                "alternatives. Montessori is an educational approach: "
+                f"{str(montessori.get('text') or '').strip()} "
+                "SPARK 2.0 is a preschool quality-improvement framework: "
+                f"{str(spark.get('text') or '').strip()} "
+                "In practical terms, Montessori describes how a preschool may organise teaching "
+                "and learning, while SPARK concerns how a preschool reflects on and improves "
+                "quality. A preschool may therefore use a Montessori approach and also participate "
+                "in SPARK. Consider them separately: whether the educational approach suits your "
+                "child, and what current quality evidence the specific preschool can provide."
+            )
+            citations = [
+                {
+                    "url": item["source_url"],
+                    "title": item.get("title") or item["source_url"],
+                    "retrieved_at": item["retrieved_at"],
+                    "chunk_id": item["chunk_id"],
+                    "evidence_scope": "general",
+                    "authority": item.get("authority"),
+                    "effective_from": item.get("effective_from"),
+                }
+                for item in (montessori, spark)
+            ]
+            return answer, citations
     pedagogy_names = ("montessori", "reggio emilia", "play-based", "play based")
     is_comparison = (
         ("difference between" in lowered or "compare" in lowered)
@@ -444,7 +540,9 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     if intent.intent == "ask_general_knowledge":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
-        answer, citations = _answer_general_knowledge(text, general_knowledge_index)
+        answer, citations = _answer_general_knowledge(
+            text, general_knowledge_index, intent.topics, intent.relationship
+        )
         return {
             "profile": profile, "understood": summarize_profile(profile), "status": "general_knowledge",
             "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
@@ -455,7 +553,9 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
         school_answer, school_citations, method, fallback = _answer_web_evidence(text, selected_centres or [], web_rag_index)
-        general_answer, general_citations = _answer_general_knowledge(text, general_knowledge_index)
+        general_answer, general_citations = _answer_general_knowledge(
+            text, general_knowledge_index, intent.topics, intent.relationship
+        )
         citations = school_citations + general_citations
         return {
             "profile": profile, "understood": summarize_profile(profile), "status": "combined_evidence",

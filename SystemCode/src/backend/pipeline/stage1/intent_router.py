@@ -1,4 +1,4 @@
-"""Closed-set conversational intent routing with deterministic precedence."""
+"""Validated hybrid intent routing for operational and open-ended preschool chat."""
 
 from __future__ import annotations
 
@@ -24,6 +24,22 @@ IntentName = Literal[
     "needs_clarification",
 ]
 
+TopicCategory = Literal[
+    "pedagogy",
+    "curriculum_framework",
+    "quality_framework",
+    "subsidy_policy",
+    "school_attribute",
+    "other",
+]
+
+
+class TopicEntity(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=80)
+    category: TopicCategory
+
 
 class IntentResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -32,6 +48,14 @@ class IntentResult(BaseModel):
     confidence: float = Field(ge=0, le=1)
     clarification: str | None = None
     method: Literal["rules", "llm", "rules_fallback"] = "rules"
+    topics: list[TopicEntity] = Field(default_factory=list, max_length=5)
+    relationship: Literal[
+        "single_concept",
+        "comparable",
+        "different_categories",
+        "combined_school_and_general",
+        "unknown",
+    ] = "unknown"
 
 
 def _rules(text: str) -> IntentResult | None:
@@ -75,6 +99,10 @@ def _rules(text: str) -> IntentResult | None:
         return IntentResult(intent="ask_general_knowledge", confidence=1)
     if asks_for_explanation and any(topic in lowered for topic in general_topics):
         return IntentResult(intent="ask_general_knowledge", confidence=1)
+    if any(word in lowered for word in ("compare", "difference", "versus", " vs ")) and any(
+        topic in lowered for topic in general_topics
+    ):
+        return IntentResult(intent="ask_general_knowledge", confidence=1)
     if any(word in lowered for word in ("compare", "difference", "versus", " vs ")):
         return IntentResult(intent="compare_selected_preschools", confidence=1)
     if ("why" in lowered and any(phrase in lowered for phrase in ("ranked first", "ranked highest", "top ranked", "top-ranked"))) or "why is this first" in lowered:
@@ -101,7 +129,12 @@ def _classify_with_openai(text: str) -> IntentResult:
     response = client.responses.parse(
         model=os.getenv("OPENAI_INTENT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini",
         instructions=(
-            "Classify the newest preschool-chat message into exactly one allowed intent. "
+            "Classify the newest preschool-chat message into exactly one allowed intent and "
+            "extract up to five named early-childhood topics. Assign each topic its semantic "
+            "category and describe their relationship. Use different_categories when a user "
+            "contrasts concepts that answer different questions, such as Montessori pedagogy "
+            "and the SPARK quality framework. Do not treat a quality or curriculum framework "
+            "as a pedagogy. "
             "find_closest_preschool asks for the nearest current eligible result; "
             "update_preferences includes maximum-distance constraints such as within 1.5 km. "
             "explain_top_ranked_preschool asks why the first result ranked highest; "
@@ -125,12 +158,13 @@ def _classify_with_openai(text: str) -> IntentResult:
 
 
 def classify_intent(text: str) -> IntentResult:
-    """Apply exact rules first, then an optional closed-set LLM classifier."""
+    """Protect explicit operations, then prioritize LLM semantics when enabled."""
     deterministic = _rules(text)
-    if deterministic:
+    llm_priority_intents = {"ask_general_knowledge", "ask_combined_evidence"}
+    if deterministic and deterministic.intent not in llm_priority_intents:
         return deterministic
     if not _llm_enabled():
-        return IntentResult(intent="update_preferences", confidence=1)
+        return deterministic or IntentResult(intent="update_preferences", confidence=1)
     try:
         result = _classify_with_openai(text)
         if result.confidence < 0.7:
@@ -142,4 +176,6 @@ def classify_intent(text: str) -> IntentResult:
             )
         return result
     except Exception:
+        if deterministic:
+            return deterministic.model_copy(update={"method": "rules_fallback"})
         return IntentResult(intent="update_preferences", confidence=1, method="rules_fallback")
