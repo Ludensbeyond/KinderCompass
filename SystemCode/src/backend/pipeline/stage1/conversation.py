@@ -498,8 +498,34 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     contextual_task = None
     decided_school_id = None
     intent = classified_intent or classify_intent(text)
+    current_profile = sync_preference_schema(
+        current or {"hard_constraints": {}, "preferences": {}, "recognized": []}
+    )
+    has_preferences = bool(
+        current_profile.get("hard_constraints") or current_profile.get("preferences")
+    )
+    use_saved_preferences = (
+        "preference" in lowered
+        and any(phrase in lowered for phrase in ("based on", "use", "according to"))
+    )
+    declines_more_preferences = lowered in {"no", "nope", "no thanks", "no thank you"}
+    if (
+        has_preferences
+        and not current_profile.get("pending")
+        and not (eligible_centres or [])
+        and (use_saved_preferences or declines_more_preferences)
+    ):
+        current_profile["intent"] = "update_preferences"
+        current_profile["intent_method"] = "conversation_state"
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "I’ll use your understood preferences. Click Show recommendations to find and rank matching schools.",
+        }
     if intent.intent == "needs_clarification":
-        profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
+        profile = current_profile
         profile["intent"] = intent.intent
         profile["intent_method"] = intent.method
         return {"profile": profile, "understood": summarize_profile(profile), "status": "needs_clarification", "ready_to_search": False, "question": intent.clarification}

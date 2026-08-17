@@ -57,12 +57,18 @@ class IntentResult(BaseModel):
         "combined_school_and_general",
         "unknown",
     ] = "unknown"
+    message_type: Literal["preference", "question", "operation", "mixed", "unknown"] = "unknown"
 
 
 def _rules(text: str, active_school_name: str | None = None) -> IntentResult | None:
     lowered = (text or "").strip().lower()
     if any(phrase in lowered for phrase in ("start over", "clear preferences", "reset preferences")):
         return IntentResult(intent="reset_preferences", confidence=1)
+    if re.search(
+        r"\b(?:less than|under|within|maximum|max|up to)\s+\d+(?:\.\d+)?\s*(?:km|kilomet(?:er|re)s?)\b",
+        lowered,
+    ):
+        return IntentResult(intent="update_preferences", confidence=1)
     if any(word in lowered for word in ("closest", "nearest")) and any(
         word in lowered for word in ("school", "preschool", "centre", "center")
     ):
@@ -132,7 +138,13 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
     response = client.responses.parse(
         model=os.getenv("OPENAI_INTENT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini",
         instructions=(
-            "Classify the newest preschool-chat message into exactly one allowed intent and "
+            "First classify the newest message_type as preference, question, operation, or mixed. "
+            "A preference states desired school criteria (for example, 'I want a school that teaches Chinese' "
+            "or 'schools within 2 km') and must use update_preferences. A question asks for information or an "
+            "answer. An operation asks the application to reset, compare, recommend, or locate something. "
+            "A mixed message both changes criteria and asks a question; choose the intent for the requested "
+            "immediate action, but never interpret a preference-only statement as a location lookup. "
+            "Then classify it into exactly one allowed intent and "
             "extract up to five named early-childhood topics. Assign each topic its semantic "
             "category and describe their relationship. Use different_categories when a user "
             "contrasts concepts that answer different questions, such as Montessori pedagogy "
@@ -161,6 +173,8 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
         raise ValueError("The model did not return a parsed intent")
     result = response.output_parsed
     result.method = "llm"
+    if result.message_type == "preference" and result.intent != "update_preferences":
+        result.intent = "update_preferences"
     return result
 
 

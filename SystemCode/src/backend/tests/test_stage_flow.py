@@ -409,6 +409,73 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(result.method, "llm")
         mocked_llm.assert_called_once()
 
+    def test_stage1_numeric_radius_is_a_requirement_even_when_llm_is_enabled(self):
+        conflicting = IntentResult(
+            intent="find_closest_preschool", confidence=0.99, method="llm"
+        )
+        with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": "true"}), patch(
+            "stage1.intent_router._classify_with_openai", return_value=conflicting
+        ) as mocked_llm:
+            result = classify_intent("I am looking for schools within 2km from my house")
+            turn = update_conversation(None, "I am looking for schools within 2km from my house")
+        self.assertEqual(result.intent, "update_preferences")
+        self.assertEqual(result.method, "rules")
+        self.assertEqual(turn["profile"]["hard_constraints"]["max_distance_km"], 2.0)
+        self.assertIn("within 2 km of your home", turn["question"])
+        mocked_llm.assert_not_called()
+
+    def test_stage1_llm_preference_statement_cannot_trigger_nearest_lookup(self):
+        misrouted = IntentResult(
+            intent="find_closest_preschool",
+            confidence=0.99,
+            method="llm",
+            message_type="preference",
+        )
+        mock_response = type("Response", (), {"output_parsed": misrouted})()
+        mock_client = type(
+            "Client",
+            (),
+            {"responses": type("Responses", (), {"parse": lambda self, **kwargs: mock_response})()},
+        )()
+        with patch("openai.OpenAI", return_value=mock_client):
+            result = __import__("stage1.intent_router", fromlist=["_classify_with_openai"])._classify_with_openai(
+                "I want a school that teaches Chinese"
+            )
+        self.assertEqual(result.message_type, "preference")
+        self.assertEqual(result.intent, "update_preferences")
+
+    def test_stage1_uses_understood_preferences_after_clarification(self):
+        profile = map_text_to_filters("Montessori with Chinese preferred")
+        clarification = IntentResult(
+            intent="needs_clarification",
+            confidence=0.8,
+            clarification="Could you clarify?",
+            method="llm",
+            message_type="unknown",
+        )
+        turn = update_conversation(
+            profile,
+            "Based on the understood preference",
+            classified_intent=clarification,
+        )
+        self.assertTrue(turn["ready_to_search"])
+        self.assertEqual(turn["status"], "ready_to_search")
+        self.assertIn("Show recommendations", turn["question"])
+        self.assertIn("language:Chinese", turn["profile"]["preferences"])
+
+    def test_stage1_no_means_finish_preferences_when_profile_is_ready(self):
+        profile = map_text_to_filters("Chinese preferred")
+        clarification = IntentResult(
+            intent="needs_clarification",
+            confidence=0.8,
+            clarification="Could you clarify?",
+            method="llm",
+            message_type="unknown",
+        )
+        turn = update_conversation(profile, "no", classified_intent=clarification)
+        self.assertTrue(turn["ready_to_search"])
+        self.assertIn("Show recommendations", turn["question"])
+
     def test_stage1_closest_without_grounded_candidates_requests_results(self):
         turn = update_conversation(None, "Which preschool is nearest to me?", [], [])
         self.assertIn("grounded preschool records", turn["question"])
