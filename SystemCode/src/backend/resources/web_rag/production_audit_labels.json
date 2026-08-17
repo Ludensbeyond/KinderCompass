@@ -1,0 +1,1007 @@
+{
+  "identity_cases": [
+    {
+      "case_id": "identity-star-learners-woodlands-circle",
+      "evidence_scope": "school",
+      "school_id": "CENTRE:PT9148",
+      "expected_identity": "school"
+    },
+    {
+      "case_id": "identity-pcf-shared-policy",
+      "evidence_scope": "operator",
+      "url": "https://www.pcf.org.sg/sparkletots",
+      "expected_identity": "unverified"
+    },
+    {
+      "case_id": "identity-small-wonder-operator",
+      "evidence_scope": "operator",
+      "url": "https://smallwonderpreschool.com/",
+      "expected_identity": "operator"
+    },
+    {
+      "case_id": "identity-school-centre-pt9148",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9148"
+    },
+    {
+      "case_id": "identity-school-centre-pt9116",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9116"
+    },
+    {
+      "case_id": "identity-school-centre-pt3460",
+      "evidence_scope": "school",
+      "expected_identity": "operator",
+      "school_id": "CENTRE:PT3460"
+    },
+    {
+      "case_id": "identity-school-centre-nt0578",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0578"
+    },
+    {
+      "case_id": "identity-school-centre-nt0559",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0559"
+    },
+    {
+      "case_id": "identity-school-centre-nt0479",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0479"
+    },
+    {
+      "case_id": "identity-school-centre-nt0471",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0471"
+    },
+    {
+      "case_id": "identity-school-centre-nt0503",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0503"
+    },
+    {
+      "case_id": "identity-school-centre-pt9463",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9463"
+    },
+    {
+      "case_id": "identity-school-centre-pt9189",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9189"
+    },
+    {
+      "case_id": "identity-school-centre-nt0489",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0489"
+    },
+    {
+      "case_id": "identity-school-centre-nt0280",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0280"
+    },
+    {
+      "case_id": "identity-school-centre-nt0574",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0574"
+    },
+    {
+      "case_id": "identity-school-centre-pt8963",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8963"
+    },
+    {
+      "case_id": "identity-school-centre-pt7900",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT7900"
+    },
+    {
+      "case_id": "identity-school-centre-nt0477",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0477"
+    },
+    {
+      "case_id": "identity-school-centre-nt0473",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0473"
+    },
+    {
+      "case_id": "identity-school-centre-nt0440",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0440"
+    },
+    {
+      "case_id": "identity-school-centre-pt9120",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9120"
+    },
+    {
+      "case_id": "identity-school-centre-nt0593",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0593"
+    },
+    {
+      "case_id": "identity-school-centre-nt0568",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0568"
+    },
+    {
+      "case_id": "identity-school-centre-nt0370",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:NT0370"
+    },
+    {
+      "case_id": "identity-school-centre-pt8587",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8587"
+    },
+    {
+      "case_id": "identity-school-centre-pt8352",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8352"
+    },
+    {
+      "case_id": "identity-school-centre-rc1835",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:RC1835"
+    },
+    {
+      "case_id": "identity-school-centre-rc1848",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:RC1848"
+    },
+    {
+      "case_id": "identity-school-centre-pt4840",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT4840"
+    },
+    {
+      "case_id": "identity-school-centre-pt9145",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9145"
+    },
+    {
+      "case_id": "identity-school-centre-rc1150",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:RC1150"
+    },
+    {
+      "case_id": "identity-school-centre-pt9932",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9932"
+    },
+    {
+      "case_id": "identity-school-centre-pt9692",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9692"
+    },
+    {
+      "case_id": "identity-school-centre-rc1680",
+      "evidence_scope": "school",
+      "expected_identity": "incorrect",
+      "school_id": "CENTRE:RC1680"
+    },
+    {
+      "case_id": "identity-school-centre-rc1875",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:RC1875"
+    },
+    {
+      "case_id": "identity-school-centre-pt9523",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9523"
+    },
+    {
+      "case_id": "identity-school-centre-pt7800",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT7800"
+    },
+    {
+      "case_id": "identity-school-centre-rc1799",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:RC1799"
+    },
+    {
+      "case_id": "identity-school-centre-pt9585",
+      "evidence_scope": "school",
+      "expected_identity": "incorrect",
+      "school_id": "CENTRE:PT9585"
+    },
+    {
+      "case_id": "identity-school-centre-pt9068",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT9068"
+    },
+    {
+      "case_id": "identity-school-centre-pt8736",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8736"
+    },
+    {
+      "case_id": "identity-school-centre-pt8040",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8040"
+    },
+    {
+      "case_id": "identity-school-centre-pt8811",
+      "evidence_scope": "school",
+      "expected_identity": "school",
+      "school_id": "CENTRE:PT8811"
+    },
+    {
+      "case_id": "identity-operator-operator_page-7e0b866ebfbd51f6",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.pcf.org.sg/sparkletots"
+    },
+    {
+      "case_id": "identity-operator-operator_page-79a3ec4765d2ea45",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://skool4kidz.com.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-7743e2eec6fc1200",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://smallwonderpreschool.com/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-3c8c414a56953d63",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.littleseeds.edu.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-56f9d15be2036a11",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.littleskoolhouse.com/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-f2e3f97ff97b7db4",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.nurturestars.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-1ebeeb19860e1843",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://info.e-bridge.edu.sg/registration-of-interest"
+    },
+    {
+      "case_id": "identity-operator-operator_page-92deb201492d9fa2",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.myworld.org.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-cde3faf506f0006b",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.littlefootprints.edu.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-b80e75e019fc114e",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.smallwonderpreschool.com/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-c811d77d58fcaf51",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.carpediem.com.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-e08c08956f2a822d",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.learningkidz.com.sg/"
+    },
+    {
+      "case_id": "identity-operator-operator_page-857e29fa40f3ff2c",
+      "evidence_scope": "operator",
+      "expected_identity": "operator",
+      "url": "https://www.littletreasures.com.sg/"
+    }
+  ],
+  "retrieval_cases": [
+    {
+      "case_id": "star-learners-outdoor",
+      "school_id": "CENTRE:PT9148",
+      "query": "Does this centre provide outdoor learning?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "outdoor",
+        "learning"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "small-wonder-philosophy",
+      "school_id": "CENTRE:PT7250",
+      "query": "What is the operator's learning philosophy?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learning"
+      ],
+      "expected_source_contains": "smallwonderpreschool.com"
+    },
+    {
+      "case_id": "star-learners-unsupported-robotics",
+      "school_id": "CENTRE:PT9148",
+      "query": "Does it provide robotics, swimming and organic meals?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": []
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9148-outdoor",
+      "school_id": "CENTRE:PT9148",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "common outdoor playground"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9148-curriculum",
+      "school_id": "CENTRE:PT9148",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "literature-based curriculum",
+        "activity-based approach"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9148-language",
+      "school_id": "CENTRE:PT9148",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "English Speech & Drama"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9116-outdoor",
+      "school_id": "CENTRE:PT9116",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9116-curriculum",
+      "school_id": "CENTRE:PT9116",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "literature-based approach"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9116-language",
+      "school_id": "CENTRE:PT9116",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "english",
+        "chinese"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9463-outdoor",
+      "school_id": "CENTRE:PT9463",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "common outdoor playground"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9463-curriculum",
+      "school_id": "CENTRE:PT9463",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9463-language",
+      "school_id": "CENTRE:PT9463",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "Bahasa Melayu",
+        "English",
+        "Chinese"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9189-outdoor",
+      "school_id": "CENTRE:PT9189",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "common outdoor playground"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9189-curriculum",
+      "school_id": "CENTRE:PT9189",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "literature-based curriculum"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9189-language",
+      "school_id": "CENTRE:PT9189",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "english and chinese"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8963-outdoor",
+      "school_id": "CENTRE:PT8963",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "common outdoor playground"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8963-curriculum",
+      "school_id": "CENTRE:PT8963",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "literature-based curriculum"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8963-language",
+      "school_id": "CENTRE:PT8963",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "English Speech & Drama"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9120-outdoor",
+      "school_id": "CENTRE:PT9120",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "common outdoor playground"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9120-curriculum",
+      "school_id": "CENTRE:PT9120",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9120-language",
+      "school_id": "CENTRE:PT9120",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "english and chinese"
+      ],
+      "expected_source_contains": "starlearners.com.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8352-curriculum",
+      "school_id": "CENTRE:PT8352",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.sunshinekidseducare.online"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8352-fees",
+      "school_id": "CENTRE:PT8352",
+      "query": "How much are the school fees and is there any subsidies?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "Full Day: $880",
+        "Half Day: $595",
+        "Maximum Possible Subsidies"
+      ],
+      "expected_source_contains": "www.sunshinekidseducare.online"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt8352-enrichment",
+      "school_id": "CENTRE:PT8352",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.sunshinekidseducare.online"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1848-outdoor",
+      "school_id": "CENTRE:RC1848",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "outdoor"
+      ],
+      "expected_source_contains": "www.riverlifekindergarten.org.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1848-curriculum",
+      "school_id": "CENTRE:RC1848",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learn through play"
+      ],
+      "expected_source_contains": "www.riverlifekindergarten.org.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1848-language",
+      "school_id": "CENTRE:RC1848",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "English",
+        "Chinese"
+      ],
+      "expected_source_contains": "www.riverlifekindergarten.org.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt4840-curriculum",
+      "school_id": "CENTRE:PT4840",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "play-based learning"
+      ],
+      "expected_source_contains": "www.pebbleplacedc.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt4840-fees",
+      "school_id": "CENTRE:PT4840",
+      "query": "How much are the school fees and is there any subsidies?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "SGD 1",
+        "300/month"
+      ],
+      "expected_source_contains": "www.pebbleplacedc.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt4840-enrichment",
+      "school_id": "CENTRE:PT4840",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.pebbleplacedc.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1150-curriculum",
+      "school_id": "CENTRE:RC1150",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "www.moriahbpc.org"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1150-fees",
+      "school_id": "CENTRE:RC1150",
+      "query": "How much are the school fees and is there any subsidies?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.moriahbpc.org"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1150-enrichment",
+      "school_id": "CENTRE:RC1150",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "lego robotics"
+      ],
+      "expected_source_contains": "www.moriahbpc.org"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9932-outdoor",
+      "school_id": "CENTRE:PT9932",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.luminasg.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9932-curriculum",
+      "school_id": "CENTRE:PT9932",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "www.luminasg.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt9932-language",
+      "school_id": "CENTRE:PT9932",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "Bilingual (english and chinese)",
+        "Trilingual (english",
+        "chinese and french)"
+      ],
+      "expected_source_contains": "www.luminasg.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt7800-outdoor",
+      "school_id": "CENTRE:PT7800",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "surrounded gardens",
+        "playgrounds"
+      ],
+      "expected_source_contains": "www.geniusschoolhouse.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt7800-curriculum",
+      "school_id": "CENTRE:PT7800",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.geniusschoolhouse.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-pt7800-fees",
+      "school_id": "CENTRE:PT7800",
+      "query": "How much are the school fees and is there any subsidies?",
+      "expected_scope": "school",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.geniusschoolhouse.com"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1799-curriculum",
+      "school_id": "CENTRE:RC1799",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "www.davidgoliath.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1799-language",
+      "school_id": "CENTRE:RC1799",
+      "query": "what languages are taught in school?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "bilingual"
+      ],
+      "expected_source_contains": "www.davidgoliath.sg"
+    },
+    {
+      "case_id": "retrieval-school-centre-rc1799-enrichment",
+      "school_id": "CENTRE:RC1799",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "school",
+      "evidence_expected": true,
+      "expected_terms": [
+        "STEAM",
+        "Coding & Robotics",
+        "Electrical Circuits"
+      ],
+      "expected_source_contains": "www.davidgoliath.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt7250-philosophy",
+      "school_id": "CENTRE:PT7250",
+      "query": "What kind of learning methods does the school emphasis on?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learning should be fun"
+      ],
+      "expected_source_contains": "smallwonderpreschool.com"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt7250-facilities",
+      "school_id": "CENTRE:PT7250",
+      "query": "How is the learning environment of the school",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "smallwonderpreschool.com"
+    },
+    {
+      "case_id": "retrieval-operator-centre-rc0090-curriculum",
+      "school_id": "CENTRE:RC0090",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "curriculum"
+      ],
+      "expected_source_contains": "littleseeds.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-rc0090-enrichment",
+      "school_id": "CENTRE:RC0090",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "littleseeds.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-rc0090-philosophy",
+      "school_id": "CENTRE:RC0090",
+      "query": "What kind of learning methods does the school emphasis on?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "values-based curriculum",
+        "child-led",
+        "teacher-supported"
+      ],
+      "expected_source_contains": "littleseeds.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-eb0001-curriculum",
+      "school_id": "CENTRE:EB0001",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "guided inquiry-based"
+      ],
+      "expected_source_contains": "info.e-bridge.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-eb0001-language",
+      "school_id": "CENTRE:EB0001",
+      "query": "what languages are taught in school?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "mother tongue language"
+      ],
+      "expected_source_contains": "info.e-bridge.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-eb0001-fees",
+      "school_id": "CENTRE:EB0001",
+      "query": "How much are the school fees and is there any subsidies?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "affordable fees"
+      ],
+      "expected_source_contains": "info.e-bridge.edu.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-ym0030-curriculum",
+      "school_id": "CENTRE:YM0030",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learner-centred and inquiry approach"
+      ],
+      "expected_source_contains": "myworld.org.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-ym0030-enrichment",
+      "school_id": "CENTRE:YM0030",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "myworld.org.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-ym0030-philosophy",
+      "school_id": "CENTRE:YM0030",
+      "query": "What kind of learning methods does the school emphasis on?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learner-centred and inquiry approach"
+      ],
+      "expected_source_contains": "myworld.org.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt8350-philosophy",
+      "school_id": "CENTRE:PT8350",
+      "query": "What kind of learning methods does the school emphasis on?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "learning should be fun"
+      ],
+      "expected_source_contains": "smallwonderpreschool.com"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt8350-facilities",
+      "school_id": "CENTRE:PT8350",
+      "query": "How is the learning environment of the school",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "smallwonderpreschool.com"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt6100-curriculum",
+      "school_id": "CENTRE:PT6100",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.learningkidz.com.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt6100-enrichment",
+      "school_id": "CENTRE:PT6100",
+      "query": "what kind of activities will the children experience?",
+      "expected_scope": "operator",
+      "evidence_expected": false,
+      "expected_terms": [],
+      "expected_source_contains": "www.learningkidz.com.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt6100-philosophy",
+      "school_id": "CENTRE:PT6100",
+      "query": "What kind of learning methods does the school emphasis on?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "every child is capable of shining",
+        "equal opportunities",
+        "holistic learning experience"
+      ],
+      "expected_source_contains": "www.learningkidz.com.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt3740-outdoor",
+      "school_id": "CENTRE:PT3740",
+      "query": "Does this branch have an outdoor playground?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "outdoor spaces"
+      ],
+      "expected_source_contains": "www.littletreasures.com.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt3740-curriculum",
+      "school_id": "CENTRE:PT3740",
+      "query": "What kind of curriculum does the preschool have?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "bilingual curriculum"
+      ],
+      "expected_source_contains": "www.littletreasures.com.sg"
+    },
+    {
+      "case_id": "retrieval-operator-centre-pt3740-language",
+      "school_id": "CENTRE:PT3740",
+      "query": "what languages are taught in school?",
+      "expected_scope": "operator",
+      "evidence_expected": true,
+      "expected_terms": [
+        "bilingual curriculum",
+        "English and Mandarin"
+      ],
+      "expected_source_contains": "www.littletreasures.com.sg"
+    }
+  ]
+}

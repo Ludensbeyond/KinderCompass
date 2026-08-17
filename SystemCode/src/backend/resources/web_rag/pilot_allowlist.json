@@ -1,0 +1,1539 @@
+[
+  {
+    "school_id": "CENTRE:PT9148",
+    "school_name": "STAR LEARNERS @ WOODLANDS CIRCLE PTE. LTD.",
+    "url": "https://starlearners.com.sg/our-centres/woodlands-circle",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9148",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "731764",
+        "observed": "731764",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "STAR LEARNERS @ WOODLANDS CIRCLE PTE. LTD.",
+        "observed": "Preschools in Woodlands Circle: Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "764A,WOODLANDS CIRCLE,#01-300,731764",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match"
+  },
+  {
+    "school_id": "CENTRE:PT9116",
+    "school_name": "STAR LEARNERS @ WOODLANDS PTE LTD",
+    "url": "https://starlearners.com.sg/our-centres/woodlands-11",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9116",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "737853",
+        "observed": "737853",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "STAR LEARNERS @ WOODLANDS PTE LTD",
+        "observed": "Preschools in Woodlands 11: Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "11,WOODLANDS CLOSE,#01-22,WOODLANDS 11,737853",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "548463ebf804ef22a9eb1345fb39615f6757ee1a611c54c5e8ec0bc7c6674ad3",
+    "last_changed_at": "2026-08-10T08:43:08.111118+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT3460",
+    "school_name": "Sunshine Kids Preschool @Woodlands Pte Ltd",
+    "url": "https://sunshinekids.com.sg/",
+    "review_status": "approved_operator",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "medium",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT3460",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "730795",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Sunshine Kids Preschool @Woodlands Pte Ltd",
+        "observed": "Sunshine Kids | A quality preschool for the holistic development of children",
+        "matched": false,
+        "similarity": 0.667
+      },
+      {
+        "type": "address",
+        "expected": "795,WOODLANDS DR 72,#01-01,730795",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "sunshinekids.com.sg",
+        "observed": "www.sunshinekids.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Official brand homepage without branch-specific location evidence",
+    "last_checked_at": "2026-08-12T09:34:21.515941+00:00",
+    "attempt_count": 3,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0578",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/wdc08-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/wdc08-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0559",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/wd6-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/wd6-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0479",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/wd4-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/wd4-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0471",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/wd3-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/wd3-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0503",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/tm3-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/tm3-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT9463",
+    "school_name": "STAR LEARNERS @ TAMPINES EAST PTE LTD",
+    "url": "https://starlearners.com.sg/our-centres/tampines-east",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9463",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "520297",
+        "observed": "520297",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "STAR LEARNERS @ TAMPINES EAST PTE LTD",
+        "observed": "Preschools in Tampines East: Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "297,TAMPINES STREET 22,#01-576,520297",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 0.833
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "b1e967bf5dc9416832d7e2f62ea6be7d13dc13295db13f0143c068530c138adb",
+    "last_changed_at": "2026-08-10T08:43:13.485779+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9189",
+    "school_name": "STAR LEARNERS @ TAMPINES PTE. LTD.",
+    "url": "https://starlearners.com.sg/our-centres/tampines",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9189",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "520241",
+        "observed": "520241",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "STAR LEARNERS @ TAMPINES PTE. LTD.",
+        "observed": "Preschools in Tampines: Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "241,TAMPINES STREET 21,#01-435,520241",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "1a2b3f68a264bc7360e9ed1d43c19c8d574c18a25c8b4be2069baf3121ee2356",
+    "last_changed_at": "2026-08-10T08:43:15.299058+00:00"
+  },
+  {
+    "school_id": "CENTRE:NT0489",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/tm4-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/tm4-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0280",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/tmc-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/tmc-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0574",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/wdc07-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/wdc07-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT8963",
+    "school_name": "Star Learners @ Tampines West Pte. Ltd.",
+    "url": "https://starlearners.com.sg/our-centres/tampines-west",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT8963",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "520823",
+        "observed": "520823",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Star Learners @ Tampines West Pte. Ltd.",
+        "observed": "Preschools in Tampines West : Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "823,TAMPINES STREET 81,#02-00,520823",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "eec2e4ede5b8ef16cd7e185bdf1931253be8da99b6da732988a58eb2a9a3e9ff",
+    "last_changed_at": "2026-08-10T08:43:18.181879+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT7900",
+    "school_name": "ELFA Preschool @ Tampines",
+    "url": "https://elfapreschools.com/singapore/tampines",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://elfapreschools.com/singapore/tampines",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0477",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/cv3-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/cv3-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0473",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/cv2-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/cv2-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0440",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/cvc-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/cvc-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT9120",
+    "school_name": "STAR LEARNERS @ RIVERVALE PTE LTD",
+    "url": "https://starlearners.com.sg/our-centres/sengkang-rivervale",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9120",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "540195",
+        "observed": "540195",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "STAR LEARNERS @ RIVERVALE PTE LTD",
+        "observed": "Preschools in Sengkang Rivervale: Infant Care and Child Care | Star Learners",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "195,RIVERVALE DRIVE,#01-743,540195",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "starlearners.com.sg",
+        "observed": "starlearners.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "38eeb2d879279781ef665c4aa36aa5d56226df4f6caf74fccec759b2d639f802",
+    "last_changed_at": "2026-08-10T08:43:21.280131+00:00"
+  },
+  {
+    "school_id": "CENTRE:NT0593",
+    "school_name": "My First Skool",
+    "url": "https://www.myfirstskool.com/rvc03-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/rvc03-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0568",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/rvc02-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/rvc02-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:43:07.815081+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:NT0370",
+    "school_name": "MY FIRST SKOOL",
+    "url": "https://www.myfirstskool.com/skc-lifesg",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Site policy disallows fetching https://www.myfirstskool.com/skc-lifesg",
+    "failure_code": "robots_disallowed",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT8587",
+    "school_name": "PICKET FENCE @ TAMPINES PTE. LTD.",
+    "url": "https://www.pf-edu.com/",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Redirected to a non-HTTPS URL",
+    "failure_code": "unsafe_redirect",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT8352",
+    "school_name": "SUNSHINE KIDS EDUCARE PRIVATE LIMITED",
+    "url": "https://www.sunshinekidseducare.online/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT8352",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "530321",
+        "observed": "530321",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "SUNSHINE KIDS EDUCARE PRIVATE LIMITED",
+        "observed": "Sunshine Kids Educare - Child Care and Infant Care",
+        "matched": true,
+        "similarity": 0.75
+      },
+      {
+        "type": "address",
+        "expected": "321,HOUGANG AVENUE 5,#01-38,530321",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 0.833
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.sunshinekidseducare.online",
+        "observed": "www.sunshinekidseducare.online",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "e1ca60b7bd21acc0cc9249c4ab8e4b334f613815dbead82379845a7ee34a7b71",
+    "last_changed_at": "2026-08-10T08:51:03.369363+00:00"
+  },
+  {
+    "school_id": "CENTRE:RC1835",
+    "school_name": "Soka Preschool",
+    "url": "https://www.sokapreschool.org/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "RC1835",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "528888",
+        "observed": "528888",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Soka Preschool",
+        "observed": "Soka Preschool",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "7,TAMPINES STREET 92,#02-01,Tampines Soka Centre 2,528888",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 0.778
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.sokapreschool.org",
+        "observed": "www.sokapreschool.org",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-12T16:37:05.098412+00:00",
+    "attempt_count": 4,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "683ee00e6805c63172b7087f24057c622dfbf35d7f0b1f67d47e7532906aa927",
+    "last_changed_at": "2026-08-12T16:37:12.298817+00:00"
+  },
+  {
+    "school_id": "CENTRE:RC1848",
+    "school_name": "RIVERLIFE KINDERGARTEN",
+    "url": "https://www.riverlifekindergarten.org.sg/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "RC1848",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "509026",
+        "observed": "509026",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "RIVERLIFE KINDERGARTEN",
+        "observed": "Riverlife Kindergarten - Locate near to Tampines,Changi,Pasir Ris and Simei",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "6,LOYANG BESAR CLOSE,509026",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "",
+        "observed": "www.riverlifekindergarten.org.sg",
+        "matched": false,
+        "similarity": 0.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "921ab11ed427540975065148e59448f811bc2ac7422d5855e096a1146c5d7350",
+    "last_changed_at": "2026-08-10T08:51:05.947069+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT4840",
+    "school_name": "Pebble Place Development Centre",
+    "url": "https://www.pebbleplacedc.com/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT4840",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "437565",
+        "observed": "437565",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Pebble Place Development Centre",
+        "observed": "Pebble Place Development Centre | Preschool, Paya Lebar Singapore",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "16,PEBBLE LANE,437565",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.pebbleplacedc.com",
+        "observed": "www.pebbleplacedc.com",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "de741e0d400fd741f609875a22b7bde2f2f7fe017cd2efcb0d4960e3204eab0f",
+    "last_changed_at": "2026-08-10T08:51:08.799320+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9145",
+    "school_name": "ORION PRESCHOOL",
+    "url": "https://www.orionpreschool.com.sg/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9145",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "436959",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "ORION PRESCHOOL",
+        "observed": "Orion Preschool",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "90,TANJONG KATONG ROAD,#01-00,NINE DEGREES,436959",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.orionpreschool.com.sg",
+        "observed": "www.orionpreschool.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Exact unqualified school brand on official homepage",
+    "last_checked_at": "2026-08-12T16:38:53.449609+00:00",
+    "attempt_count": 5,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "4f1cd17d9c5b1d1da02477d532199b0a30403c9af5e0208ad97321a9d30448e1",
+    "last_changed_at": "2026-08-12T16:38:59.415837+00:00"
+  },
+  {
+    "school_id": "CENTRE:RC1150",
+    "school_name": "MORIAH CHILD CARE AND DEVELOPMENT CENTRE",
+    "url": "https://www.moriahbpc.org/childcare",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "RC1150",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "529974",
+        "observed": "529974",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "MORIAH CHILD CARE AND DEVELOPMENT CENTRE",
+        "observed": "Childcare | Moriah BP Church",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "31,SIMEI ROAD,529974",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.moriahbpc.org",
+        "observed": "www.moriahbpc.org",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "a841d06988b8cd15ba8cc4f0830a0e0c94880e312926a8e0885cb438f35f49ea",
+    "last_changed_at": "2026-08-10T08:51:14.187759+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9932",
+    "school_name": "Lumina International School",
+    "url": "https://www.luminasg.com/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9932",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "119962",
+        "observed": "119962",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Lumina International School",
+        "observed": "Lumina International Preschool | Bilingual, Trilingual & French Curriculum",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "456,ALEXANDRA ROAD,#04-01,FRAGRANCE EMPIRE BUILDING,119962",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.luminasg.com",
+        "observed": "www.luminasg.com",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "6094082d96cce290b631ea75f5e01b20349ca4df7e54c4145f4f6ef7f1846e0c",
+    "last_changed_at": "2026-08-10T08:51:14.961399+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9692",
+    "school_name": "Little Skittles International Preschool",
+    "url": "https://www.littleskittles.com.sg/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9692",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "438052",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Little Skittles International Preschool",
+        "observed": "Home - Little Skittles International Preschool",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "11,MARGATE ROAD,438052",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.littleskittles.com.sg",
+        "observed": "littleskittles.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Exact unqualified school brand on official homepage",
+    "last_checked_at": "2026-08-12T16:38:53.449609+00:00",
+    "attempt_count": 5,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "0c63d27a67f6add741f362da35f7a4d4c2b110ec991b2c6bbc408b69d65c5d98",
+    "last_changed_at": "2026-08-12T16:39:03.019871+00:00"
+  },
+  {
+    "school_id": "CENTRE:RC1680",
+    "school_name": "KIDS' KINGDOM CHILD DEVELOPMENT AND LEARNING CENTRE",
+    "url": "http://www.kidskingdomcdlc.com/",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Only absolute HTTPS URLs may be fetched",
+    "failure_code": "invalid_url",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:RC1875",
+    "school_name": "Jurong Calvary Kindergarten",
+    "url": "https://jurongcalvarykindergarten.com/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "RC1875",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "618720",
+        "observed": "618720",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "Jurong Calvary Kindergarten",
+        "observed": "Home - Jurong Calvary Kindergarten",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "1,TAO CHING ROAD,CALVARY BIBLE-PRESBYTERIAN CHURCH,618720",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "jurongcalvarykindergarten.com",
+        "observed": "www.jck.edu.sg",
+        "matched": false,
+        "similarity": 0.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-12T16:34:19.257511+00:00",
+    "attempt_count": 3,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "84853851382925aab1c8035ce5d85e0f5960ce2acf0cceb95ac6f41443ba75e5",
+    "last_changed_at": "2026-08-12T16:34:40.380355+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9523",
+    "school_name": "GUG PRESCHOOL @ TAMPINES PTE LTD",
+    "url": "https://www.gugifted.com/",
+    "review_status": "pending_review",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "medium",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9523",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "529653",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "GUG PRESCHOOL @ TAMPINES PTE LTD",
+        "observed": "Growing Up Gifted | Preschool Inspired by Gifted Education",
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "address",
+        "expected": "300,TAMPINES AVENUE 5,#07-01,INCOME AT TAMPINES JUNCTION,529653",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "www.gugifted.com",
+        "observed": "www.gugifted.com",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Official brand homepage may require rendered branch content",
+    "last_checked_at": "2026-08-12T09:36:39.841216+00:00",
+    "attempt_count": 2,
+    "next_retry_at": null
+  },
+  {
+    "school_id": "CENTRE:PT7800",
+    "school_name": "GENIUS SCHOOL HOUSE",
+    "url": "https://www.geniusschoolhouse.com/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT7800",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "824637",
+        "observed": "824637",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "GENIUS SCHOOL HOUSE",
+        "observed": "Home | genius",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "637D,PUNGGOL DRIVE,#01-385,824637",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "",
+        "observed": "www.geniusschoolhouse.com",
+        "matched": false,
+        "similarity": 0.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "2bae11bea030fc86be6834da68f695c9018027a71751a1329d42011c8cbf5b0e",
+    "last_changed_at": "2026-08-10T08:51:22.179839+00:00"
+  },
+  {
+    "school_id": "CENTRE:RC1799",
+    "school_name": "David & Goliath Preschool",
+    "url": "https://www.davidgoliath.sg/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "RC1799",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "618744",
+        "observed": "618744",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "David & Goliath Preschool",
+        "observed": "David & Goliath Preschool (DGP) | Playgroup, Nursery & Kindergarten | Singapore",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "2,TAH CHING ROAD,#02-01,JURONG CHRISTIAN CHURCH,618744",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 0.889
+      },
+      {
+        "type": "operator_domain",
+        "expected": "",
+        "observed": "www.davidgoliath.sg",
+        "matched": false,
+        "similarity": 0.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "e8695fee67399e57729b74ce8874e8994ac2721ba63c291a2240a894d76352ca",
+    "last_changed_at": "2026-08-10T08:51:24.847805+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9585",
+    "school_name": "Cedan Kindergarten",
+    "url": "https://www.cedankindergarten.com.sg/",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Fetch failed for https://www.cedankindergarten.com.sg/: HTTP 500",
+    "failure_code": "server_error",
+    "retryable": true,
+    "retry_after_seconds": 3600,
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": "2026-08-10T09:51:00.850586+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT9068",
+    "school_name": "ESHKOL VALLEY @ NORTHSTAR PTE. LTD.",
+    "url": "https://eshkolvalley.com.sg/",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT9068",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "569880",
+        "observed": "569880",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "school_name",
+        "expected": "ESHKOL VALLEY @ NORTHSTAR PTE. LTD.",
+        "observed": "Eshkol Valley | We Focus on Character Building, Sports & Arts",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "7030,ANG MO KIO AVENUE 5,#01-41,NORTHSTAR @ AMK,569880",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 0.8
+      },
+      {
+        "type": "operator_domain",
+        "expected": "eshkolvalley.com.sg",
+        "observed": "eshkolvalley.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-12T16:37:05.098412+00:00",
+    "attempt_count": 4,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "51d6d25dd5e6509127e4599d6e2d63f2f461d0e0733afc1c80476de9a1d5268e",
+    "last_changed_at": "2026-08-12T16:37:27.386123+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT8736",
+    "school_name": "The Schoolhouse Dover",
+    "url": "https://theschoolhouse.com.sg/dover",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT8736",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "139659",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "The Schoolhouse Dover",
+        "observed": "Premier Preschool in Clementi - The Schoolhouse, Singapore",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "131,DOVER ROAD,139659",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "theschoolhouse.com.sg",
+        "observed": "theschoolhouse.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-12T09:34:21.515941+00:00",
+    "attempt_count": 3,
+    "next_retry_at": null,
+    "change_status": "new",
+    "previous_content_hash": null,
+    "current_content_hash": "dade3c831ac20720615444e45ef4d98fd2ea63bb6fb997e02ca5d00c34e017f9",
+    "last_changed_at": "2026-08-12T09:34:26.186727+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT8040",
+    "school_name": "The Schoolhouse Gentle Road",
+    "url": "https://theschoolhouse.com.sg/gentle-road",
+    "review_status": "approved",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "high",
+    "reviewed_at": "2026-08-12",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [
+      {
+        "type": "centre_code",
+        "expected": "PT8040",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "postal_code",
+        "expected": "309198",
+        "observed": null,
+        "matched": false,
+        "similarity": 0.0
+      },
+      {
+        "type": "school_name",
+        "expected": "The Schoolhouse Gentle Road",
+        "observed": "Private Preschool in Novena - The Schoolhouse",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "address",
+        "expected": "12,GENTLE ROAD,309198",
+        "observed": "matched in page text",
+        "matched": true,
+        "similarity": 1.0
+      },
+      {
+        "type": "operator_domain",
+        "expected": "theschoolhouse.com.sg",
+        "observed": "theschoolhouse.com.sg",
+        "matched": true,
+        "similarity": 1.0
+      }
+    ],
+    "notes": "Strong school identity match",
+    "last_checked_at": "2026-08-12T16:37:05.098412+00:00",
+    "attempt_count": 4,
+    "next_retry_at": null,
+    "change_status": "unchanged",
+    "previous_content_hash": "b6b535fcbba467f847958ff0125c726ea01f41b91cd1a2d7879efa5615b7deff",
+    "current_content_hash": "b6b535fcbba467f847958ff0125c726ea01f41b91cd1a2d7879efa5615b7deff",
+    "last_changed_at": "2026-08-12T16:34:53.616194+00:00"
+  },
+  {
+    "school_id": "CENTRE:PT8811",
+    "school_name": "Small Wonder Preschool Choa Chu Kang",
+    "url": "http://www.smallwonderpreschool.com/",
+    "review_status": "fetch_failed",
+    "verification_method": "automated_deterministic",
+    "identity_confidence": "unknown",
+    "reviewed_at": "2026-08-10",
+    "reviewer": "Phase 9 automated verifier",
+    "identity_matches": [],
+    "notes": "Only absolute HTTPS URLs may be fetched",
+    "failure_code": "invalid_url",
+    "retryable": false,
+    "retry_after_seconds": null,
+    "last_checked_at": "2026-08-10T08:51:00.850586+00:00",
+    "attempt_count": 1,
+    "next_retry_at": null
+  }
+]
