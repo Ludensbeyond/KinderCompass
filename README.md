@@ -138,7 +138,10 @@ Raw datasets are stored in `SystemCode/data/raw/`; the generated catalogue is
 written to `SystemCode/data/processed/kindercompass_master.json`. Graph updates
 are non-destructive by default. See the
 [offline pipeline guide](SystemCode/src/scripts/README.md) before using the
-explicit destructive rebuild option.
+explicit destructive rebuild option. The
+[knowledge graph schema](SystemCode/src/scripts/KNOWLEDGE_GRAPH_SCHEMA.md)
+documents which features are properties or nodes, their relationships, source
+mapping, constraints, and current limitations.
 
 ### [ 4 ] Run locally
 

@@ -10,6 +10,7 @@ does not execute them during web requests.
 |---|---|
 | `prepare_data.py` | Validate, join, enrich, and atomically write the master preschool catalogue. |
 | `build_knowledge_graph.py` | Validate the processed catalogue and idempotently update Neo4j nodes and relationships. |
+| `KNOWLEDGE_GRAPH_SCHEMA.md` | Authoritative nodes, properties, relationships, constraints, sources, and modelling decisions. |
 | `tests/` | Offline-pipeline tests, including catalogue invariants and destructive-operation safeguards. |
 
 The notebooks in `SystemCode/notebooks/` import these modules for interactive
@@ -62,6 +63,9 @@ The default operation is non-destructive. It upserts each `Preschool`, replaces
 that school's current knowledge relationships, and merges the corresponding
 concept nodes. It also creates uniqueness constraints for stable identifiers and
 concept names, plus an index on preschool names.
+
+See the [knowledge graph schema](KNOWLEDGE_GRAPH_SCHEMA.md) for the complete
+property-versus-node design and source mapping.
 
 ```text
 (Preschool)-[:LOCATED_IN]->(Town)
