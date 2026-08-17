@@ -4,7 +4,7 @@
 
 Stage 1 now attaches validated evidence metadata to every recognised preference. This creates a safe contract for future LLM extraction without allowing an LLM to invent attributes or values that the search pipeline cannot handle.
 
-The schema is implemented in `src/stage1/preference_schema.py`. Schema version 2 is backward-compatible: `hard_constraints` and `preferences` remain available to the existing Neo4j query builder and deterministic scorer, while `preference_items` provides the new canonical representation.
+The schema is implemented in `../../SystemCode/src/backend/pipeline/stage1/preference_schema.py`. Schema version 2 is backward-compatible: `hard_constraints` and `preferences` remain available to the existing Neo4j query builder and deterministic scorer, while `preference_items` provides the new canonical representation.
 
 ## Preference item
 

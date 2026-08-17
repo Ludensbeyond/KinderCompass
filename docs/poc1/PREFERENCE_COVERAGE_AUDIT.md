@@ -4,7 +4,7 @@
 
 This audit compares parent-facing preferences with:
 
-- the 1,867 records in `data/processed/poc1/kindercompass_master.json`;
+- the 1,867 records in `data/processed/kindercompass_master.json`;
 - the properties imported into Neo4j by `knowledge_graph_gen.ipynb`; and
 - the current Stage 1 extraction, filtering, and scoring code.
 
@@ -16,7 +16,7 @@ The audit was conducted in four steps.
 
 ### 1. Measure dataset coverage
 
-The 1,867 records in `data/processed/poc1/kindercompass_master.json` were inspected for fields corresponding to parent-facing preferences. For each field, the audit counted records containing usable evidence and calculated the percentage of the complete catalogue covered.
+The 1,867 records in `data/processed/kindercompass_master.json` were inspected for fields corresponding to parent-facing preferences. For each field, the audit counted records containing usable evidence and calculated the percentage of the complete catalogue covered.
 
 The following were treated as unavailable evidence:
 
@@ -46,9 +46,9 @@ The audit inspected how each field was created, imported, interpreted, and used:
 
 - `data_prep.ipynb` was reviewed to identify the source and derivation of processed fields;
 - `knowledge_graph_gen.ipynb` was reviewed to verify which properties are imported into Neo4j;
-- `src/stage1/nlp_mapper.py` was reviewed to identify the preferences recognised from chat messages;
-- `src/stage1/query_builder.py` was reviewed to identify required database filters; and
-- `src/stage1/scorer.py` was reviewed to identify weighted preferences and matching behaviour.
+- `../../SystemCode/src/backend/pipeline/stage1/nlp_mapper.py` was reviewed to identify the preferences recognised from chat messages;
+- `../../SystemCode/src/backend/pipeline/stage1/query_builder.py` was reviewed to identify required database filters; and
+- `../../SystemCode/src/backend/pipeline/stage1/scorer.py` was reviewed to identify weighted preferences and matching behaviour.
 
 This revealed, for example, that pedagogy and philosophy are inferred only from keywords in the centre name. Consequently, `General` means that no supported keyword was detected; it is not verified evidence of a general teaching approach. The code review also found that the current food matcher treats both halal descriptions and no-pork descriptions as satisfying a halal preference, even though these claims are not equivalent.
 
@@ -66,24 +66,24 @@ The classification describes what the system can substantiate, not merely what t
 
 ## How to use the audit script
 
-The reusable script is located at `SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py`. It uses only the Python standard library, so no additional packages are required.
+The reusable script is located at `SystemCode/src/backend/scripts/audit_preference_coverage.py`. It uses only the Python standard library, so no additional packages are required.
 
 ### Run the default audit
 
 Open PowerShell in the KinderCompass repository root and run:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py
+python SystemCode/src/backend/scripts/audit_preference_coverage.py
 ```
 
-Without options, the script reads `SystemCode/data/processed/poc1/kindercompass_master.json` and prints a Markdown report to the terminal.
+Without options, the script reads `SystemCode/data/processed/kindercompass_master.json` and prints a Markdown report to the terminal.
 
 ### Save the report
 
 Use `--output` to save the Markdown report instead of printing it:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py --output preference_coverage.md
+python SystemCode/src/backend/scripts/audit_preference_coverage.py --output preference_coverage.md
 ```
 
 The output path is relative to the directory in which the command is run. Existing files at the specified path are replaced.
@@ -93,7 +93,7 @@ The output path is relative to the directory in which the command is run. Existi
 Use JSON when the results will be consumed by another script, test, notebook, or CI process:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py --format json --output preference_coverage.json
+python SystemCode/src/backend/scripts/audit_preference_coverage.py --format json --output preference_coverage.json
 ```
 
 Omit `--output` to print the JSON to the terminal.
@@ -103,7 +103,7 @@ Omit `--output` to print the JSON to the terminal.
 After regenerating or testing another master dataset, pass its path with `--input`:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py --input path/to/kindercompass_master.json
+python SystemCode/src/backend/scripts/audit_preference_coverage.py --input path/to/kindercompass_master.json
 ```
 
 The input must be a JSON array containing school objects.
@@ -113,13 +113,13 @@ The input must be a JSON array containing school objects.
 The report shows the eight most common informative values for each audited field by default. Change this with `--top-values`:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py --top-values 5
+python SystemCode/src/backend/scripts/audit_preference_coverage.py --top-values 5
 ```
 
 Run the built-in help command to see all available options:
 
 ```powershell
-python SystemCode/notebooks/poc1/scripts/audit_preference_coverage.py --help
+python SystemCode/src/backend/scripts/audit_preference_coverage.py --help
 ```
 
 ### Interpret the output

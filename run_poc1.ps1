@@ -5,14 +5,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$pocDirectory = $PSScriptRoot
-$repositoryRoot = (Resolve-Path (Join-Path $pocDirectory "..\..\..")).Path
+$repositoryRoot = $PSScriptRoot
 $pythonExecutable = Join-Path $repositoryRoot ".venv\Scripts\python.exe"
-$backendRequirements = Join-Path $repositoryRoot "SystemCode\src\backend\poc1\requirements.txt"
-$frontendDirectory = Join-Path $repositoryRoot "SystemCode\src\frontend\poc1"
+$backendRequirements = Join-Path $repositoryRoot "SystemCode\src\backend\requirements.txt"
+$frontendDirectory = Join-Path $repositoryRoot "SystemCode\src\frontend"
 $frontendEnvironment = Join-Path $frontendDirectory ".env.local"
 $frontendEnvironmentExample = Join-Path $frontendDirectory ".env.local.example"
-$neo4jEnvironment = Join-Path $pocDirectory ".env"
+$neo4jEnvironment = Join-Path $repositoryRoot ".env"
 
 function Stop-WithMessage {
     param([string]$Message)
@@ -70,7 +69,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $frontendDirectory "node_modules")))
     Stop-WithMessage "Frontend packages are missing. Run this script once with -InstallDependencies."
 }
 
-$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.poc1.main:app --reload"
+$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.main:app --reload"
 $frontendCommand = "Set-Location -LiteralPath '$($frontendDirectory.Replace("'", "''"))'; & npm.cmd run dev"
 
 Write-Host "Starting FastAPI backend in a new PowerShell window..." -ForegroundColor Cyan

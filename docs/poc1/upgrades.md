@@ -59,8 +59,8 @@ An unrecognised request no longer silently produces every school.
 
 Relevant implementation:
 
-- [`conversation.py`](../../SystemCode/notebooks/poc1/src/stage1/conversation.py)
-- [`nlp_mapper.py`](../../SystemCode/notebooks/poc1/src/stage1/nlp_mapper.py)
+- [`conversation.py`](../../SystemCode/src/backend/pipeline/stage1/conversation.py)
+- [`nlp_mapper.py`](../../SystemCode/src/backend/pipeline/stage1/nlp_mapper.py)
 
 ## 3. Evidence-aware preference schema
 
@@ -91,8 +91,8 @@ Unsupported preferences are retained in the conversation but are not used for ra
 
 Relevant documentation:
 
-- [`PREFERENCE_COVERAGE_AUDIT.md`](../../SystemCode/notebooks/poc1/PREFERENCE_COVERAGE_AUDIT.md)
-- [`PREFERENCE_SCHEMA.md`](../../SystemCode/notebooks/poc1/PREFERENCE_SCHEMA.md)
+- [`PREFERENCE_COVERAGE_AUDIT.md`](PREFERENCE_COVERAGE_AUDIT.md)
+- [`PREFERENCE_SCHEMA.md`](PREFERENCE_SCHEMA.md)
 
 ## 4. Optional LLM preference extraction
 
@@ -118,8 +118,8 @@ Only the newest preference message and existing canonical preferences are sent t
 
 Relevant implementation and documentation:
 
-- [`llm_extractor.py`](../../SystemCode/notebooks/poc1/src/stage1/llm_extractor.py)
-- [`PHASE3_LLM_EXTRACTION.md`](../../SystemCode/notebooks/poc1/PHASE3_LLM_EXTRACTION.md)
+- [`llm_extractor.py`](../../SystemCode/src/backend/pipeline/stage1/llm_extractor.py)
+- [`PHASE3_LLM_EXTRACTION.md`](PHASE3_LLM_EXTRACTION.md)
 
 ## 5. Selected-school recommendation
 
@@ -207,8 +207,8 @@ Runtime status is recorded as:
 
 Relevant implementation and documentation:
 
-- [`grounded_explainer.py`](../../SystemCode/notebooks/poc1/src/stage1/grounded_explainer.py)
-- [`PHASE4_GROUNDED_EXPLANATIONS.md`](../../SystemCode/notebooks/poc1/PHASE4_GROUNDED_EXPLANATIONS.md)
+- [`grounded_explainer.py`](../../SystemCode/src/backend/pipeline/stage1/grounded_explainer.py)
+- [`PHASE4_GROUNDED_EXPLANATIONS.md`](PHASE4_GROUNDED_EXPLANATIONS.md)
 
 ## 7.1 Phase 5 recommendation transparency
 
@@ -222,7 +222,7 @@ The closed intent catalogue now includes ranking explanations, selected-school c
 
 Optional grounded LLM wording must reference the top-ranked school for a ranking explanation and every selected school for a multi-school comparison. Otherwise, the system returns its deterministic fallback.
 
-See [`PHASE5_RECOMMENDATION_TRANSPARENCY.md`](../../SystemCode/notebooks/poc1/PHASE5_RECOMMENDATION_TRANSPARENCY.md).
+See [`PHASE5_RECOMMENDATION_TRANSPARENCY.md`](PHASE5_RECOMMENDATION_TRANSPARENCY.md).
 
 ## 7.2 Phase 6 ranking quality and personalisation
 
@@ -236,7 +236,7 @@ Unknown evidence earns no compatibility credit and is separated from the verifie
 
 Each result now includes an expandable calculation showing the evidence status, importance, and verified contribution for every scored preference.
 
-See [`PHASE6_RANKING_QUALITY.md`](../../SystemCode/notebooks/poc1/PHASE6_RANKING_QUALITY.md).
+See [`PHASE6_RANKING_QUALITY.md`](PHASE6_RANKING_QUALITY.md).
 
 ## 7.3 Phase 7 recommendation evaluation and observability
 
@@ -248,7 +248,7 @@ Ranking behavior was covered by individual unit tests, but there was no standalo
 
 A privacy-safe evaluator runs synthetic golden scenarios and produces Markdown or JSON. It fails with a non-zero exit code when an expected constraint, score, or ordering changes. Search and evaluation responses also expose aggregate stage-count traces connected by a random trace ID. These traces exclude family details, postal codes, income, dates, and chat content.
 
-See [`PHASE7_RECOMMENDATION_EVALUATION.md`](../../SystemCode/notebooks/poc1/PHASE7_RECOMMENDATION_EVALUATION.md).
+See [`PHASE7_RECOMMENDATION_EVALUATION.md`](PHASE7_RECOMMENDATION_EVALUATION.md).
 
 ## 7.4 Phase 8 evidence provenance and freshness
 
@@ -262,7 +262,7 @@ Every scored preference carries source, method, reliability, source date, freshn
 
 `General` pedagogy is now correctly treated as unknown because it means no specific pedagogy keyword was detected in the centre name. It is not used as proof that a school has a general pedagogy or fails another pedagogy requirement.
 
-See [`PHASE8_EVIDENCE_PROVENANCE.md`](../../SystemCode/notebooks/poc1/PHASE8_EVIDENCE_PROVENANCE.md).
+See [`PHASE8_EVIDENCE_PROVENANCE.md`](PHASE8_EVIDENCE_PROVENANCE.md).
 
 ## 7.5 Phase 9 official-webpage RAG foundation
 
@@ -274,7 +274,7 @@ The application had no curated webpage source inventory for enriching unsupporte
 
 An offline inventory normalises both catalogue website fields, removes tracking parameters, detects shared URLs, and classifies scope. A deterministic verifier approves strong school matches, while shared URLs remain operator evidence. Processing is incremental, with atomic checkpoints and age-based refresh. Structured failure codes distinguish policy refusal, rate limits, timeouts, DNS/network/server errors, missing pages, unsafe targets, unsupported content, oversized responses, and JavaScript-only pages. Temporary failures use scheduled exponential-backoff retries; permanent failures are skipped. URLs and hashes distinguish webpage changes, while last-known evidence survives temporary refresh failures with an explicit error and freshness label. School-isolated BM25 retrieval remains explanation-only and disconnected from ranking.
 
-See [`PHASE9_WEBPAGE_RAG.md`](../../SystemCode/notebooks/poc1/PHASE9_WEBPAGE_RAG.md).
+See [`PHASE9_WEBPAGE_RAG.md`](PHASE9_WEBPAGE_RAG.md).
 
 ## 8. Family-first workflow
 

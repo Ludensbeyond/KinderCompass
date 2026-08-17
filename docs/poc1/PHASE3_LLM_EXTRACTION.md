@@ -40,10 +40,10 @@ When fallback occurs, `llm_fallback_reason` contains only the exception type and
 Install the updated dependencies once:
 
 ```powershell
-.\SystemCode\notebooks\poc1\run_poc1.ps1 -InstallDependencies
+.\run_poc1.ps1 -InstallDependencies
 ```
 
-Add these values to `SystemCode/notebooks/poc1/.env`:
+Add these values to the repository-level `.env`:
 
 ```dotenv
 OPENAI_PREFERENCE_EXTRACTION_ENABLED=true
@@ -76,9 +76,9 @@ The integration does not include the family form, date of birth, admission date,
 Automated tests mock the OpenAI extraction boundary, so they require neither network access nor an API key:
 
 ```powershell
-cd SystemCode/notebooks/poc1
-$env:PYTHONPATH = "src"
-& "..\..\..\.venv\Scripts\python.exe" -m unittest discover -s tests
+# Run from the repository root
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline;SystemCode/src/backend"
+& ".\.venv\Scripts\python.exe" -m unittest discover -s SystemCode/src/backend/tests
 ```
 
 For a manual LLM test, enable the environment settings, restart the application, and enter a natural description that the keyword mapper does not directly cover. Inspect the `/api/preferences` response in browser developer tools and confirm that `profile.extraction_method` is `llm`.
@@ -87,4 +87,3 @@ For a manual LLM test, enable the environment settings, restart the application,
 
 The integration follows the official OpenAI Structured Outputs guide:
 https://developers.openai.com/api/docs/guides/structured-outputs
-

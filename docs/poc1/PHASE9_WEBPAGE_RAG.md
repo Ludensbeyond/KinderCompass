@@ -16,7 +16,7 @@ Phase 9 aims to retrieve cited, school-specific evidence for preferences that th
 
 ## Step 1: website candidate inventory
 
-`scripts/build_website_inventory.py` extracts `centre_website` and `website_lifesg` from the processed school catalogue. It runs offline and:
+`../../SystemCode/src/backend/scripts/build_website_inventory.py` extracts `centre_website` and `website_lifesg` from the processed school catalogue. It runs offline and:
 
 - adds a missing `https://` scheme;
 - normalises host, path, fragments, and tracking parameters;
@@ -60,19 +60,19 @@ Consequently, inventory classifications must pass the identity-verification gate
 From the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\build_website_inventory.py
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py
 ```
 
 Save the detailed JSON inventory:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\build_website_inventory.py --format json --output SystemCode\notebooks\poc1\output\website_inventory.json
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format json --output SystemCode\notebooks\output\website_inventory.json
 ```
 
 Create a reviewable CSV:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\build_website_inventory.py --format csv --output SystemCode\notebooks\poc1\output\website_inventory.csv
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format csv --output SystemCode\notebooks\output\website_inventory.csv
 ```
 
 ## Identity-verification gate
@@ -89,12 +89,12 @@ The automated workflow groups `shared_operator_page_candidate` records by normal
 - final URL, title, retrieval time, content hash, and chunks; and
 - an explicit warning that its claims are not verified for a particular branch.
 
-Shared-page decisions are written to `web_rag/operator_page_allowlist.json`. Their chunks are stored under `operator_pages` in the pilot index, separate from the school-specific `pages` collection.
+Shared-page decisions are written to `../../SystemCode/src/backend/resources/web_rag/operator_page_allowlist.json`. Their chunks are stored under `operator_pages` in the pilot index, separate from the school-specific `pages` collection.
 
 Ordinary retrieval searches only school-specific chunks. Operator evidence must be requested explicitly:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/query_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/query_web_rag_pilot.py `
   --school-id "CENTRE:PT9148" `
   --query "bilingual curriculum" `
   --include-operator
@@ -104,7 +104,7 @@ Operator results are labelled `OPERATOR LEVEL` and state that the information is
 
 ## Pilot implementation
 
-The pilot uses an automatically generated review gate at `web_rag/pilot_allowlist.json`. An entry is fetchable only when:
+The pilot uses an automatically generated review gate at `../../SystemCode/src/backend/resources/web_rag/pilot_allowlist.json`. An entry is fetchable only when:
 
 - `review_status` is `approved`;
 - the URL is absolute HTTPS; and
@@ -125,8 +125,8 @@ The live Star Learners validation decreased from 13 noisy chunks to 4 content-fo
 Run the complete workflow for all inventoried `school_specific_candidate` records from the repository root:
 
 ```powershell
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src;SystemCode/notebooks/poc1"
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline;SystemCode/src/backend"
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py
 ```
 
 That command rebuilds the inventory in memory, verifies all school-specific candidates, processes every unique shared operator page once, writes both decision files, and creates separate school and operator indexes without downloading approved pages twice. Social pages and unavailable records remain in the inventory but are not fetched.
@@ -147,13 +147,13 @@ The workflow resumes by default from `pilot_allowlist.json`, `operator_page_allo
 Use `--limit` when a smaller audit batch is desired:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py --limit 20
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py --limit 20
 ```
 
 `--limit` controls school-specific candidates. Use `--shared-limit` to bound unique shared pages as well:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py `
   --limit 20 `
   --shared-limit 10
 ```
@@ -161,7 +161,7 @@ Use `--limit` when a smaller audit batch is desired:
 Reprocess one or more specific school decisions without pruning any other checkpoints:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py `
   --school-id "CENTRE:PT3460" `
   --school-id "CENTRE:PT8736" `
   --shared-limit 0
@@ -170,7 +170,7 @@ Reprocess one or more specific school decisions without pruning any other checkp
 To intentionally discard checkpoints and rebuild from the beginning, use:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py `
   --fresh `
   --limit 20 `
   --shared-limit 10
@@ -183,7 +183,7 @@ Because `--fresh` replaces the existing decision and index files, use it only wh
 Approved indexed pages become eligible for refresh after 30 days by default. Change the interval with `--refresh-after-days`, or use `0` to force a check of completed pages within the selected batch:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/automate_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/automate_web_rag_pilot.py `
   --limit 20 `
   --shared-limit 10 `
   --refresh-after-days 30
@@ -227,14 +227,14 @@ Legacy unclassified `fetch_failed` entries default to retryable so existing chec
 The lower-level ingestion command remains available when using an existing allowlist:
 
 ```powershell
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src"
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/run_web_rag_pilot.py
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline;SystemCode/src/backend"
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/run_web_rag_pilot.py
 ```
 
 Query evidence for exactly one school:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/query_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/query_web_rag_pilot.py `
   --school-id "CENTRE:PT9148" `
   --query "outdoor learning literature curriculum"
 ```
@@ -257,7 +257,7 @@ High-precision intent gates additionally require concrete evidence for language,
 Results expose BM25 score, relevance, matched query terms, and phrase-match status. The command-line default minimum relevance is `0.25` and can be adjusted for evaluation:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/query_web_rag_pilot.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/query_web_rag_pilot.py `
   --school-id "CENTRE:PT9148" `
   --query "outdoor learning curriculum" `
   --min-relevance 0.35
@@ -268,18 +268,18 @@ The offline evaluator includes golden checks for exact-phrase ranking, synonym r
 Run the offline isolation and citation evaluation:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/evaluate_web_rag_pilot.py
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/evaluate_web_rag_pilot.py
 ```
 
 ## Production-readiness audit
 
-Human-reviewed labels live in `web_rag/production_audit_labels.json`. Identity cases state the expected school/operator decision, while retrieval cases state the school, question, expected evidence scope, expected terms, source domain, and whether evidence should exist.
+Human-reviewed labels live in `../../SystemCode/src/backend/resources/web_rag/production_audit_labels.json`. Identity cases state the expected school/operator decision, while retrieval cases state the school, question, expected evidence scope, expected terms, source domain, and whether evidence should exist.
 
 Run the audit and save a Markdown report:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/audit_web_rag_readiness.py `
-  --output SystemCode/notebooks/poc1/output/web_rag_readiness.md
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/audit_web_rag_readiness.py `
+  --output SystemCode/src/backend/output/web_rag_readiness.md
 ```
 
 The command exits non-zero until every gate passes. Default production gates are:
@@ -300,13 +300,13 @@ The completed audit contains 57 identity cases and 61 retrieval cases. The cumul
 Export the current review packet:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/review_web_rag_audit.py export
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/review_web_rag_audit.py export
 ```
 
 This creates:
 
-- `output/web_rag_review/identity_review.csv`, containing automated decisions, confidence, matched identifiers, failure codes, and blank human decision fields; and
-- `output/web_rag_review/retrieval_review.csv`, containing topic-based candidate questions, retrieved passages, sources, relevance, and blank human expectation fields.
+- `../../SystemCode/src/backend/output/web_rag_review/identity_review.csv`, containing automated decisions, confidence, matched identifiers, failure codes, and blank human decision fields; and
+- `../../SystemCode/src/backend/output/web_rag_review/retrieval_review.csv`, containing topic-based candidate questions, retrieved passages, sources, relevance, and blank human expectation fields.
 
 The exporter refuses to overwrite existing CSVs unless `--overwrite` is supplied. Do not use `--overwrite` after review has started.
 
@@ -319,7 +319,7 @@ Fetch success is calculated across policy-eligible cases. Explicit `robots_disal
 Import completed rows:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/review_web_rag_audit.py import
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/review_web_rag_audit.py import
 ```
 
 Import validates statuses, scopes, boolean fields, required school IDs, and positive-case expected terms, then merges cases by stable `case_id` into `production_audit_labels.json`. Rows without `include_in_audit: yes` are ignored.
@@ -336,7 +336,7 @@ The generated index is explanation-only. It is not connected to the scorer, hard
 
 ## Chat answer integration
 
-The `/api/preferences` chat endpoint loads `output/web_rag_pilot_index.json` and recognises factual questions about exactly one selected preschool, for example, “What curriculum does this school use?” It retrieves only chunks belonging to that school and returns:
+The `/api/preferences` chat endpoint loads `../../SystemCode/src/backend/output/web_rag_pilot_index.json` and recognises factual questions about exactly one selected preschool, for example, “What curriculum does this school use?” It retrieves only chunks belonging to that school and returns:
 
 - a concise set of matching official-page passages;
 - structured citations with source URL, title, retrieval date, and chunk ID;
@@ -350,19 +350,19 @@ When `OPENAI_WEB_RAG_ANSWERS_ENABLED=true`, the retrieved school-isolated passag
 Evaluate the deterministic answer formatter without API calls:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/evaluate_web_rag_answers.py `
-  --output SystemCode/notebooks/poc1/output/web_rag_answer_quality.json
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/evaluate_web_rag_answers.py `
+  --output SystemCode/src/backend/output/web_rag_answer_quality.json
 ```
 
 Run the same labelled cases through the configured LLM:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode/notebooks/poc1/scripts/evaluate_web_rag_answers.py `
+.\.venv\Scripts\python.exe SystemCode/src/backend/scripts/evaluate_web_rag_answers.py `
   --use-llm `
-  --output SystemCode/notebooks/poc1/output/web_rag_answer_quality_llm.json
+  --output SystemCode/src/backend/output/web_rag_answer_quality_llm.json
 ```
 
-The focused four-case smoke labels live in `web_rag/answer_quality_labels.json`. By default, the evaluator consumes the independently reviewed school-scoped cases in `production_audit_labels.json`; 41 currently apply to indexed school pages. It reports answer accuracy, citation validity, unsupported-claim-free rate, conciseness, school isolation, LLM-grounded rate, and fallback rate.
+The focused four-case smoke labels live in `../../SystemCode/src/backend/resources/web_rag/answer_quality_labels.json`. By default, the evaluator consumes the independently reviewed school-scoped cases in `production_audit_labels.json`; 41 currently apply to indexed school pages. It reports answer accuracy, citation validity, unsupported-claim-free rate, conciseness, school isolation, LLM-grounded rate, and fallback rate.
 
 Production gates require at least 30 cases, answer accuracy of at least 90%, 100% citation validity, 100% school isolation, 100% unsupported-claim-free answers, at least 95% concise answers, and at most 10% LLM fallback. On the expanded 41-case set, the intent-aware deterministic formatter achieves 70.73% answer accuracy. The combined LLM and validated deterministic fallback achieves 90.24% answer accuracy, 100% evidence-availability accuracy, citation validity, isolation, unsupported-claim-free answers, and conciseness, with a 7.32% fallback rate. Every answer-quality gate therefore passes. Three reviewed cases still expose upstream indexed-evidence gaps, so passing the aggregate gates does not remove the need to refresh and improve individual page extraction.
 

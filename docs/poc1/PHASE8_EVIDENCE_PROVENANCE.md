@@ -34,19 +34,19 @@ Deterministic responses remain available, and optional LLM wording is restricted
 From the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\audit_evidence_quality.py
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\audit_evidence_quality.py
 ```
 
 Generate JSON:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\audit_evidence_quality.py --format json
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\audit_evidence_quality.py --format json
 ```
 
 Save a report:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\audit_evidence_quality.py --output SystemCode\notebooks\poc1\output\evidence_quality.md
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\audit_evidence_quality.py --output SystemCode\src\backend\output\evidence_quality.md
 ```
 
 The audit reports coverage, unknown values, confirmed `No` values, derived evidence, freshness, and invalid provenance definitions. It uses school catalogue data only and does not read family details or chat history.

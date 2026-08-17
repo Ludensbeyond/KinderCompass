@@ -4,7 +4,7 @@ Phase 7 adds repeatable evidence that ranking changes preserve the intended reco
 
 ## Golden scenarios
 
-`scripts/evaluate_recommendations.py` runs five synthetic scenarios:
+`../../SystemCode/src/backend/scripts/evaluate_recommendations.py` runs five synthetic scenarios:
 
 1. proven mismatches on required supported preferences are excluded;
 2. unknown evidence receives no compatibility credit;
@@ -19,7 +19,7 @@ The fixtures contain no real postal codes, income, dates, family details, or cha
 From the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\evaluate_recommendations.py
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\evaluate_recommendations.py
 ```
 
 The default report is Markdown printed to the terminal. A failed scenario makes the command exit with status 1.
@@ -27,13 +27,13 @@ The default report is Markdown printed to the terminal. A failed scenario makes 
 Save a Markdown report:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\evaluate_recommendations.py --output SystemCode\notebooks\poc1\output\recommendation_evaluation.md
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\evaluate_recommendations.py --output SystemCode\src\backend\output\recommendation_evaluation.md
 ```
 
 Generate machine-readable JSON:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\notebooks\poc1\scripts\evaluate_recommendations.py --format json --output SystemCode\notebooks\poc1\output\recommendation_evaluation.json
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\evaluate_recommendations.py --format json --output SystemCode\src\backend\output\recommendation_evaluation.json
 ```
 
 ## Runtime search traces
@@ -56,8 +56,8 @@ Generate machine-readable JSON:
 The normal unit-test suite also invokes the golden evaluator:
 
 ```powershell
-cd SystemCode\notebooks\poc1
-$env:PYTHONPATH = "src"
-..\..\..\.venv\Scripts\python.exe -m unittest discover -s tests -v
+# Run from the repository root
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline;SystemCode/src/backend"
+.\.venv\Scripts\python.exe -m unittest discover -s SystemCode/src/backend/tests -v
 ```
 

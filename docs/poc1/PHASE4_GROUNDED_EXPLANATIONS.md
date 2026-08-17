@@ -38,7 +38,7 @@ The parsed response must reference the deterministically decided school ID. Any 
 
 ## Configuration
 
-Add the following to `SystemCode/notebooks/poc1/.env`:
+Add the following to the repository-level `.env`:
 
 ```dotenv
 OPENAI_GROUNDED_EXPLANATIONS_ENABLED=true
@@ -75,9 +75,9 @@ To test suitability, select exactly one school and ask: `Is the selected school 
 ## Automated tests
 
 ```powershell
-cd SystemCode/notebooks/poc1
-$env:PYTHONPATH = "src"
-& "..\..\..\.venv\Scripts\python.exe" -m unittest discover -s tests
+# Run from the repository root
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline;SystemCode/src/backend"
+& ".\.venv\Scripts\python.exe" -m unittest discover -s SystemCode/src/backend/tests
 ```
 
 The Phase 4 tests mock the OpenAI boundary and cover successful grounding, rejection of an unselected-school reference, and timeout fallback without using an API key.
@@ -86,4 +86,3 @@ The Phase 4 tests mock the OpenAI boundary and cover successful grounding, rejec
 
 The implementation follows official OpenAI guidance to specify required evidence and output structure, keep deterministic processing in code, and evaluate final-answer completeness:
 https://developers.openai.com/api/docs/guides/latest-model
-
