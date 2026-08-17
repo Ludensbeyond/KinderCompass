@@ -3,7 +3,7 @@
 Run as module from repo root with PYTHONPATH set so `stage1` is importable:
 
 PowerShell:
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src"
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline"
 python -m stage1.check_kg
 
 """

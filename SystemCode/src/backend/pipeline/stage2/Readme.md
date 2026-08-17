@@ -61,14 +61,14 @@ Run commands from the repository root in PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src"
+$env:PYTHONPATH = "SystemCode/src/backend;SystemCode/src/backend/pipeline"
 ```
 
 On Linux or macOS, use Bash:
 
 ```bash
 source .venv/bin/activate
-export PYTHONPATH="SystemCode/notebooks/poc1/src"
+export PYTHONPATH="SystemCode/src/backend:SystemCode/src/backend/pipeline"
 ```
 
 ## Run Stage 2
@@ -79,12 +79,12 @@ Stage 2 reads a shortlist JSON file previously produced by Stage 1.
 
 ```powershell
 python -m stage2.runner `
-  --input "SystemCode/notebooks/poc1/output/stage1_shortlist.json" `
+  --input "SystemCode/src/backend/output/stage1_shortlist.json" `
   --dob "2023-06-10" `
   --admission-date "2026-01-01" `
   --ghi 4500 `
   --basic-subsidy 600 `
-  --output "SystemCode/notebooks/poc1/output/stage2_results.json"
+  --output "SystemCode/src/backend/output/stage2_results.json"
 ```
 
 Dates must use `YYYY-MM-DD`. Monetary values are monthly amounts in Singapore
@@ -94,12 +94,12 @@ Bash:
 
 ```bash
 python -m stage2.runner \
-  --input "SystemCode/notebooks/poc1/output/stage1_shortlist.json" \
+  --input "SystemCode/src/backend/output/stage1_shortlist.json" \
   --dob "2023-06-10" \
   --admission-date "2026-01-01" \
   --ghi 4500 \
   --basic-subsidy 600 \
-  --output "SystemCode/notebooks/poc1/output/stage2_results.json"
+  --output "SystemCode/src/backend/output/stage2_results.json"
 ```
 
 ### Keep ineligible preschools in the output
@@ -208,12 +208,12 @@ import datetime as dt
 from stage2.runner import run_from_file
 
 results = run_from_file(
-    "SystemCode/notebooks/poc1/output/stage1_shortlist.json",
+    "SystemCode/src/backend/output/stage1_shortlist.json",
     dob=dt.date(2023, 6, 10),
     admission_date=dt.date(2026, 1, 1),
     ghi=4500,
     basic_subsidy=600,
-    output_path="SystemCode/notebooks/poc1/output/stage2_results.json",
+    output_path="SystemCode/src/backend/output/stage2_results.json",
 )
 ```
 
@@ -223,11 +223,11 @@ For an already loaded Stage 1 list, call
 ## Run the tests
 
 ```powershell
-python -m unittest discover -s SystemCode/notebooks/poc1/tests -v
+python -m unittest discover -s SystemCode/src/backend/tests -v
 ```
 
 Bash:
 
 ```bash
-python -m unittest discover -s SystemCode/notebooks/poc1/tests -v
+python -m unittest discover -s SystemCode/src/backend/tests -v
 ```

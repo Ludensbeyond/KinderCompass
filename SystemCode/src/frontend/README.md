@@ -1,9 +1,16 @@
 # Frontend
 
-User interfaces for KinderCompass.
+Next.js interface for the KinderCompass PoC 1 workflow.
 
-| Folder | Purpose |
-|---|---|
-| `poc1/` | Next.js guided interface for the PoC 1 pipeline. |
+From the repository root:
 
-See `poc1/README.md` for setup and development instructions.
+```powershell
+npm install --prefix SystemCode/src/frontend
+npm --prefix SystemCode/src/frontend run dev
+```
+
+The development server is available at `http://localhost:3000`. Configure its
+backend URL in `SystemCode/src/frontend/.env.local`; the launcher creates that
+file from `.env.local.example` when necessary.
+
+See [the PoC 1 guide](../../../docs/poc1/Readme.md) for complete setup and usage.

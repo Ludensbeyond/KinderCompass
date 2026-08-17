@@ -16,13 +16,13 @@ from pydantic import BaseModel, Field
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-POC_SRC = REPO_ROOT / "SystemCode" / "notebooks" / "poc1" / "src"
-POC_ENV = REPO_ROOT / "SystemCode" / "notebooks" / "poc1" / ".env"
+POC_SRC = REPO_ROOT / "SystemCode" / "src" / "backend" / "pipeline"
+POC_ENV = REPO_ROOT / ".env"
 if str(POC_SRC) not in sys.path:
     sys.path.insert(0, str(POC_SRC))
 
-# PoC 1 keeps its Neo4j connection details beside its notebooks. Loading this
-# explicit path makes backend startup independent of the terminal's directory.
+# Load the repository-level configuration independently of the terminal's
+# current directory.
 load_dotenv(POC_ENV)
 
 from stage1.runner import run_from_profile  # noqa: E402
@@ -130,7 +130,7 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
     index_path = (
         Path(configured_index)
         if configured_index
-        else REPO_ROOT / "SystemCode" / "notebooks" / "poc1" / "output" / "web_rag_pilot_index.json"
+        else REPO_ROOT / "SystemCode" / "src" / "backend" / "output" / "web_rag_pilot_index.json"
     )
     try:
         web_rag_index = load_json(index_path) if index_path.is_file() else None

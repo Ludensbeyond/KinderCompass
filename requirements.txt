@@ -1,5 +1,5 @@
 # Backend API and reusable Stage 1-3 modules
--r SystemCode/src/backend/poc1/requirements.txt
+-r SystemCode/src/backend/requirements.txt
 
 # Data preparation and knowledge-graph notebooks
 pandas>=2.2,<4

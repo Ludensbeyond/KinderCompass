@@ -24,21 +24,21 @@ Usage (recommended):
 - Unix / macOS (from repo root):
 
 ```bash
-# set PYTHONPATH so `stage1` package under SystemCode/notebooks/poc1/src is importable
-PYTHONPATH=SystemCode/notebooks/poc1/src python -m stage1.runner --text "montessori" --town 54 --output "SystemCode/notebooks/poc1/output/stage1_shortlist.json"
+# expose the pipeline packages
+PYTHONPATH=SystemCode/src/backend/pipeline python -m stage1.runner --text "montessori" --town 54 --output "SystemCode/src/backend/output/stage1_shortlist.json"
 ```
 
 - Windows PowerShell:
 
 ```powershell
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src"
-python -m stage1.runner --text "montessori" --town 54 --output "./../output/stage1_shortlist.json"
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline"
+python -m stage1.runner --text "montessori" --town 54 --output "SystemCode/src/backend/output/stage1_shortlist.json"
 ```
 
 Write the Stage 1 shortlist to a JSON handoff file:
 
 ```powershell
-python -m stage1.runner --text "play-based learning" --town "560123" --output "./../output/stage1_shortlist.json"
+python -m stage1.runner --text "play-based learning" --town "560123" --output "SystemCode/src/backend/output/stage1_shortlist.json"
 ```
 
 Notes

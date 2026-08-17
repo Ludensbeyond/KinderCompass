@@ -15,12 +15,12 @@ There is no workplace destination, multiple-stop route, or genetic algorithm.
 From the repository root:
 
 ```powershell
-$env:PYTHONPATH = "SystemCode/notebooks/poc1/src"
+$env:PYTHONPATH = "SystemCode/src/backend/pipeline"
 python -m stage3.runner `
-  --input "SystemCode/notebooks/poc1/output/stage2_results.json" `
+  --input "SystemCode/src/backend/output/stage2_results.json" `
   --select "CENTRE:PT8718" `
   --home-postal-code "540231" `
-  --output "SystemCode/notebooks/poc1/output/stage3_route.json"
+  --output "SystemCode/src/backend/output/stage3_route.json"
 ```
 
 `--select` accepts exactly one eligible `school_id` (or a legacy centre code in
