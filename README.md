@@ -63,7 +63,7 @@ delivered through a FastAPI backend and Next.js frontend.
 
 ---
 
-## SECTION 5 : USER GUIDE
+## SECTION 5 : Project Setup
 
 See the detailed [KinderCompass PoC 1 guide](docs/poc1/Readme.md) and the user
 guide PDF in `ProjectReport/`.
@@ -158,7 +158,17 @@ For normal subsequent launches:
 In short: initialize the data only when Neo4j or the source catalogue needs it;
 otherwise start directly with `run_poc1.ps1`.
 
-## SECTION 6 : Repository structure
+## SECTION 6 : User Guide
+
+- User enter FORM
+- User start chatting with CompassChat to gain preferential Preschools Information \
+  For Example:
+  - CompassChat: I want a school that is within 2km from my house and teaches Chinese
+  - Click "Show Recommendations"
+  - Select schools of interest from results
+  - CompassChat: Compare the selected schools
+
+## SECTION 7 : Repository structure
 
 ```text
 KinderCompass/
