@@ -53,4 +53,4 @@ The audit reports coverage, unknown values, confirmed `No` values, derived evide
 
 ## Refreshing live update dates
 
-`last_updated` is imported from `kindercompass_master.json` into each Neo4j `Preschool` node and returned by the Stage 1 query. After introducing this field or refreshing the processed catalogue, rerun `knowledge_graph_gen.ipynb` so existing graph nodes receive the latest source date. Restart the backend and generate new recommendations afterward; previously returned browser results are not updated in place.
+`last_updated` is imported from `kindercompass_master.json` into each Neo4j `Preschool` node and returned by the Stage 1 query. After introducing this field or refreshing the processed catalogue, run `python -m SystemCode.src.scripts.build_knowledge_graph` so existing graph nodes receive the latest source date. The `knowledge_graph_gen.ipynb` notebook demonstrates the same shared loader. Restart the backend and generate new recommendations afterward; previously returned browser results are not updated in place.

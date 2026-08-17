@@ -64,26 +64,17 @@ Data is sourced from [data.gov.sg](https://data.gov.sg) ECDA preschool registrie
 - Node.js 18+ (for frontend)
 - Neo4j (for knowledge graph engine)
 
-### [ 2 ] To run locally (future)
+### [ 2 ] Run locally
 
-```bash
-# Backend
-cd SystemCode/src/backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-
-# Frontend
-cd SystemCode/src/frontend
-npm install
-npm run dev
+```powershell
+.\run_poc1.ps1 -InstallDependencies
 ```
 
 ### [ 3 ] Data pipeline (offline scripts)
 
-```bash
-cd SystemCode/src/scripts
-python clean.py
-python build_graph.py
+```powershell
+.venv\Scripts\python.exe -m SystemCode.src.scripts.prepare_data
+.venv\Scripts\python.exe -m SystemCode.src.scripts.build_knowledge_graph
 ```
 
 Raw datasets are in `SystemCode/data/raw/`. Processed outputs go to `SystemCode/data/processed/`.

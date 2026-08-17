@@ -17,4 +17,5 @@ Original, unmodified datasets downloaded from [data.gov.sg](https://data.gov.sg)
 
 - Store datasets here only — no code.
 - Do not edit files in place; re-download or replace if the source updates.
-- Processing scripts in `src/scripts/` read from here and write to `data/processed/`.
+- `src/scripts/prepare_data.py` reads these files and atomically writes the
+  processed catalogue to `data/processed/`.

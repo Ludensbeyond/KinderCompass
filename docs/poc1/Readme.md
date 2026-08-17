@@ -12,9 +12,10 @@ Family and child details ----------------> Stage 2: eligibility and cost
 Selected centres and home postal code ---> Stage 3: distance comparison
 ```
 
-The web application exposes the complete flow. Notebooks demonstrate data
-preparation and selected reasoning stages; reusable application code lives in
-`SystemCode/src/backend/`.
+The web application exposes the complete flow. The offline modules in
+`SystemCode/src/scripts/` prepare the catalogue and update Neo4j. Notebooks call
+those shared modules for interactive demonstrations, while reusable application
+code lives in `SystemCode/src/backend/`.
 
 ## How the stages work
 
@@ -64,6 +65,7 @@ distance, not road distance or travel time.
 
 | Path | Purpose |
 |---|---|
+| `SystemCode/src/scripts/` | Offline catalogue preparation and Neo4j loading. |
 | `SystemCode/src/backend/main.py` | FastAPI application and endpoints. |
 | `SystemCode/src/backend/pipeline/` | Reusable Stage 1–3 modules. |
 | `SystemCode/src/backend/scripts/` | Audits and evaluation utilities. |
@@ -71,7 +73,7 @@ distance, not road distance or travel time.
 | `SystemCode/src/backend/tests/` | Backend tests. |
 | `SystemCode/src/backend/output/` | Generated handoff and audit files. |
 | `SystemCode/src/frontend/` | Next.js application. |
-| `SystemCode/notebooks/` | Preparation and interactive demonstrations. |
+| `SystemCode/notebooks/` | Interactive demonstrations of shared pipeline logic. |
 | `SystemCode/data/` | Raw and processed preschool datasets. |
 | `docs/poc1/` | Design, evaluation, and demonstration documentation. |
 | `run_poc1.ps1` | Windows launcher for both services. |

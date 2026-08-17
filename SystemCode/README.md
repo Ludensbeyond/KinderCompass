@@ -1,25 +1,33 @@
 # SystemCode
 
-All runnable code and project data for KinderCompass.
+Runnable application code, offline pipelines, notebooks, and project data for
+KinderCompass.
 
 ## Structure
 
-```
+```text
 SystemCode/
-├── src/
-│   ├── scripts/       # Offline pipeline: scrape, clean, build graph
-│   ├── backend/       # FastAPI — four reasoning engines
-│   └── frontend/      # Next.js/React website
-├── data/
-│   ├── raw/           # Original datasets from data.gov.sg
-│   └── processed/     # Cleaned tables and graph exports
-└── notebooks/         # Jupyter exploration before moving logic to src/
+|-- src/
+|   |-- scripts/       # Offline catalogue preparation and Neo4j loading
+|   |-- backend/       # FastAPI, reasoning pipeline, audits, and RAG tools
+|   `-- frontend/      # Next.js user interface
+|-- data/
+|   |-- raw/           # Source CSV and GeoJSON datasets
+|   `-- processed/     # Reproducible processed catalogue
+`-- notebooks/         # Interactive demonstrations using shared modules
 ```
 
-## Data flow
+## Data and application flow
 
-```
-data/raw/  →  src/scripts/  →  data/processed/  →  src/backend/  →  src/frontend/
+```text
+data/raw
+   -> src/scripts/prepare_data.py
+   -> data/processed/kindercompass_master.json
+   -> src/scripts/build_knowledge_graph.py
+   -> Neo4j
+   -> src/backend
+   -> src/frontend
 ```
 
-Each subfolder contains a README describing planned contents.
+Use [src/scripts/README.md](src/scripts/README.md) for the offline pipeline and
+[the PoC 1 guide](../docs/poc1/Readme.md) for application setup and operation.

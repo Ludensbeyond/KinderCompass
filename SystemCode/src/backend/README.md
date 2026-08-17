@@ -153,12 +153,12 @@ The development CORS policy accepts the frontend origins
 | `grounded_explainer.py` | Produces deterministic or optional LLM-grounded explanations from fixed results and evidence. |
 | `web_rag.py` | Verifies, ingests, retrieves, and cites school-isolated or operator webpage evidence. |
 | `runner.py` | Stage 1 command-line and reusable execution entry points. |
-| `check_kg.py` | Diagnostic utility for inspecting Neo4j preschool nodes and properties. |
 
 ### Maintenance scripts
 
 | Script | Purpose |
 |---|---|
+| `check_kg.py` | Verify Neo4j connectivity and inspect preschool counts, property keys, and sample records. |
 | `audit_preference_coverage.py` | Measure which parent-facing preferences are supported by catalogue fields. |
 | `audit_evidence_quality.py` | Audit evidence coverage, value states, derivation, source dates, and freshness. |
 | `evaluate_recommendations.py` | Run privacy-safe golden ranking scenarios and detect regressions. |
@@ -173,6 +173,17 @@ The development CORS policy accepts the frontend origins
 
 The Phase 9 commands, review workflow, and quality gates are documented in
 [PHASE9_WEBPAGE_RAG.md](../../../docs/poc1/PHASE9_WEBPAGE_RAG.md).
+
+Run the Neo4j diagnostic from the repository root with:
+
+```powershell
+$env:PYTHONPATH = "SystemCode/src/backend;SystemCode/src/backend/pipeline"
+.venv\Scripts\python.exe SystemCode/src/backend/scripts/check_kg.py
+```
+
+This command connects to the configured database, reports the number of
+`Preschool` nodes, displays one node's property keys, and prints a random sample.
+It is read-only and does not rebuild or modify the graph.
 
 ## Tests
 

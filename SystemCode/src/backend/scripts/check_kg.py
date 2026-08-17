@@ -1,11 +1,9 @@
-"""Inspect the Preschool nodes in the KG: keys, count, and sample rows.
+"""Inspect Neo4j preschool counts, property keys, and sample records.
 
-Run as module from repo root with PYTHONPATH set so `stage1` is importable:
+Run from the repository root in PowerShell:
 
-PowerShell:
-$env:PYTHONPATH = "SystemCode/src/backend/pipeline"
-python -m stage1.check_kg
-
+    $env:PYTHONPATH = "SystemCode/src/backend;SystemCode/src/backend/pipeline"
+    python SystemCode/src/backend/scripts/check_kg.py
 """
 from dotenv import load_dotenv
 import random

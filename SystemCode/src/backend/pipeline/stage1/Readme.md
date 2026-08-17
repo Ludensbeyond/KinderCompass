@@ -51,6 +51,15 @@ Quick test checklist
 2. Create `.env` with `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD` at the repo root or current working directory.
 3. Run the runner as shown above. The script will print the generated Cypher, params, and up to 50 results.
 
+To inspect Neo4j connectivity, preschool counts, stored property keys, and a
+random sample without running a recommendation search, use the read-only
+maintenance utility from the repository root:
+
+```powershell
+$env:PYTHONPATH = "SystemCode/src/backend;SystemCode/src/backend/pipeline"
+.venv\Scripts\python.exe SystemCode/src/backend/scripts/check_kg.py
+```
+
 Extending
 - Replace `nlp_mapper.map_text_to_filters` with a semantic text-to-filter mapper (sentence embeddings + nearest-neighbour lookup against KG concept labels).
 - Add `tests/` and CI steps to validate mapping and query building.
