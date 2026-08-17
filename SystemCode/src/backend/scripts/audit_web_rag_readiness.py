@@ -189,9 +189,9 @@ def markdown(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--index", type=Path, default=POC_ROOT / "output" / "web_rag_pilot_index.json")
-    parser.add_argument("--school-decisions", type=Path, default=POC_ROOT / "web_rag" / "pilot_allowlist.json")
-    parser.add_argument("--operator-decisions", type=Path, default=POC_ROOT / "web_rag" / "operator_page_allowlist.json")
-    parser.add_argument("--labels", type=Path, default=POC_ROOT / "web_rag" / "production_audit_labels.json")
+    parser.add_argument("--school-decisions", type=Path, default=POC_ROOT / "resources" / "web_rag" / "pilot_allowlist.json")
+    parser.add_argument("--operator-decisions", type=Path, default=POC_ROOT / "resources" / "web_rag" / "operator_page_allowlist.json")
+    parser.add_argument("--labels", type=Path, default=POC_ROOT / "resources" / "web_rag" / "production_audit_labels.json")
     parser.add_argument("--format", choices=("markdown", "json"), default="markdown")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()

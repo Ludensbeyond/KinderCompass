@@ -13,7 +13,7 @@ POC_ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--allowlist", type=Path, default=POC_ROOT / "web_rag" / "pilot_allowlist.json")
+    parser.add_argument("--allowlist", type=Path, default=POC_ROOT / "resources" / "web_rag" / "pilot_allowlist.json")
     parser.add_argument("--output", type=Path, default=POC_ROOT / "output" / "web_rag_pilot_index.json")
     parser.add_argument("--delay-seconds", type=float, default=1.0)
     args = parser.parse_args()

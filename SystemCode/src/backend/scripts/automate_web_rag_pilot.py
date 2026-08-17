@@ -351,14 +351,14 @@ def main() -> int:
         help="Maximum new school-specific pages to attempt; omit to finish all pending candidates",
     )
     parser.add_argument("--delay-seconds", type=float, default=1.0)
-    parser.add_argument("--allowlist", type=Path, default=POC_ROOT / "web_rag" / "pilot_allowlist.json")
+    parser.add_argument("--allowlist", type=Path, default=POC_ROOT / "resources" / "web_rag" / "pilot_allowlist.json")
     parser.add_argument(
         "--shared-limit", type=int, default=None,
         help="Maximum new shared pages to attempt; omit to finish all pending shared pages",
     )
     parser.add_argument(
         "--operator-allowlist", type=Path,
-        default=POC_ROOT / "web_rag" / "operator_page_allowlist.json",
+        default=POC_ROOT / "resources" / "web_rag" / "operator_page_allowlist.json",
     )
     parser.add_argument("--output", type=Path, default=POC_ROOT / "output" / "web_rag_pilot_index.json")
     parser.add_argument(

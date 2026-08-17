@@ -136,7 +136,7 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
         web_rag_index = load_json(index_path) if index_path.is_file() else None
     except (OSError, ValueError):
         web_rag_index = None
-    general_path = REPO_ROOT / "SystemCode" / "notebooks" / "poc1" / "web_rag" / "general_knowledge_index.json"
+    general_path = REPO_ROOT / "SystemCode" / "src" / "backend" / "resources" / "web_rag" / "general_knowledge_index.json"
     try:
         general_knowledge_index = load_json(general_path) if general_path.is_file() else None
     except (OSError, ValueError):

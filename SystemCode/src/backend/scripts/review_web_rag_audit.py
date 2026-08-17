@@ -226,13 +226,13 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     export_parser = subparsers.add_parser("export")
     export_parser.add_argument("--index", type=Path, default=POC_ROOT / "output" / "web_rag_pilot_index.json")
-    export_parser.add_argument("--school-decisions", type=Path, default=POC_ROOT / "web_rag" / "pilot_allowlist.json")
-    export_parser.add_argument("--operator-decisions", type=Path, default=POC_ROOT / "web_rag" / "operator_page_allowlist.json")
+    export_parser.add_argument("--school-decisions", type=Path, default=POC_ROOT / "resources" / "web_rag" / "pilot_allowlist.json")
+    export_parser.add_argument("--operator-decisions", type=Path, default=POC_ROOT / "resources" / "web_rag" / "operator_page_allowlist.json")
     export_parser.add_argument("--output-dir", type=Path, default=DEFAULT_REVIEW_DIR)
     export_parser.add_argument("--overwrite", action="store_true")
     import_parser = subparsers.add_parser("import")
     import_parser.add_argument("--input-dir", type=Path, default=DEFAULT_REVIEW_DIR)
-    import_parser.add_argument("--labels", type=Path, default=POC_ROOT / "web_rag" / "production_audit_labels.json")
+    import_parser.add_argument("--labels", type=Path, default=POC_ROOT / "resources" / "web_rag" / "production_audit_labels.json")
     args = parser.parse_args()
     if args.command == "export":
         result = export_packets(

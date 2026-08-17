@@ -162,7 +162,7 @@ def main() -> int:
     load_dotenv(POC_ROOT / ".env")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--index", type=Path, default=POC_ROOT / "output" / "web_rag_pilot_index.json")
-    parser.add_argument("--labels", type=Path, default=POC_ROOT / "web_rag" / "production_audit_labels.json")
+    parser.add_argument("--labels", type=Path, default=POC_ROOT / "resources" / "web_rag" / "production_audit_labels.json")
     parser.add_argument("--use-llm", action="store_true", help="Call the configured OpenAI model instead of forcing deterministic answers")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
