@@ -14,7 +14,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 POC_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATASET = POC_ROOT.parents[1] / "data" / "processed" / "poc1" / "kindercompass_master.json"
+DEFAULT_DATASET = POC_ROOT.parents[1] / "data" / "processed" / "kindercompass_master.json"
 MISSING = {"", "na", "n/a", "none", "null", "-"}
 TRACKING_PREFIXES = ("utm_",)
 TRACKING_KEYS = {"fbclid", "gclid", "mc_cid", "mc_eid"}

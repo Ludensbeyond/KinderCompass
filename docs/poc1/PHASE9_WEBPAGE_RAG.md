@@ -66,13 +66,13 @@ From the repository root:
 Save the detailed JSON inventory:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format json --output SystemCode\notebooks\output\website_inventory.json
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format json --output SystemCode\src\backend\output\website_inventory.json
 ```
 
 Create a reviewable CSV:
 
 ```powershell
-.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format csv --output SystemCode\notebooks\output\website_inventory.csv
+.\.venv\Scripts\python.exe SystemCode\src\backend\scripts\build_website_inventory.py --format csv --output SystemCode\src\backend\output\website_inventory.csv
 ```
 
 ## Identity-verification gate

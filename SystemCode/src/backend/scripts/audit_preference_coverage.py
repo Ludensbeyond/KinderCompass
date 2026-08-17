@@ -13,7 +13,6 @@ DEFAULT_DATASET = (
     Path(__file__).resolve().parents[3]
     / "data"
     / "processed"
-    / "poc1"
     / "kindercompass_master.json"
 )
 

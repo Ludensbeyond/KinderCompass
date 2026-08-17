@@ -17,7 +17,7 @@ if str(SRC) not in sys.path:
 from stage1.evidence import EVIDENCE_PROVENANCE, freshness  # noqa: E402
 
 
-DEFAULT_DATASET = POC_ROOT.parents[1] / "data" / "processed" / "poc1" / "kindercompass_master.json"
+DEFAULT_DATASET = POC_ROOT.parents[1] / "data" / "processed" / "kindercompass_master.json"
 FIELDS = {
     "language": "second_languages_offered",
     "spark_certified": "spark_certified",

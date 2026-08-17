@@ -1,4 +1,4 @@
-school_id,school_name,postal_code,selected_candidate_url,domain,schools_sharing_selected_url,scope,identity_status,candidate_urls,normalization_errors
+school_id,school_name,postal_code,selected_candidate_url,domain,schools_sharing_selected_url,scope,identity_status,candidate_urls,normalization_errors
 CENTRE:ST0280,PCF Sparkletots Preschool @ Sengkang North Blk 231 (DS),540231,https://www.pcf.org.sg/sparkletots,www.pcf.org.sg,333,shared_operator_page_candidate,not_verified,https://www.pcf.org.sg/sparkletots,
 CENTRE:ST0344,PCF Sparkletots Preschool @ Admiralty Blk 687B (DS),732687,https://www.pcf.org.sg/sparkletots,www.pcf.org.sg,333,shared_operator_page_candidate,not_verified,https://www.pcf.org.sg/sparkletots,
 CENTRE:ST0341,PCF Sparkletots Preschool @ Sembawang West Blk 789 (DS),730789,https://www.pcf.org.sg/sparkletots,www.pcf.org.sg,333,shared_operator_page_candidate,not_verified,https://www.pcf.org.sg/sparkletots,
