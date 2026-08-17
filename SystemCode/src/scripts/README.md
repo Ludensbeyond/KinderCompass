@@ -59,8 +59,31 @@ Configure the repository-level `.env`, then run:
 ```
 
 The default operation is non-destructive. It upserts each `Preschool`, replaces
-that school's current `LOCATED_IN` and `SERVES_LEVEL` relationships, and merges
-the corresponding `Town` and `CareLevel` nodes.
+that school's current knowledge relationships, and merges the corresponding
+concept nodes. It also creates uniqueness constraints for stable identifiers and
+concept names, plus an index on preschool names.
+
+```text
+(Preschool)-[:LOCATED_IN]->(Town)
+(Preschool)-[:SERVES_LEVEL]->(CareLevel)
+(Preschool)-[:TEACHES_IN]->(Language)
+(Preschool)-[:USES_PEDAGOGY]->(Pedagogy)
+(Preschool)-[:PARTICIPATES_IN]->(OperatorScheme)
+(Preschool)-[:HAS_CERTIFICATION]->(Certification)
+```
+
+Longitude and latitude parsed from the official location GeoJSON are retained
+on each `Preschool` node. Existing scalar properties remain available for
+backward compatibility with Stage 1 ranking. Concept relationships that no
+longer apply are replaced during refresh, and unused concept nodes are removed.
+
+After updating the graph, inspect the enriched model in Neo4j Browser:
+
+```cypher
+MATCH (p:Preschool)-[r]->(concept)
+RETURN p, r, concept
+LIMIT 500;
+```
 
 To intentionally delete every Neo4j node before rebuilding, supply the explicit
 flag:
