@@ -60,7 +60,8 @@ type Stop = MapPoint & {
 type Route = { total_distance_km: number; distance_method: string; schedule: Stop[] };
 type DistanceResult = { school_id: string; distance_km: number };
 type Citation = { url: string; title: string; retrieved_at: string; chunk_id: string; evidence_scope: string; authority?: string; effective_from?: string };
-type Message = { role: "assistant" | "user"; text: string; citations?: Citation[] };
+type EvidenceCategory = "authoritative_fact" | "school_published_claim" | "calculated_estimate" | "parent_sentiment" | "unknown";
+type Message = { role: "assistant" | "user"; text: string; citations?: Citation[]; evidenceCategory?: EvidenceCategory | null };
 type PreferenceImportance = "required" | "high_priority" | "preferred" | "nice_to_have";
 type PreferenceItem = { attribute: string; value: unknown; importance: PreferenceImportance };
 type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; recognized?: string[] };
@@ -201,7 +202,7 @@ export default function Home() {
     const question = preference.trim();
     setMessages((items) => [...items, { role: "user", text: question }]);
     try {
-      const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string; citations?: Citation[] }>("/api/preferences", {
+      const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string; citations?: Citation[]; evidence_category?: EvidenceCategory | null }>("/api/preferences", {
         message: question,
         profile: preferenceProfile,
         selected_school_ids: selected,
@@ -214,7 +215,7 @@ export default function Home() {
       const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
       setDistanceFilter(distancePreference ? String(distancePreference.value) : "none");
       setReadyToSearch(result.ready_to_search);
-      setMessages((items) => [...items, { role: "assistant", text: result.question, citations: result.citations }]);
+      setMessages((items) => [...items, { role: "assistant", text: result.question, citations: result.citations, evidenceCategory: result.evidence_category }]);
       setPreference("");
     } catch (caught) {
       const message = (caught as Error).message;
@@ -346,7 +347,7 @@ export default function Home() {
           <div className="sectionTitle"><span className="bot">✦</span><div><h1>Compass chat</h1><p>Describe the preschool you need</p></div></div>
           {understood.length > 0 && <><details className="preferenceSummary"><summary><strong>Understood preferences</strong><span>{understood.length}</span></summary><div className="preferenceContent"><div className="preferenceChips">{understood.map((item) => <span key={item}>{item}</span>)}</div>{preferenceProfile?.preference_items?.some((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)) && <div className="importanceControls"><strong>Adjust ranking importance</strong>{preferenceProfile.preference_items.filter((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)).map((item) => <label key={`${item.attribute}-${String(item.value)}`}><span>{item.attribute.replaceAll("_", " ")}</span><select value={item.importance} onChange={(event) => updateImportance(item.attribute, item.value, event.target.value as PreferenceImportance)}><option value="required">Required</option><option value="high_priority">High priority</option><option value="preferred">Preferred</option><option value="nice_to_have">Nice to have</option></select></label>)}</div>}<small>Send another message to add or correct these preferences.</small></div></details><div className="recommendationAction"><button onClick={confirmSearch} disabled={busy || !readyToSearch}>Show recommendations</button></div></>}
           <div className="messages" aria-live="polite">
-            {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.text}</span>{message.citations?.length ? <div className="messageSources"><strong>Sources</strong>{message.citations.map((citation, sourceIndex) => <a href={citation.url} target="_blank" rel="noreferrer" key={citation.chunk_id}>[{sourceIndex + 1}] {citation.title}<small>{citation.evidence_scope === "general" ? "General guidance" : "School evidence"}{citation.authority ? ` · ${citation.authority}` : ""}{citation.effective_from ? ` · Effective ${sourceDateLabel(citation.effective_from)}` : ""} · Retrieved {sourceDateLabel(citation.retrieved_at)}</small></a>)}</div> : null}</div>)}
+            {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.text}</span>{message.evidenceCategory && <small className={`evidenceLabel ${message.evidenceCategory}`}>Evidence: {message.evidenceCategory.replaceAll("_", " ")}</small>}{message.citations?.length ? <div className="messageSources"><strong>Sources</strong>{message.citations.map((citation, sourceIndex) => <a href={citation.url} target="_blank" rel="noreferrer" key={citation.chunk_id}>[{sourceIndex + 1}] {citation.title}<small>{citation.evidence_scope === "general" ? "General guidance" : "School evidence"}{citation.authority ? ` · ${citation.authority}` : ""}{citation.effective_from ? ` · Effective ${sourceDateLabel(citation.effective_from)}` : ""} · Retrieved {sourceDateLabel(citation.retrieved_at)}</small></a>)}</div> : null}</div>)}
             {busy && <div className="message assistant typing">Thinking…</div>}
           </div>
           <form className="chatComposer" onSubmit={sendPreference}>

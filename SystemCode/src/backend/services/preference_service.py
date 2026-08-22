@@ -83,6 +83,7 @@ class PreferenceService:
             profile,
             f"What-if only ({assumptions}); your saved family details were not changed. " + " ".join(sections),
             status="what_if",
+            evidence_category="calculated_estimate",
         )
 
     def _explain_exclusion(
@@ -97,10 +98,16 @@ class PreferenceService:
         for item in targets:
             reason = item.get("reason") or item.status.replace("_", " ")
             explanations.append(f"{item.name} was excluded at Stage 2 because {reason}.")
-        return self._direct_answer(profile, " ".join(explanations), status="exclusion_explanation")
+        return self._direct_answer(
+            profile, " ".join(explanations), status="exclusion_explanation",
+            evidence_category="authoritative_fact",
+        )
 
     @staticmethod
-    def _direct_answer(profile: dict[str, Any], question: str, *, status: str = "comparison") -> dict[str, Any]:
+    def _direct_answer(
+        profile: dict[str, Any], question: str, *, status: str = "comparison",
+        evidence_category: str = "unknown",
+    ) -> dict[str, Any]:
         return {
             "profile": profile,
             "understood": summarize_profile(profile),
@@ -109,6 +116,7 @@ class PreferenceService:
             "question": question,
             "citations": [],
             "ranking_affected": False,
+            "evidence_category": evidence_category,
         }
 
     def handle(

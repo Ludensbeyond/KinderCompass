@@ -141,6 +141,10 @@ class PreferenceResponse(BaseModel):
     citations: list[dict[str, Any]] = Field(default_factory=list)
     answer_method: str | None = None
     fallback_reason: str | None = None
+    evidence_category: Literal[
+        "authoritative_fact", "school_published_claim", "calculated_estimate",
+        "parent_sentiment", "unknown",
+    ] | None = None
 
 
 class GeocodeResponse(BaseModel):

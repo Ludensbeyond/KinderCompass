@@ -133,6 +133,7 @@ class WhatIfAndExclusionTests(unittest.TestCase):
         self.assertIn("$750", result["question"])
         self.assertIn("were not changed", result["question"])
         self.assertEqual(self.family.working_hours_per_month, 56)
+        self.assertEqual(result["evidence_category"], "calculated_estimate")
 
     def test_exclusion_uses_stage2_reason(self):
         self.evaluation.evaluate.return_value = [
@@ -143,6 +144,7 @@ class WhatIfAndExclusionTests(unittest.TestCase):
         )
         self.assertIn("required age level is not offered", result["question"])
         self.assertFalse(result["ranking_affected"])
+        self.assertEqual(result["evidence_category"], "authoritative_fact")
 
 
 if __name__ == "__main__":

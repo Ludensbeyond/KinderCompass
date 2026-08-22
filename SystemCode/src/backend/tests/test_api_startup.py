@@ -43,6 +43,7 @@ class ApiStartupTests(unittest.TestCase):
         self.assertIn("Near School", response.json()["question"])
         self.assertIn("0.30 km", response.json()["question"])
         self.assertEqual(response.json()["profile"]["active_school"]["school_id"], "B")
+        self.assertEqual(response.json()["evidence_category"], "calculated_estimate")
         mock_all.assert_called_once_with()
         mock_distances.assert_any_call(mock_all.return_value, "540231")
 
@@ -55,6 +56,7 @@ class ApiStartupTests(unittest.TestCase):
 
         self.assertEqual(follow_up.status_code, 200)
         self.assertNotIn("Select one preschool", follow_up.json()["question"])
+        self.assertIn(follow_up.json()["evidence_category"], {"school_published_claim", "unknown"})
 
 
 if __name__ == "__main__":

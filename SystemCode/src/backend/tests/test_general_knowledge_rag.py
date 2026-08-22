@@ -136,6 +136,7 @@ class GeneralKnowledgeRagTests(unittest.TestCase):
         )
         self.assertEqual(turn["status"], "general_knowledge")
         self.assertEqual(turn["citations"][0]["authority"], "ECDA")
+        self.assertEqual(turn["evidence_category"], "authoritative_fact")
         self.assertFalse(turn["ranking_affected"])
 
 

@@ -404,6 +404,7 @@ def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: 
         "status": "comparison",
         "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
         "question": grounded,
+        "evidence_category": "calculated_estimate",
     }
 
 
@@ -584,7 +585,14 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             profile["active_school"] = {
                 key: closest.get(key) for key in ("school_id", "centre_code", "name") if closest.get(key) is not None
             }
-        return {"profile": profile, "understood": summarize_profile(profile), "status": "comparison", "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")), "question": answer}
+        return {
+            "profile": profile,
+            "understood": summarize_profile(profile),
+            "status": "comparison",
+            "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
+            "question": answer,
+            "evidence_category": "calculated_estimate",
+        }
     if intent.intent == "explain_top_ranked_preschool":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
@@ -620,6 +628,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "ranking_affected": False,
             "web_answer_method": answer_method,
             "web_answer_fallback_reason": fallback_reason,
+            "evidence_category": "school_published_claim" if citations else "unknown",
         }
     if intent.intent == "ask_general_knowledge":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
@@ -632,6 +641,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
             "question": answer, "citations": citations,
             "evidence_scope": "general" if citations else "unavailable", "ranking_affected": False,
+            "evidence_category": "authoritative_fact" if citations else "unknown",
         }
     if intent.intent == "ask_combined_evidence":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
