@@ -16,7 +16,9 @@ from stage1.llm_extractor import merge_preference_profile_with_llm
 from stage1.grounded_explainer import explain_school_comparison, explain_school_decision, synthesize_web_evidence
 from stage1.intent_router import classify_intent
 from stage1.web_rag import retrieve, retrieve_general_evidence
-from stage1.dialogue_manager import next_best_question
+from stage1.dialogue_manager import (
+    detect_contradiction, next_best_question, resolve_contradiction,
+)
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
@@ -502,6 +504,23 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     current_profile = sync_preference_schema(
         current or {"hard_constraints": {}, "preferences": {}, "recognized": []}
     )
+    repaired_profile, repaired = resolve_contradiction(current_profile, text)
+    if repaired:
+        return {
+            "profile": repaired_profile,
+            "understood": summarize_profile(repaired_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "The conflicting preference has been resolved. Add another preference or click Show recommendations.",
+        }
+    if current_profile.get("pending_contradiction"):
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_clarification",
+            "ready_to_search": False,
+            "question": current_profile["pending_contradiction"]["question"],
+        }
     has_preferences = bool(
         current_profile.get("hard_constraints") or current_profile.get("preferences")
     )
@@ -674,6 +693,16 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         }
 
     incoming = map_text_to_filters(text)
+    contradiction = detect_contradiction(current_profile, incoming, text)
+    if contradiction:
+        current_profile["pending_contradiction"] = contradiction
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_clarification",
+            "ready_to_search": False,
+            "question": contradiction["question"],
+        }
     profile = merge_preference_profile_with_llm(current, text)
     if profile.get("clarification_needed"):
         return {

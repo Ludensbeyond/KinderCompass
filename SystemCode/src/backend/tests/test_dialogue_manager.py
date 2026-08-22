@@ -41,5 +41,34 @@ class DecisionAwareDialogueTests(unittest.TestCase):
         self.assertIn("Show recommendations", turn["question"])
 
 
+class ContradictionDetectionTests(unittest.TestCase):
+    def test_conflicting_required_languages_require_explicit_repair(self):
+        first = update_conversation(None, "Chinese is required")
+        conflict = update_conversation(first["profile"], "Malay is required")
+        self.assertEqual(conflict["status"], "needs_clarification")
+        self.assertFalse(conflict["ready_to_search"])
+        self.assertIn("already require Chinese", conflict["question"])
+        self.assertEqual(conflict["profile"]["hard_constraints"]["language"], "Chinese")
+
+        resolved = update_conversation(conflict["profile"], "use Malay")
+        self.assertTrue(resolved["ready_to_search"])
+        self.assertEqual(resolved["profile"]["hard_constraints"]["language"], "Malay")
+        self.assertNotIn("pending_contradiction", resolved["profile"])
+
+    def test_unresolved_contradiction_cannot_be_silently_overwritten(self):
+        first = update_conversation(None, "Chinese is required")
+        conflict = update_conversation(first["profile"], "Malay is required")
+        repeated = update_conversation(conflict["profile"], "show recommendations")
+        self.assertFalse(repeated["ready_to_search"])
+        self.assertEqual(repeated["profile"]["hard_constraints"]["language"], "Chinese")
+
+    def test_conflicting_required_pedagogies_can_keep_existing(self):
+        first = update_conversation(None, "Montessori is required")
+        conflict = update_conversation(first["profile"], "Reggio is required")
+        self.assertEqual(conflict["status"], "needs_clarification")
+        resolved = update_conversation(conflict["profile"], "keep Montessori")
+        self.assertEqual(resolved["profile"]["preferences"]["pedagogy"]["value"], "Montessori")
+
+
 if __name__ == "__main__":
     unittest.main()

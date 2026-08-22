@@ -6,6 +6,8 @@ import math
 from collections import Counter
 from typing import Any, Iterable, Mapping
 
+from stage1.preference_schema import sync_preference_schema
+
 
 QUESTION_ORDER = ("language", "pedagogy", "spark_certified", "transport", "food")
 QUESTIONS = {
@@ -108,3 +110,78 @@ def next_best_question(profile: Mapping[str, Any], facets: Mapping[str, Any] | N
     if _entropy_score(attribute, facets) <= 0:
         return None
     return attribute, QUESTIONS[attribute]
+
+
+def detect_contradiction(
+    current: Mapping[str, Any], incoming: Mapping[str, Any], text: str
+) -> dict[str, Any] | None:
+    """Return a repair choice when a new requirement conflicts with saved state."""
+    lowered = text.casefold()
+    incoming_required = any(
+        marker in lowered for marker in ("must", "need", "required", "require", "essential")
+    )
+    old_language = current.get("hard_constraints", {}).get("language")
+    new_language = incoming.get("hard_constraints", {}).get("language")
+    if old_language and new_language and old_language != new_language:
+        return {
+            "attribute": "language",
+            "existing": old_language,
+            "incoming": new_language,
+            "question": (
+                f"You already require {old_language}, but this message requires {new_language}. "
+                f"Say ‘keep {old_language}’ or ‘use {new_language}’."
+            ),
+        }
+
+    existing_pedagogy = current.get("preferences", {}).get("pedagogy")
+    incoming_pedagogy = incoming.get("preferences", {}).get("pedagogy")
+    if existing_pedagogy and incoming_pedagogy:
+        old_value = existing_pedagogy.get("value")
+        new_value = incoming_pedagogy.get("value")
+        old_required = any(
+            item.get("attribute") == "pedagogy" and item.get("importance") == "required"
+            for item in current.get("preference_items", [])
+        )
+        opposing = (
+            old_value == new_value
+            and existing_pedagogy.get("desired", True)
+            != incoming_pedagogy.get("desired", True)
+        )
+        if opposing or (old_value != new_value and old_required and incoming_required):
+            old_label = old_value if existing_pedagogy.get("desired", True) else f"avoid {old_value}"
+            new_label = new_value if incoming_pedagogy.get("desired", True) else f"avoid {new_value}"
+            return {
+                "attribute": "pedagogy",
+                "existing": old_label,
+                "incoming": new_label,
+                "incoming_preference": dict(incoming_pedagogy),
+                "question": (
+                    f"Your saved teaching-approach requirement is {old_label}, while the new one is "
+                    f"{new_label}. Say ‘keep {old_label}’ or ‘use {new_label}’."
+                ),
+            }
+    return None
+
+
+def resolve_contradiction(profile: dict[str, Any], text: str) -> tuple[dict[str, Any], bool]:
+    pending = profile.get("pending_contradiction")
+    if not pending:
+        return profile, False
+    lowered = text.casefold().strip()
+    use_new = "use new" in lowered or (
+        "use " in lowered and str(pending["incoming"]).casefold() in lowered
+    )
+    keep_old = "keep existing" in lowered or "keep current" in lowered or (
+        "keep " in lowered and str(pending["existing"]).casefold() in lowered
+    )
+    if not use_new and not keep_old:
+        return profile, False
+    updated = dict(profile)
+    if use_new:
+        if pending["attribute"] == "language":
+            updated.setdefault("hard_constraints", {})["language"] = pending["incoming"]
+        elif pending["attribute"] == "pedagogy":
+            updated.setdefault("preferences", {})["pedagogy"] = pending["incoming_preference"]
+    updated.pop("pending_contradiction", None)
+    updated["recognized"] = [f"resolved {pending['attribute']} contradiction"]
+    return sync_preference_schema(updated), True
