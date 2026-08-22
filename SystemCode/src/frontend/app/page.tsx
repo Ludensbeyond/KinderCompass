@@ -115,6 +115,8 @@ export default function Home() {
   const [readyToSearch, setReadyToSearch] = useState(false);
   const [recommendationTrace, setRecommendationTrace] = useState("");
   const [anonymousSessionId, setAnonymousSessionId] = useState("");
+  const [rememberPreferences, setRememberPreferences] = useState(false);
+  const [memoryStatus, setMemoryStatus] = useState("");
   const [feedbackSchoolId, setFeedbackSchoolId] = useState("");
   const [feedbackEvent, setFeedbackEvent] = useState<FeedbackEvent>("selected");
   const [feedbackReason, setFeedbackReason] = useState<FeedbackReason>("good_match");
@@ -142,6 +144,18 @@ export default function Home() {
     const value = existing ?? window.crypto.randomUUID();
     if (!existing) window.localStorage.setItem(key, value);
     setAnonymousSessionId(value);
+    if (window.localStorage.getItem("kindercompass-remember-preferences") === "true") {
+      setRememberPreferences(true);
+      void post<{ found: boolean; profile?: PreferenceProfile; understood: string[] }>("/api/memory/restore", {
+        anonymous_session_id: value,
+      }).then((result) => {
+        if (!result.found || !result.profile) return;
+        setPreferenceProfile(result.profile);
+        setUnderstood(result.understood);
+        setReadyToSearch(Boolean(Object.keys(result.profile.hard_constraints).length || Object.keys(result.profile.preferences).length));
+        setMessages((items) => [...items, { role: "assistant", text: "I restored your saved preschool preferences. Family details and previous chat messages were not stored." }]);
+      }).catch(() => setMemoryStatus("Saved preferences could not be restored."));
+    }
   }, []);
 
   useEffect(() => {
@@ -210,6 +224,8 @@ export default function Home() {
         excluded_school_ids: excluded,
         family: familyDetails,
         home_postal_code: homePostalCode,
+        anonymous_session_id: rememberPreferences ? anonymousSessionId : undefined,
+        remember_preferences: rememberPreferences,
       });
       setPreferenceProfile(result.profile); setUnderstood(result.understood);
       const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
@@ -285,6 +301,28 @@ export default function Home() {
     setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
 
+  async function changePreferenceMemory(enabled: boolean) {
+    setMemoryStatus("");
+    if (!anonymousSessionId) return;
+    try {
+      if (enabled) {
+        window.localStorage.setItem("kindercompass-remember-preferences", "true");
+        setRememberPreferences(true);
+        if (preferenceProfile) {
+          await post("/api/memory/save", { anonymous_session_id: anonymousSessionId, profile: preferenceProfile });
+        }
+        setMemoryStatus("Structured preferences will be remembered for up to 180 days.");
+      } else {
+        await post("/api/memory/forget", { anonymous_session_id: anonymousSessionId });
+        window.localStorage.removeItem("kindercompass-remember-preferences");
+        setRememberPreferences(false);
+        setMemoryStatus("Saved preferences were forgotten.");
+      }
+    } catch (caught) {
+      setMemoryStatus((caught as Error).message);
+    }
+  }
+
   async function changeProgramme(schoolId: string, programmeId: ProgrammeId) {
     if (!familyDetails) return;
     setProgrammeBusy(schoolId); setError("");
@@ -354,6 +392,10 @@ export default function Home() {
             <textarea required minLength={2} maxLength={500} disabled={!familyDetails || busy} value={preference} onChange={(event) => setPreference(event.target.value)} placeholder={familyDetails ? "Ask for Montessori, bilingual, play-based…" : "Complete Family details to unlock chat"} />
             <button className="primary" disabled={!familyDetails || busy}>Send <span>↑</span></button>
           </form>
+          <div className="memoryControl">
+            <label><input type="checkbox" checked={rememberPreferences} onChange={(event) => void changePreferenceMemory(event.target.checked)} /><span>Remember my structured preferences on this device</span></label>
+            <small>No chat text, postal code, income, or child details are stored. {memoryStatus}</small>
+          </div>
         </aside>
 
         <section className="rightColumn">

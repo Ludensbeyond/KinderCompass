@@ -28,11 +28,12 @@ from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noq
 from stage1.proximity import geocode_postal_code  # noqa: E402
 from stage1.dialogue_manager import propose_constraint_relaxation  # noqa: E402
 from SystemCode.src.backend.domain.models import (  # noqa: E402
-    DistanceRequest, DistanceResponse, EvaluateRequest, EvaluationResponse,
+    ConversationMemoryRequest, ConversationMemoryResponse, DistanceRequest, DistanceResponse,
+    EvaluateRequest, EvaluationResponse, ForgetConversationMemoryResponse,
     FeedbackRequest, FeedbackResponse,
     GeocodeRequest, GeocodeResponse, HealthResponse, PreferenceRequest,
     PreferenceResponse, ProgrammeEstimateRequest, ProgrammeEstimateResponse,
-    RouteRequest, RouteResponse, SearchRequest, SearchResponse,
+    RouteRequest, RouteResponse, SaveConversationMemoryRequest, SearchRequest, SearchResponse,
 )
 from SystemCode.src.backend.repositories.school_repository import (  # noqa: E402
     SchoolNotFoundError, SchoolRepository,
@@ -46,6 +47,7 @@ from SystemCode.src.backend.services.preference_service import PreferenceService
 from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
     FeedbackSchoolMismatchError, FeedbackService, FeedbackSnapshotNotFoundError,
 )
+from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
 
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
@@ -68,6 +70,9 @@ PREFERENCE_SERVICE = PreferenceService(
 )
 FEEDBACK_SERVICE = FeedbackService(
     REPO_ROOT / "SystemCode/src/backend/output/recommendation_feedback.sqlite3"
+)
+CONVERSATION_MEMORY_SERVICE = ConversationMemoryService(
+    REPO_ROOT / "SystemCode/src/backend/output/conversation_memory.sqlite3"
 )
 
 
@@ -111,17 +116,45 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
     try:
         if "closest" in request.message.lower() and not request.home_postal_code:
             raise HTTPException(status_code=422, detail="Enter a six-digit home postal code before asking for the nearest preschool.")
-        return PREFERENCE_SERVICE.handle(
+        result = PREFERENCE_SERVICE.handle(
             message=request.message, profile=request.profile,
             selected_school_ids=request.selected_school_ids,
             eligible_school_ids=request.eligible_school_ids,
             excluded_school_ids=request.excluded_school_ids,
             family=request.family, home_postal_code=request.home_postal_code,
         )
+        if request.remember_preferences:
+            if request.anonymous_session_id is None:
+                raise HTTPException(status_code=422, detail="An anonymous session ID is required to remember preferences.")
+            CONVERSATION_MEMORY_SERVICE.save(request.anonymous_session_id, result["profile"])
+        return result
     except SchoolNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/memory/restore", response_model=ConversationMemoryResponse)
+def restore_conversation_memory(request: ConversationMemoryRequest) -> dict[str, Any]:
+    profile = CONVERSATION_MEMORY_SERVICE.restore(request.anonymous_session_id)
+    return {
+        "found": profile is not None,
+        "profile": profile,
+        "understood": summarize_profile(profile) if profile else [],
+    }
+
+
+@app.post("/api/memory/save", response_model=ConversationMemoryResponse)
+def save_conversation_memory(request: SaveConversationMemoryRequest) -> dict[str, Any]:
+    CONVERSATION_MEMORY_SERVICE.save(request.anonymous_session_id, request.profile)
+    profile = CONVERSATION_MEMORY_SERVICE.restore(request.anonymous_session_id)
+    return {"found": True, "profile": profile, "understood": summarize_profile(profile or {})}
+
+
+@app.post("/api/memory/forget", response_model=ForgetConversationMemoryResponse)
+def forget_conversation_memory(request: ConversationMemoryRequest) -> dict[str, str]:
+    CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id)
+    return {"status": "forgotten"}
 
 
 @app.post("/api/evaluate", response_model=EvaluationResponse)

@@ -53,6 +53,26 @@ class PreferenceRequest(BaseModel):
     excluded_school_ids: list[SchoolId] = Field(default_factory=list)
     family: FamilyDetails | None = None
     home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
+    anonymous_session_id: uuid.UUID | None = None
+    remember_preferences: bool = False
+
+
+class ConversationMemoryRequest(BaseModel):
+    anonymous_session_id: uuid.UUID
+
+
+class SaveConversationMemoryRequest(ConversationMemoryRequest):
+    profile: dict[str, Any]
+
+
+class ConversationMemoryResponse(BaseModel):
+    found: bool
+    profile: dict[str, Any] | None = None
+    understood: list[str] = Field(default_factory=list)
+
+
+class ForgetConversationMemoryResponse(BaseModel):
+    status: Literal["forgotten"]
 
 
 class EvaluateRequest(BaseModel):
