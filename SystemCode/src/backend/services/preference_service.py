@@ -65,4 +65,5 @@ class PreferenceService:
         web_index, general_index = self._resources()
         return update_conversation(
             profile, message, selected, eligible, web_index, general_index, intent,
+            self.schools.facet_summary(),
         )

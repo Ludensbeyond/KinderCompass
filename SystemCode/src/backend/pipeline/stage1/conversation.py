@@ -16,6 +16,7 @@ from stage1.llm_extractor import merge_preference_profile_with_llm
 from stage1.grounded_explainer import explain_school_comparison, explain_school_decision, synthesize_web_evidence
 from stage1.intent_router import classify_intent
 from stage1.web_rag import retrieve, retrieve_general_evidence
+from stage1.dialogue_manager import next_best_question
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
@@ -491,7 +492,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -743,7 +744,13 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     if incoming.get("hard_constraints", {}).get("max_distance_km") is not None:
         question = _distance_acknowledgement(profile)
     else:
-        question = "Would you like to add another preference or show recommendations?"
+        selected_question = next_best_question(profile, candidate_facets)
+        if selected_question:
+            profile["next_question_attribute"] = selected_question[0]
+            question = selected_question[1] + " You can also click Show recommendations now."
+        else:
+            profile.pop("next_question_attribute", None)
+            question = "Would you like to add another preference or show recommendations?"
     return {
         "profile": profile,
         "understood": understood,

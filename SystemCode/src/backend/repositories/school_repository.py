@@ -89,3 +89,10 @@ class SchoolRepository:
     def catalogue_version(self) -> str:
         self._refresh()
         return str(self._mtime_ns)
+
+    def facet_summary(self) -> dict:
+        """Return privacy-free catalogue statistics for next-question selection."""
+        self._refresh()
+        from stage1.dialogue_manager import catalogue_facets
+
+        return catalogue_facets(self._by_id.values())
