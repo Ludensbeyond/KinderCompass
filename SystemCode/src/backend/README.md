@@ -126,6 +126,7 @@ Stop the development server with `Ctrl+C`.
 | `POST /api/preferences` | Merge preferences and route chat questions. A nearest-school request queries the grounded catalogue for a location answer, but does not create a ranked recommendation shortlist. |
 | `POST /api/search` | Run confirmed Stage 1 constraints and preference ranking against Neo4j. |
 | `POST /api/evaluate` | Run Stage 2 exact-age eligibility and an explainable programme-specific fee/subsidy estimate. |
+| `POST /api/schools/{school_id}/programme-estimate` | Recalculate one authoritative school's fee and subsidy for an exact programme option shown by the GUI. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |
 | `POST /api/distances` | Calculate independent home distances for a collection of centres. |
 | `POST /api/route` | Run Stage 3 for one selected authoritative preschool ID and return its two-point map schedule. |
@@ -249,6 +250,14 @@ citizenship, and selected programme from the catalogue's detailed
 the dated ECDA policy resource under `resources/policy/`, including the relevant
 minimum co-payment. Larger qualifying households are assessed using reported
 per-capita income criteria.
+
+The evaluation response also lists the exact programmes available for each
+school and age level, such as Half Day AM and Half Day PM. If the preferred
+programme is unavailable, the school remains visible with its lowest-fee
+supported option and an explicit warning. Selecting another programme in the
+GUI calls the programme-estimate endpoint, which resolves the school and fee
+again from the authoritative catalogue rather than accepting a browser-supplied
+fee.
 
 The result is an estimate, not subsidy approval. Class C kindergarten, reported
 Special Approval circumstances, missing programme fees, and unsupported

@@ -28,13 +28,16 @@ from stage1.proximity import geocode_postal_code  # noqa: E402
 from SystemCode.src.backend.domain.models import (  # noqa: E402
     DistanceRequest, DistanceResponse, EvaluateRequest, EvaluationResponse,
     GeocodeRequest, GeocodeResponse, HealthResponse, PreferenceRequest,
-    PreferenceResponse, RouteRequest, RouteResponse, SearchRequest, SearchResponse,
+    PreferenceResponse, ProgrammeEstimateRequest, ProgrammeEstimateResponse,
+    RouteRequest, RouteResponse, SearchRequest, SearchResponse,
 )
 from SystemCode.src.backend.repositories.school_repository import (  # noqa: E402
     SchoolNotFoundError, SchoolRepository,
 )
 from SystemCode.src.backend.repositories.policy_repository import PolicyUnavailableError  # noqa: E402
-from SystemCode.src.backend.services.evaluation_service import EvaluationService  # noqa: E402
+from SystemCode.src.backend.services.evaluation_service import (  # noqa: E402
+    EvaluationService, ProgrammeUnavailableError,
+)
 from SystemCode.src.backend.services.location_service import LocationService  # noqa: E402
 from SystemCode.src.backend.services.preference_service import PreferenceService  # noqa: E402
 
@@ -127,6 +130,25 @@ def evaluate(request: EvaluateRequest) -> EvaluationResponse:
             "stage2_excluded": len(request.school_ids) - eligible_count,
         },
     })
+
+
+@app.post(
+    "/api/schools/{school_id}/programme-estimate",
+    response_model=ProgrammeEstimateResponse,
+)
+def programme_estimate(
+    school_id: str, request: ProgrammeEstimateRequest
+) -> ProgrammeEstimateResponse:
+    """Recalculate one school's fees for an exact programme option."""
+    try:
+        result = EVALUATION_SERVICE.estimate_programme(
+            school_id, request.programme_id, request.family
+        )
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (ProgrammeUnavailableError, PolicyUnavailableError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return ProgrammeEstimateResponse(**result)
 
 
 @app.post("/api/geocode", response_model=GeocodeResponse)

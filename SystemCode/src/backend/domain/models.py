@@ -7,6 +7,16 @@ from pydantic import BaseModel, Field
 
 
 SchoolId = str
+ProgrammeId = Literal[
+    "full_day",
+    "half_day_am",
+    "half_day_pm",
+    "flexi_care_1",
+    "flexi_care_1_am",
+    "flexi_care_1_pm",
+    "flexi_care_2",
+    "flexi_care_3",
+]
 
 
 class FamilyDetails(BaseModel):
@@ -49,6 +59,11 @@ class EvaluateRequest(BaseModel):
     trace_id: str | None = Field(default=None, max_length=36)
 
 
+class ProgrammeEstimateRequest(BaseModel):
+    family: FamilyDetails
+    programme_id: ProgrammeId
+
+
 class RouteRequest(BaseModel):
     school_id: SchoolId = Field(min_length=1)
     home_postal_code: str = Field(pattern=r"^\d{6}$")
@@ -80,6 +95,25 @@ class EvaluationResponse(BaseModel):
     eligible_count: int
     centres: list[dict[str, Any]]
     trace: dict[str, Any]
+
+
+class ProgrammeEstimateResponse(BaseModel):
+    school_id: SchoolId
+    programme_id: ProgrammeId
+    service_label: str
+    programme: str | None = None
+    status: str
+    eligible: bool
+    eligible_level: str | None = None
+    fee_before_subsidy: float
+    base_fee: float | None = None
+    basic_subsidy: float | None = None
+    additional_subsidy: float | None = None
+    minimum_copayment: float | None = None
+    net_monthly_fee: float
+    working_status: str | None = None
+    policy_source: dict[str, Any] | None = None
+    warnings: list[str] = Field(default_factory=list)
 
 
 class SearchResponse(BaseModel):

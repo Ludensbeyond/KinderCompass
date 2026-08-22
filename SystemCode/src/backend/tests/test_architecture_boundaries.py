@@ -14,10 +14,30 @@ from SystemCode.src.backend.repositories.policy_repository import (
 from SystemCode.src.backend.repositories.school_repository import (
     SchoolNotFoundError, SchoolRepository,
 )
-from SystemCode.src.backend.services.evaluation_service import EvaluationService
+from SystemCode.src.backend.services.evaluation_service import (
+    EvaluationService, ProgrammeUnavailableError,
+)
 
 
 class RepositoryBoundaryTests(unittest.TestCase):
+    @staticmethod
+    def _programme_service(path: Path) -> EvaluationService:
+        level = "Pre-Nursery (3 yrs old)"
+        path.write_text(json.dumps([{
+            "school_id": "CENTRE:A", "centre_code": "A", "centre_name_x": "Trusted",
+            "care_levels": [level], "base_fee": 9999,
+            "services_menu": [
+                {"class_of_licence": "Class B (Child Care)",
+                 "levels_offered": level, "type_of_service": service_type,
+                 "type_of_citizenship": "SC", "fees": fee,
+                 "last_updated": "2026-07-17"}
+                for service_type, fee in (
+                    ("Full Day", 800), ("Half Day AM", 420), ("Half Day PM", 510)
+                )
+            ],
+        }]), encoding="utf-8")
+        return EvaluationService(SchoolRepository(path))
+
     def test_school_repository_resolves_ids_and_rejects_unknown_ids(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "catalogue.json"
@@ -53,6 +73,34 @@ class RepositoryBoundaryTests(unittest.TestCase):
                        "gross_household_income": 4500},
         })
         self.assertEqual(response.status_code, 422)
+
+    def test_evaluation_exposes_exact_programmes_and_falls_back_when_preferred_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = self._programme_service(Path(directory) / "catalogue.json")
+            family = FamilyDetails(
+                dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+                gross_household_income=4500, programme_type="flexi_care_3",
+            )
+            result = service.evaluate(["CENTRE:A"], {}, family)[0]
+            self.assertFalse(result["preferred_programme_available"])
+            self.assertEqual(result["programme_id"], "half_day_am")
+            self.assertEqual(
+                {item["programme_id"] for item in result["programme_options"]},
+                {"full_day", "half_day_am", "half_day_pm"},
+            )
+
+    def test_exact_programme_estimate_uses_selected_variant(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = self._programme_service(Path(directory) / "catalogue.json")
+            family = FamilyDetails(
+                dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+                gross_household_income=4500,
+            )
+            result = service.estimate_programme("CENTRE:A", "half_day_pm", family)
+            self.assertEqual(result["service_label"], "Half Day PM")
+            self.assertEqual(result["fee_before_subsidy"], 510)
+            with self.assertRaises(ProgrammeUnavailableError):
+                service.estimate_programme("CENTRE:A", "flexi_care_3", family)
 
     def test_unknown_school_id_is_a_404_before_evaluation(self):
         response = TestClient(main.app).post("/api/evaluate", json={

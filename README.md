@@ -230,30 +230,51 @@ form values:
 | Working-hours boundary | Change working hours from `56` to `55` | Treats the applicant as non-working; Additional Subsidy becomes unavailable and the estimate increases. |
 | Qualifying larger household | Income `8000`, household size `6`, non-earning dependants `3` | Uses the qualifying per-capita-income assessment; PCI is approximately `$1,333.33`. |
 | Permanent Resident child | Citizenship `Permanent Resident` | Uses the matching SPR programme fee and applies no SC Basic or Additional Subsidy. |
-| Flexi-care 1 or 3 | Select the corresponding flexi-care programme | Uses a matching centre fee and the programme-specific policy table when the centre offers it. |
-| Flexi-care 2 | Select `Flexi-care 2 (confirm hours with centre)` | Uses a matching Flexi-care 2 fee but requires manual review; no subsidy amount is invented. |
+| Flexi-care 1 or 3 | Select the corresponding flexi-care programme | Uses a matching centre fee and programme-specific policy table when offered. A school without that programme remains visible with a fallback warning and its lowest-fee supported option. |
+| Flexi-care 2 | Select `Flexi-care 2 (confirm hours with centre)` | Uses a matching Flexi-care 2 fee when offered, but requires manual review and does not invent a subsidy. Otherwise, the school shows its lowest-fee supported option with a fallback warning. |
 | Potential Special Approval | Check the Special Approval box | Reports that ECDA review may be required instead of presenting an approved subsidy amount. |
 
 The displayed amount is an indicative monthly estimate based on reported facts.
 It is not an ECDA subsidy approval, and GST treatment or additional centre
 charges may differ.
 
-### 6.4 Test results, map, comparison, and explanations
+### 6.4 Test programme selection, results, map, and explanations
 
 After clicking **Show recommendations**:
 
 1. Open the **Results** tab and confirm that each card shows match percentage,
    evidence confidence, eligible level, estimated fee, and home distance where
    location data is available.
-2. Expand **How this score was calculated**. Verify that each ranked preference
+2. Find a school card with more than one entry in its **Programme** selector.
+   The list should contain only programmes offered by that school for the
+   child's eligible level and citizenship. Full Day, Half Day AM, and Half Day
+   PM appear as separate options when present in the source catalogue.
+3. Record the displayed monthly fee, choose another programme, and wait for the
+   selector to become active again. Confirm that the card displays the selected
+   programme and its recalculated monthly estimate. Switching between Half Day
+   AM and Half Day PM must use the corresponding fee rather than the cheaper of
+   the two.
+4. To test programme fallback, return to the **Form** tab, choose a less common
+   option such as Flexi-care 3, and generate recommendations again. A school
+   that does not offer the preferred programme should remain visible when it
+   has another supported option. Its card should show this warning:
+
+   ```text
+   Your preferred programme is unavailable at this school; the lowest-fee available option is shown.
+   ```
+
+   The selector must not list the unavailable programme. A school with no
+   supported programme for the child's level and citizenship is excluded from
+   the eligible results.
+5. Expand **How this score was calculated**. Verify that each ranked preference
    shows its importance, contribution, source, evidence state, and last-updated
    date.
-3. Change the **Distance from home** selector between `None`, `1`, `2`, and `5`
+6. Change the **Distance from home** selector between `None`, `1`, `2`, and `5`
    km. The visible result count should change while the original ranking order
    is preserved.
-4. Select two or more schools. Their pins should appear on the map with the home
+7. Select two or more schools. Their pins should appear on the map with the home
    pin and independently calculated straight-line distances.
-5. Ask Compass chat:
+8. Ask Compass chat:
 
    ```text
    Compare the selected schools.

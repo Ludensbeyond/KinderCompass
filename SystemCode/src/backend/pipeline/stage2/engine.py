@@ -21,11 +21,17 @@ LEVEL_BY_AGE_MONTHS = (
     (60, 72, "Kindergarten 1 (5 yrs old)", "child_care"),
     (72, 84, "Kindergarten 2 (6 yrs old)", "child_care"),
 )
-PROGRAMME_ALIASES = {
-    "Full Day": "full_day", "Half Day AM": "half_day", "Half Day PM": "half_day",
-    "Flexi Care 1": "flexi_care_1", "Flexi Care 1 AM": "flexi_care_1",
-    "Flexi Care 1 PM": "flexi_care_1", "Flexi Care 3": "flexi_care_3",
-    "Flexi Care 2": "flexi_care_2",
+SERVICE_PROGRAMME_IDS = {
+    "Full Day": "full_day", "Half Day AM": "half_day_am", "Half Day PM": "half_day_pm",
+    "Flexi Care 1": "flexi_care_1", "Flexi Care 1 AM": "flexi_care_1_am",
+    "Flexi Care 1 PM": "flexi_care_1_pm", "Flexi Care 2": "flexi_care_2",
+    "Flexi Care 3": "flexi_care_3",
+}
+PROGRAMME_CATEGORIES = {
+    "full_day": "full_day", "half_day": "half_day", "half_day_am": "half_day",
+    "half_day_pm": "half_day", "flexi_care_1": "flexi_care_1",
+    "flexi_care_1_am": "flexi_care_1", "flexi_care_1_pm": "flexi_care_1",
+    "flexi_care_2": "flexi_care_2", "flexi_care_3": "flexi_care_3",
 }
 
 
@@ -51,15 +57,25 @@ def placement_for_age(months: int) -> tuple[str | None, str | None]:
 def _normalise_programme(value: str | None) -> str | None:
     if not value:
         return None
-    if value in PROGRAMME_ALIASES.values():
-        return value
-    return PROGRAMME_ALIASES.get(value)
+    programme_id = SERVICE_PROGRAMME_IDS.get(value, value)
+    return PROGRAMME_CATEGORIES.get(programme_id)
 
 
-def _select_service(menu: Iterable[Mapping[str, Any]], *, level: str, citizenship: str, programme: str) -> dict[str, Any] | None:
+def programme_id_for_service(service_type: str | None) -> str | None:
+    return SERVICE_PROGRAMME_IDS.get(str(service_type or ""))
+
+
+def subsidy_category(programme_id: str | None) -> str | None:
+    return PROGRAMME_CATEGORIES.get(str(programme_id or ""))
+
+
+def _select_service(menu: Iterable[Mapping[str, Any]], *, level: str, citizenship: str,
+                    programme: str, service_type: str | None = None) -> dict[str, Any] | None:
     candidates = []
     for item in menu:
         if item.get("levels_offered") != level or item.get("type_of_citizenship") != citizenship:
+            continue
+        if service_type and item.get("type_of_service") != service_type:
             continue
         if _normalise_programme(str(item.get("type_of_service") or "")) != programme:
             continue
@@ -83,7 +99,7 @@ def evaluate_preschool_eligibility(
     services_menu: Iterable[Mapping[str, Any]] | None = None, citizenship: str = "SC",
     programme_type: str = "full_day", working_hours_per_month: float = 56,
     household_size: int = 1, non_earning_dependants: int = 0,
-    special_approval: bool = False,
+    special_approval: bool = False, service_type: str | None = None,
 ) -> dict[str, Any]:
     """Estimate placement, programme fee, and potential subsidy from reported facts."""
     if float(ghi) < 0:
@@ -106,7 +122,8 @@ def evaluate_preschool_eligibility(
         return {"eligible": False, "status": "needs_information", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "reason": "The selected programme is not supported by the subsidy estimator"}
     menu = list(services_menu or [])
-    service = _select_service(menu, level=eligible_level, citizenship=citizenship, programme=programme)
+    service = _select_service(menu, level=eligible_level, citizenship=citizenship,
+                              programme=programme, service_type=service_type)
     fee = service["fees"] if service else float(base_fee) if base_fee is not None and not menu else None
     if fee is None:
         return {"eligible": False, "status": "fee_unavailable", "eligible_level": eligible_level,
@@ -119,18 +136,21 @@ def evaluate_preschool_eligibility(
     if programme == "flexi_care_2":
         return {"eligible": True, "status": "manual_review", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "scheme": scheme, "programme": programme,
+                "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
                 "fee_before_subsidy": fee, "net_monthly_fee": fee,
                 "reason": "A Flexi-care 2 fee is available, but no separately verified subsidy table is configured.",
                 "warnings": warnings, "policy_source": source, "selected_service": service}
     if service and service.get("class_of_licence") == "Class C (Kindergarten)":
         return {"eligible": True, "status": "manual_review", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "scheme": "kifas", "programme": programme,
+                "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
                 "fee_before_subsidy": fee, "net_monthly_fee": fee,
                 "reason": "Kindergarten fees require a separate KiFAS eligibility assessment.",
                 "warnings": warnings, "policy_source": source, "selected_service": service}
     if citizenship != "SC":
         return {"eligible": True, "status": "estimated", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "scheme": "none", "programme": programme,
+                "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
                 "fee_before_subsidy": fee, "basic_subsidy": 0.0, "additional_subsidy": 0.0,
                 "minimum_copayment": 0.0, "net_monthly_fee": fee,
                 "reasons": ["The reported child citizenship is not eligible for this ECDA subsidy estimate."],
@@ -138,6 +158,7 @@ def evaluate_preschool_eligibility(
     if special_approval:
         return {"eligible": True, "status": "manual_review", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "scheme": scheme, "programme": programme,
+                "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
                 "fee_before_subsidy": fee, "net_monthly_fee": fee,
                 "reason": "Reported circumstances may require ECDA Special Approval and supporting documents.",
                 "warnings": warnings, "policy_source": source, "selected_service": service}
@@ -155,6 +176,7 @@ def evaluate_preschool_eligibility(
     return {
         "eligible": True, "status": "estimated", "eligible_level": eligible_level,
         "age_on_admission_months": months, "scheme": scheme, "programme": programme,
+        "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
         "fee_before_subsidy": fee, "base_fee": fee, "basic_subsidy": applied_basic,
         "additional_subsidy": float(additional), "minimum_copayment": float(minimum_copayment),
         "net_monthly_fee": round(net, 2), "working_status": status_key,

@@ -36,6 +36,21 @@ class Stage2PolicyTests(unittest.TestCase):
         self.assertEqual(result["net_monthly_fee"], 160)
         self.assertEqual(result["policy_source"]["policy_id"], "ecda-preschool-subsidies-2025-01-01")
 
+    def test_exact_half_day_variant_does_not_use_cheaper_sibling_fee(self):
+        level = "Pre-Nursery (3 yrs old)"
+        menu = [
+            service(level, service_type="Half Day AM", fee=420),
+            service(level, service_type="Half Day PM", fee=510),
+        ]
+        result = evaluate_preschool_eligibility(
+            dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+            ghi=4500, care_levels=[level], services_menu=menu,
+            citizenship="SC", programme_type="half_day_pm",
+            service_type="Half Day PM",
+        )
+        self.assertEqual(result["programme_id"], "half_day_pm")
+        self.assertEqual(result["fee_before_subsidy"], 510)
+
     def test_56_hour_boundary_changes_basic_and_additional_subsidy(self):
         level = "Pre-Nursery (3 yrs old)"
         common = dict(dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),

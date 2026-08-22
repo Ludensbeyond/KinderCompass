@@ -3,6 +3,21 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import LiveMap, { MapPoint } from "./LiveMap";
 
+type ProgrammeOption = {
+  programme_id: string;
+  service_label: string;
+  status: Centre["status"];
+  eligible: boolean;
+  eligible_level?: string;
+  fee_before_subsidy: number;
+  net_monthly_fee: number;
+  basic_subsidy?: number;
+  additional_subsidy?: number;
+  minimum_copayment?: number;
+  warnings?: string[];
+  policy_source?: Centre["policy_source"];
+};
+
 type Centre = {
   school_id: string;
   centre_code?: string | null;
@@ -18,6 +33,10 @@ type Centre = {
   basic_subsidy?: number;
   additional_subsidy?: number;
   minimum_copayment?: number;
+  programme_id?: string;
+  service_label?: string;
+  preferred_programme_available?: boolean;
+  programme_options?: ProgrammeOption[];
   warnings?: string[];
   policy_source?: { policy_id: string; authority: string; effective_from: string; source_url: string };
   distance_km?: number;
@@ -76,6 +95,7 @@ export default function Home() {
   const [distances, setDistances] = useState<Record<string, number>>({});
   const [distanceFilter, setDistanceFilter] = useState("none");
   const [busy, setBusy] = useState(false);
+  const [programmeBusy, setProgrammeBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [homePostalCode, setHomePostalCode] = useState("731764");
   const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(null);
@@ -226,6 +246,24 @@ export default function Home() {
     setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
 
+  async function changeProgramme(schoolId: string, programmeId: string) {
+    if (!familyDetails) return;
+    setProgrammeBusy(schoolId); setError("");
+    try {
+      const estimate = await post<ProgrammeOption & { school_id: string }>(
+        `/api/schools/${encodeURIComponent(schoolId)}/programme-estimate`,
+        { family: familyDetails, programme_id: programmeId },
+      );
+      setEligible((centres) => centres.map((centre) =>
+        centre.school_id === schoolId ? { ...centre, ...estimate } : centre
+      ));
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally {
+      setProgrammeBusy(null);
+    }
+  }
+
   function updateImportance(attribute: string, value: unknown, importance: PreferenceImportance) {
     setPreferenceProfile((profile) => profile ? {
       ...profile,
@@ -295,7 +333,7 @@ export default function Home() {
               {tab === "results" && stage === "choose" && <>
                 <div className="rankingSummary"><div><strong>Ranked recommendations</strong><p>Ordered by preference match, then evidence confidence.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>
                 <div className="resultToolbar"><label>Distance from home<select value={distanceFilter} onChange={(event) => setDistanceFilter(event.target.value)}><option value="none">None</option>{distanceFilter !== "none" && !["1", "2", "3", "4", "5"].includes(distanceFilter) && <option value={distanceFilter}>Within {distanceFilter} km</option>}{[1, 2, 3, 4, 5].map((km) => <option value={km} key={km}>Within {km} km</option>)}</select></label><span>Filtering preserves the original rank</span></div>
-                <div className="resultList selectable">{visibleEligible.length === 0 ? <div className="emptyState"><h2>No schools within this distance</h2><p>Increase the distance or select None.</p></div> : visibleEligible.map((centre) => <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}><button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}><span className="selectMark">✓</span><div><span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span><small>{centre.match_score?.toFixed(0) ?? "—"}% match · {((centre.profile_confidence ?? 0) * 100).toFixed(0)}% evidence · Eligible · {centre.eligible_level}</small><h3>{centre.name}</h3><p>{centre.strengths?.length ? `Strengths: ${centre.strengths.join(", ")}` : "Limited preference evidence"}{centre.tradeoffs?.length ? ` · Trade-offs: ${centre.tradeoffs.join(", ")}` : ""}</p><p>{distances[centre.school_id] != null ? `${distances[centre.school_id].toFixed(2)} km from home` : "Distance unavailable"}</p></div><div className="schoolMetrics"><strong>{money.format(centre.net_monthly_fee ?? 0)}<small>/month</small></strong>{routes[centre.school_id] && <strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>from home</small></strong>}</div></button><details className="scoreBreakdown"><summary>How this score was calculated</summary><div>{centre.match_breakdown?.length ? centre.match_breakdown.map((item) => <p key={item.attribute}><strong>{item.attribute.split(":")[0].replaceAll("_", " ")}</strong><span className={`evidenceStatus ${item.status}`}>{item.status.replaceAll("_", " ")}</span><small>{item.importance.replaceAll("_", " ")} · {item.contribution} of {item.possible_contribution} verified points</small><small>Source: {item.source} · Evidence: {item.evidence_state} · Last updated: {sourceDateLabel(item.source_date)}</small></p>) : <p>All requested features were applied as required filters. The remaining schools satisfy those verifiable requirements, but no preferred criteria were available to rank them further.</p>}</div></details></article>)}</div>
+                <div className="resultList selectable">{visibleEligible.length === 0 ? <div className="emptyState"><h2>No schools within this distance</h2><p>Increase the distance or select None.</p></div> : visibleEligible.map((centre) => <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}><button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}><span className="selectMark">✓</span><div><span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span><small>{centre.match_score?.toFixed(0) ?? "—"}% match · {((centre.profile_confidence ?? 0) * 100).toFixed(0)}% evidence · Eligible · {centre.eligible_level}</small><h3>{centre.name}</h3><p>{centre.strengths?.length ? `Strengths: ${centre.strengths.join(", ")}` : "Limited preference evidence"}{centre.tradeoffs?.length ? ` · Trade-offs: ${centre.tradeoffs.join(", ")}` : ""}</p><p>{distances[centre.school_id] != null ? `${distances[centre.school_id].toFixed(2)} km from home` : "Distance unavailable"}</p></div><div className="schoolMetrics"><strong>{money.format(centre.net_monthly_fee ?? 0)}<small>/month</small></strong>{routes[centre.school_id] && <strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>from home</small></strong>}</div></button>{centre.programme_options && centre.programme_options.length > 0 && <div className="programmePicker"><label>Programme<select value={centre.programme_id ?? ""} disabled={programmeBusy === centre.school_id} onChange={(event) => void changeProgramme(centre.school_id, event.target.value)}>{centre.programme_options.map((option) => <option value={option.programme_id} key={option.programme_id}>{option.service_label} — {money.format(option.net_monthly_fee)}/month</option>)}</select></label>{centre.preferred_programme_available === false && <small>Your preferred programme is unavailable at this school; the lowest-fee available option is shown.</small>}</div>}<details className="scoreBreakdown"><summary>How this score was calculated</summary><div>{centre.match_breakdown?.length ? centre.match_breakdown.map((item) => <p key={item.attribute}><strong>{item.attribute.split(":")[0].replaceAll("_", " ")}</strong><span className={`evidenceStatus ${item.status}`}>{item.status.replaceAll("_", " ")}</span><small>{item.importance.replaceAll("_", " ")} · {item.contribution} of {item.possible_contribution} verified points</small><small>Source: {item.source} · Evidence: {item.evidence_state} · Last updated: {sourceDateLabel(item.source_date)}</small></p>) : <p>All requested features were applied as required filters. The remaining schools satisfy those verifiable requirements, but no preferred criteria were available to rank them further.</p>}</div></details></article>)}</div>
                 <div className="rankingHelp"><p><strong>Preference match</strong> means how well the school matches requested features.</p><p><strong>Evidence confidence</strong> means how much usable school data was available to evaluate those features.</p></div>
               </>}
             </div>
