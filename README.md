@@ -333,6 +333,29 @@ This feedback is evaluation data for a future explainable ranking model. It
 does not currently change eligibility, subsidies, required filters, or the live
 ranking order.
 
+### 6.6 Test conversation continuity and lost-in-the-middle handling
+
+1. Complete the family form and enable **Remember my structured preferences on
+   this device** below the chat box.
+2. Enter several preferences over separate turns, for example a required
+   language, preferred pedagogy, maximum distance, and SPARK preference.
+3. Change an earlier preference. Confirm that **Understood preferences** shows
+   the latest value rather than the superseded one.
+4. Create a contradiction, such as requiring Chinese and then requiring Malay.
+   Do not resolve it yet. Refresh the browser. After completing the family form,
+   answer the restored contradiction; the chat should continue the unresolved
+   decision instead of silently replacing either requirement.
+5. Enter enough different questions to exceed six topics. Earlier prose is not
+   replayed, but the bounded decision state should retain the latest confirmed
+   preference changes and current goal.
+6. Disable **Remember my structured preferences on this device**, then refresh.
+   The stored structured profile and pending decision should no longer return.
+
+The persisted state contains normalized preferences, recent preference changes,
+recent intent labels, and unresolved decision types. It does not contain raw
+chat messages, assistant answers, family details, postal codes, or selected
+schools.
+
 ## SECTION 7 : Repository structure
 
 ```text

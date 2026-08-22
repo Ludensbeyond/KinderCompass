@@ -12,6 +12,8 @@ from typing import Any
 
 _PERSISTED_PROFILE_KEYS = {
     "hard_constraints", "preferences", "preference_items", "recognized", "answered_facets",
+    "unsupported_preferences", "pending", "pending_queue", "pending_contradiction",
+    "pending_relaxation", "next_question_attribute", "decision_state",
 }
 
 

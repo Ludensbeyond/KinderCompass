@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,7 @@ from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
 from SystemCode.src.backend.services.evaluation_service import EvaluationService
 from SystemCode.src.backend.services.location_service import LocationService
+from SystemCode.src.backend.services.decision_state_service import enrich_decision_state
 from stage1.conversation import update_conversation
 from stage1.intent_router import classify_intent
 from stage1.nlp_mapper import summarize_profile
@@ -125,16 +127,19 @@ class PreferenceService:
         excluded_school_ids: list[str], family: FamilyDetails | None, home_postal_code: str | None,
     ) -> dict[str, Any]:
         current = profile or {}
+        before = deepcopy(current)
         active = current.get("active_school") or {}
         intent = classify_intent(message, active.get("name"))
         if intent.intent == "run_what_if_scenario":
-            return self._what_if(
+            result = self._what_if(
                 message, selected_school_ids or eligible_school_ids, current, family
             )
+            return enrich_decision_state(before, result, intent=intent.intent)
         if intent.intent == "explain_school_exclusion":
-            return self._explain_exclusion(
+            result = self._explain_exclusion(
                 message, excluded_school_ids, current, family
             )
+            return enrich_decision_state(before, result, intent=intent.intent)
         selected_ids = selected_school_ids or ([active["school_id"]] if active.get("school_id") else [])
         selected = self._rebuild(selected_ids, current, family)
         eligible = self._rebuild(eligible_school_ids, current, family)
@@ -146,7 +151,8 @@ class PreferenceService:
             if eligible:
                 eligible = self.locations.attach_distances(eligible, home_postal_code)
         web_index, general_index = self._resources()
-        return update_conversation(
+        result = update_conversation(
             profile, message, selected, eligible, web_index, general_index, intent,
             self.schools.facet_summary(),
         )
+        return enrich_decision_state(before, result, intent=intent.intent)

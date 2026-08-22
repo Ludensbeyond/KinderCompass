@@ -153,7 +153,7 @@ export default function Home() {
         setPreferenceProfile(result.profile);
         setUnderstood(result.understood);
         setReadyToSearch(Boolean(Object.keys(result.profile.hard_constraints).length || Object.keys(result.profile.preferences).length));
-        setMessages((items) => [...items, { role: "assistant", text: "I restored your saved preschool preferences. Family details and previous chat messages were not stored." }]);
+        setMessages((items) => [...items, { role: "assistant", text: "I restored your saved preschool preferences and unresolved decision state. Family details and previous chat messages were not stored." }]);
       }).catch(() => setMemoryStatus("Saved preferences could not be restored."));
     }
   }, []);
@@ -411,7 +411,7 @@ export default function Home() {
           </form>
           <div className="memoryControl">
             <label><input type="checkbox" checked={rememberPreferences} onChange={(event) => void changePreferenceMemory(event.target.checked)} /><span>Remember my structured preferences on this device</span></label>
-            <small>No chat text, postal code, income, or child details are stored. {memoryStatus}</small>
+            <small>Saves compact preferences and unresolved decisions—not chat text, postal code, income, or child details. {memoryStatus}</small>
           </div>
         </aside>
 

@@ -26,6 +26,8 @@ class ConversationMemoryServiceTests(unittest.TestCase):
             "preference_items": [],
             "recognized": ["Mandarin"],
             "answered_facets": ["language"],
+            "decision_state": {"current_goal": "optional_clarification"},
+            "pending_contradiction": {"attribute": "language"},
             "active_school": {"school_id": "secret-selection"},
             "raw_chat": "My child and income details",
         })
@@ -34,6 +36,8 @@ class ConversationMemoryServiceTests(unittest.TestCase):
 
         self.assertEqual(restored["hard_constraints"], {"language": "Mandarin"})
         self.assertEqual(restored["answered_facets"], ["language"])
+        self.assertEqual(restored["decision_state"]["current_goal"], "optional_clarification")
+        self.assertEqual(restored["pending_contradiction"]["attribute"], "language")
         self.assertNotIn("raw_chat", restored)
         self.assertNotIn("active_school", restored)
 
