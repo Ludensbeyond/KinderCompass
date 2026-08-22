@@ -5,6 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from SystemCode.src.backend.domain.catalogue import EvaluatedSchool, ProgrammeOption
+
 
 SchoolId = str
 ProgrammeId = Literal[
@@ -93,27 +95,15 @@ class DistanceResponse(BaseModel):
 
 class EvaluationResponse(BaseModel):
     eligible_count: int
-    centres: list[dict[str, Any]]
+    centres: list[EvaluatedSchool]
     trace: dict[str, Any]
 
 
-class ProgrammeEstimateResponse(BaseModel):
+class ProgrammeEstimateResponse(ProgrammeOption):
     school_id: SchoolId
     programme_id: ProgrammeId
-    service_label: str
-    programme: str | None = None
-    status: str
-    eligible: bool
-    eligible_level: str | None = None
-    fee_before_subsidy: float
     base_fee: float | None = None
-    basic_subsidy: float | None = None
-    additional_subsidy: float | None = None
-    minimum_copayment: float | None = None
-    net_monthly_fee: float
     working_status: str | None = None
-    policy_source: dict[str, Any] | None = None
-    warnings: list[str] = Field(default_factory=list)
 
 
 class SearchResponse(BaseModel):

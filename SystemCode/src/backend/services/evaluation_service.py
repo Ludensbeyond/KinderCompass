@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from SystemCode.src.backend.domain.catalogue import (
+    EvaluatedSchool, ProgrammeOption, SchoolRecord,
+)
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
 from stage1.scorer import rank_schools
@@ -37,7 +40,7 @@ class EvaluationService:
 
     def _estimate(
         self,
-        school: dict[str, Any],
+        school: SchoolRecord,
         family: FamilyDetails,
         *,
         programme_id: str,
@@ -53,8 +56,8 @@ class EvaluationService:
         )
 
     def programme_options(
-        self, school: dict[str, Any], family: FamilyDetails
-    ) -> list[dict[str, Any]]:
+        self, school: SchoolRecord, family: FamilyDetails
+    ) -> list[ProgrammeOption]:
         months = age_in_months(family.dob, family.admission_date)
         level, _ = placement_for_age(months)
         if not level:
@@ -79,12 +82,14 @@ class EvaluationService:
                 service_type=service_type,
             )
             if result.get("eligible"):
-                options.append({**result, "service_label": service_type})
+                options.append(ProgrammeOption.model_validate(
+                    {**result, "service_label": service_type}
+                ))
         return options
 
     def _evaluate_school(
-        self, school: dict[str, Any], family: FamilyDetails
-    ) -> dict[str, Any]:
+        self, school: SchoolRecord, family: FamilyDetails
+    ) -> EvaluatedSchool:
         options = self.programme_options(school, family)
         preferred_category = subsidy_category(family.programme_type)
         preferred = [
@@ -99,13 +104,13 @@ class EvaluationService:
             chosen = self._estimate(
                 school, family, programme_id=family.programme_type
             )
-        return {
+        return EvaluatedSchool.model_validate({
             **school,
             **chosen,
             "preferred_programme": family.programme_type,
             "preferred_programme_available": bool(preferred),
             "programme_options": options,
-        }
+        })
 
     def evaluate(
         self,
@@ -114,11 +119,18 @@ class EvaluationService:
         family: FamilyDetails,
         *,
         include_ineligible: bool = False,
-    ) -> list[dict[str, Any]]:
+    ) -> list[EvaluatedSchool]:
         trusted = self.schools.get_many(school_ids)
         if profile.get("hard_constraints") or profile.get("preferences"):
             trusted = rank_schools(profile, trusted, limit=len(trusted))
-        evaluated = [self._evaluate_school(school, family) for school in trusted]
+        evaluated = [
+            self._evaluate_school(
+                school if isinstance(school, SchoolRecord)
+                else SchoolRecord.model_validate(school),
+                family,
+            )
+            for school in trusted
+        ]
         return [
             item for item in evaluated if item.get("eligible") or include_ineligible
         ]

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+
+from pydantic import ValidationError
+
+from SystemCode.src.backend.domain.catalogue import SchoolRecord
 
 
 class SchoolNotFoundError(LookupError):
@@ -11,13 +14,18 @@ class SchoolNotFoundError(LookupError):
         super().__init__("Unknown school ID(s): " + ", ".join(school_ids))
 
 
+class SchoolCatalogueValidationError(RuntimeError):
+    pass
+
+
 class SchoolRepository:
     """Read trusted school facts from the generated catalogue by stable school ID."""
 
     def __init__(self, catalogue_path: Path):
         self.catalogue_path = catalogue_path
         self._mtime_ns: int | None = None
-        self._by_id: dict[str, dict[str, Any]] = {}
+        self._by_id: dict[str, SchoolRecord] = {}
+        self._refresh()
 
     def _refresh(self) -> None:
         try:
@@ -29,31 +37,50 @@ class SchoolRepository:
         records = json.loads(self.catalogue_path.read_text(encoding="utf-8"))
         if not isinstance(records, list):
             raise RuntimeError("School catalogue must be a JSON array")
-        by_id: dict[str, dict[str, Any]] = {}
-        for record in records:
+        by_id: dict[str, SchoolRecord] = {}
+        for index, record in enumerate(records):
+            if not isinstance(record, dict):
+                raise SchoolCatalogueValidationError(
+                    f"School catalogue record {index} must be a JSON object"
+                )
             school_id = record.get("school_id")
             if not school_id or school_id in by_id:
-                raise RuntimeError("School catalogue contains missing or duplicate school IDs")
-            by_id[school_id] = {
+                raise SchoolCatalogueValidationError(
+                    f"School catalogue record {index} has a missing or duplicate school_id"
+                )
+            normalized = {
                 **record,
-                "name": record.get("name") or record.get("centre_name_x") or record.get("centre_name"),
+                "name": record.get("name") or record.get("centre_name_x")
+                or record.get("centre_name") or record.get("Name"),
+                "care_levels": record.get("care_levels") or [],
+                "services_menu": record.get("services_menu") or [],
             }
+            try:
+                by_id[school_id] = SchoolRecord.model_validate(normalized)
+            except ValidationError as exc:
+                details = "; ".join(
+                    f"{'.'.join(map(str, error['loc']))}: {error['msg']}"
+                    for error in exc.errors()
+                )
+                raise SchoolCatalogueValidationError(
+                    f"Invalid school catalogue record {index} ({school_id}): {details}"
+                ) from exc
         self._by_id = by_id
         self._mtime_ns = mtime_ns
 
-    def get(self, school_id: str) -> dict[str, Any]:
+    def get(self, school_id: str) -> SchoolRecord:
         self._refresh()
         if school_id not in self._by_id:
             raise SchoolNotFoundError([school_id])
-        return dict(self._by_id[school_id])
+        return self._by_id[school_id].model_copy(deep=True)
 
-    def get_many(self, school_ids: list[str]) -> list[dict[str, Any]]:
+    def get_many(self, school_ids: list[str]) -> list[SchoolRecord]:
         self._refresh()
         missing = list(dict.fromkeys(item for item in school_ids if item not in self._by_id))
         if missing:
             raise SchoolNotFoundError(missing)
-        return [dict(self._by_id[item]) for item in school_ids]
+        return [self._by_id[item].model_copy(deep=True) for item in school_ids]
 
-    def all(self) -> list[dict[str, Any]]:
+    def all(self) -> list[SchoolRecord]:
         self._refresh()
-        return [dict(item) for item in self._by_id.values()]
+        return [item.model_copy(deep=True) for item in self._by_id.values()]

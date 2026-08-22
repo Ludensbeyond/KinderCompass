@@ -164,6 +164,14 @@ The development CORS policy accepts the frontend origins
 | `tests/` | Unit and integration tests for all stages, preference conversation, ranking, provenance, and webpage RAG. |
 | `output/` | Generated shortlist, eligibility, distance, inventory, RAG index, review, and evaluation artifacts. |
 
+The authoritative catalogue is validated into typed `SchoolRecord` and
+`SchoolService` domain objects when the repository starts or reloads. Invalid
+records stop loading with the record index, school ID, and failing field rather
+than reaching ranking or fee evaluation. Stage 2 returns typed
+`ProgrammeOption` and `EvaluatedSchool` objects, and the FastAPI evaluation
+response uses the same domain contract. These models remain mapping-compatible
+while the older Stage 1 scoring functions are migrated incrementally.
+
 ### Stage 1 modules
 
 | File | Responsibility |

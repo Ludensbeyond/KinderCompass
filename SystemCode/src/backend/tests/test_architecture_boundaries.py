@@ -8,11 +8,12 @@ from fastapi.testclient import TestClient
 
 from SystemCode.src.backend import main
 from SystemCode.src.backend.domain.models import FamilyDetails
+from SystemCode.src.backend.domain.catalogue import SchoolRecord
 from SystemCode.src.backend.repositories.policy_repository import (
     PolicyConfigurationError, PolicyRepository, PolicyUnavailableError,
 )
 from SystemCode.src.backend.repositories.school_repository import (
-    SchoolNotFoundError, SchoolRepository,
+    SchoolCatalogueValidationError, SchoolNotFoundError, SchoolRepository,
 )
 from SystemCode.src.backend.services.evaluation_service import (
     EvaluationService, ProgrammeUnavailableError,
@@ -43,9 +44,28 @@ class RepositoryBoundaryTests(unittest.TestCase):
             path = Path(directory) / "catalogue.json"
             path.write_text(json.dumps([{"school_id": "CENTRE:A", "centre_name_x": "Trusted Name"}]), encoding="utf-8")
             repository = SchoolRepository(path)
+            self.assertIsInstance(repository.get("CENTRE:A"), SchoolRecord)
             self.assertEqual(repository.get("CENTRE:A")["name"], "Trusted Name")
             with self.assertRaises(SchoolNotFoundError):
                 repository.get_many(["CENTRE:A", "CENTRE:MISSING"])
+
+    def test_school_repository_reports_record_and_field_for_invalid_catalogue(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "catalogue.json"
+            path.write_text(json.dumps([{
+                "school_id": "CENTRE:A", "centre_name_x": "Trusted",
+                "services_menu": [{
+                    "class_of_licence": "Class B (Child Care)",
+                    "levels_offered": "Pre-Nursery (3 yrs old)",
+                    "type_of_service": "Full Day",
+                    "type_of_citizenship": "SC", "fees": -1,
+                }],
+            }]), encoding="utf-8")
+            with self.assertRaisesRegex(
+                SchoolCatalogueValidationError,
+                r"record 0 \(CENTRE:A\).*services_menu\.0\.fees",
+            ):
+                SchoolRepository(path)
 
     def test_evaluation_uses_repository_fee_not_caller_school_object(self):
         with tempfile.TemporaryDirectory() as directory:
