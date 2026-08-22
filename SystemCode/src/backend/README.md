@@ -125,7 +125,7 @@ Stop the development server with `Ctrl+C`.
 | `GET /api/health` | Confirm that FastAPI is running. |
 | `POST /api/preferences` | Merge preferences and route chat questions. A nearest-school request queries the grounded catalogue for a location answer, but does not create a ranked recommendation shortlist. |
 | `POST /api/search` | Run confirmed Stage 1 constraints and preference ranking against Neo4j. |
-| `POST /api/evaluate` | Run Stage 2 care-level eligibility and estimated monthly cost calculations. |
+| `POST /api/evaluate` | Run Stage 2 exact-age eligibility and an explainable programme-specific fee/subsidy estimate. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |
 | `POST /api/distances` | Calculate independent home distances for a collection of centres. |
 | `POST /api/route` | Run Stage 3 for one selected eligible preschool and return its two-point map schedule. |
@@ -230,6 +230,26 @@ Treat changes there as source changes requiring review. In particular:
   identity decisions;
 - `production_audit_labels.json` and `answer_quality_labels.json` support
   evaluation and readiness checks.
+
+### Stage 2 policy estimates
+
+Stage 2 selects the fee matching the child's completed age in months, reported
+citizenship, and selected programme from the catalogue's detailed
+`services_menu`. It derives potential Basic and Additional Subsidy amounts from
+the dated ECDA policy resource under `resources/policy/`, including the relevant
+minimum co-payment. Larger qualifying households are assessed using reported
+per-capita income criteria.
+
+The result is an estimate, not subsidy approval. Class C kindergarten, reported
+Special Approval circumstances, missing programme fees, and unsupported
+programme types are routed to review or an unavailable state instead of being
+assigned an invented amount. GST treatment and additional centre charges may
+vary.
+
+Flexi-care 2 can be selected when a centre publishes a matching fee. Because
+the configured ECDA policy source does not contain a separate Flexi-care 2
+subsidy table, these results show the programme fee and require manual review;
+the engine does not interpolate a subsidy from Flexi-care 1 or 3.
 
 ## Security and data boundaries
 

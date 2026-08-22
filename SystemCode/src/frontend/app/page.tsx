@@ -12,7 +12,14 @@ type Centre = {
   pedagogy?: string;
   eligible?: boolean;
   eligible_level?: string;
-  net_monthly_fee?: number;
+  net_monthly_fee?: number | null;
+  status?: "estimated" | "manual_review" | "fee_unavailable" | "ineligible" | "needs_information";
+  fee_before_subsidy?: number;
+  basic_subsidy?: number;
+  additional_subsidy?: number;
+  minimum_copayment?: number;
+  warnings?: string[];
+  policy_source?: { policy_id: string; authority: string; effective_from: string; source_url: string };
   distance_km?: number;
   match_score?: number;
   profile_confidence?: number;
@@ -34,7 +41,7 @@ type Message = { role: "assistant" | "user"; text: string; citations?: Citation[
 type PreferenceImportance = "required" | "high_priority" | "preferred" | "nice_to_have";
 type PreferenceItem = { attribute: string; value: unknown; importance: PreferenceImportance };
 type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; recognized?: string[] };
-type FamilyDetails = { dob: string; admission_date: string; gross_household_income: number; basic_subsidy: number };
+type FamilyDetails = { dob: string; admission_date: string; gross_household_income: number; citizenship: "SC" | "SPR" | "Others"; programme_type: "full_day" | "half_day" | "flexi_care_1" | "flexi_care_2" | "flexi_care_3"; working_hours_per_month: number; household_size: number; non_earning_dependants: number; special_approval: boolean };
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const money = new Intl.NumberFormat("en-SG", { style: "currency", currency: "SGD", maximumFractionDigits: 0 });
@@ -204,7 +211,12 @@ export default function Home() {
       dob: String(form.get("dob")),
       admission_date: String(form.get("admission_date")),
       gross_household_income: Number(form.get("income")),
-      basic_subsidy: Number(form.get("subsidy")),
+      citizenship: String(form.get("citizenship")) as FamilyDetails["citizenship"],
+      programme_type: String(form.get("programme_type")) as FamilyDetails["programme_type"],
+      working_hours_per_month: Number(form.get("working_hours")),
+      household_size: Number(form.get("household_size")),
+      non_earning_dependants: Number(form.get("dependants")),
+      special_approval: form.get("special_approval") === "on",
     });
     setError(""); setStage("search"); setTab("form");
     setMessages((items) => [...items, { role: "assistant", text: "Family details saved. Now tell me what matters most in a preschool. You can mention pedagogy, language, SPARK, transport, food, or full-day care." }]);
@@ -259,10 +271,16 @@ export default function Home() {
                 <div className="formGrid">
                   <label>Child&apos;s date of birth<input name="dob" type="date" required defaultValue={familyDetails?.dob ?? "2023-06-10"} /></label>
                   <label>Admission date<input name="admission_date" type="date" required defaultValue={familyDetails?.admission_date ?? "2026-09-01"} /></label>
+                  <label>Child citizenship<select name="citizenship" defaultValue={familyDetails?.citizenship ?? "SC"}><option value="SC">Singapore Citizen</option><option value="SPR">Permanent Resident</option><option value="Others">Other</option></select></label>
+                  <label>Care programme<select name="programme_type" defaultValue={familyDetails?.programme_type ?? "full_day"}><option value="full_day">Full day</option><option value="half_day">Half day</option><option value="flexi_care_1">Flexi-care 1 (12–24 hours/week)</option><option value="flexi_care_2">Flexi-care 2 (confirm hours with centre)</option><option value="flexi_care_3">Flexi-care 3 (&gt;36–48 hours/week)</option></select></label>
                   <label>Gross monthly income<input name="income" type="number" min="0" required defaultValue={familyDetails?.gross_household_income ?? 4500} /></label>
-                  <label>Basic monthly subsidy<input name="subsidy" type="number" min="0" required defaultValue={familyDetails?.basic_subsidy ?? 600} /></label>
+                  <label>Applicant working hours/month<input name="working_hours" type="number" min="0" required defaultValue={familyDetails?.working_hours_per_month ?? 56} /></label>
+                  <label>Household size<input name="household_size" type="number" min="1" required defaultValue={familyDetails?.household_size ?? 4} /></label>
+                  <label>Non-earning dependants<input name="dependants" type="number" min="0" required defaultValue={familyDetails?.non_earning_dependants ?? 2} /></label>
                   <label>Home postal code<input value={homePostalCode} onChange={(e) => setHomePostalCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" pattern="[0-9]{6}" required placeholder="540231" /></label>
+                  <label className="checkField"><input name="special_approval" type="checkbox" defaultChecked={familyDetails?.special_approval ?? false} /><span>My circumstances may require ECDA Special Approval</span></label>
                 </div>
+                <p className="estimateNote">Fee results are estimates based on reported information and the cited ECDA policy, not subsidy approval.</p>
                 <button className="primary" disabled={busy}>Save and continue to chat →</button>
               </form>}
 

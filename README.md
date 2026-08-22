@@ -30,7 +30,7 @@ KinderCompass implements a three-stage workflow:
 | Stage | Capability |
 |---|---|
 | Stage 1 | Convert conversational preferences into validated constraints and explainably ranked Neo4j results. |
-| Stage 2 | Evaluate care-level eligibility and estimate monthly cost using proof-of-concept subsidy rules. |
+| Stage 2 | Evaluate exact-age and programme eligibility, then estimate fees using citizenship-specific centre fees and dated ECDA subsidy rules. |
 | Stage 3 | Compare selected eligible centres with home using OneMap geocoding and straight-line distance. |
 
 The system also provides evidence provenance, recommendation explanations, and
@@ -163,13 +163,114 @@ otherwise start directly with `run_poc1.ps1`.
 
 ## SECTION 6 : User Guide
 
-- User enter FORM
-- User start chatting with CompassChat to gain preferential Preschools Information \
-  For Example:
-  - CompassChat: I want a school that is within 2km from my house and teaches Chinese
-  - Click "Show Recommendations"
-  - Select schools of interest from results
-  - CompassChat: Compare the selected schools
+Start KinderCompass with `run_poc1.ps1`, wait for both services to report that
+they are ready, and open `http://localhost:3000`. The following walkthroughs
+exercise the main GUI inputs and expected behaviour.
+
+### 6.1 Test family details and exact-age eligibility
+
+In the **Form** tab, enter:
+
+| Field | Test value |
+|---|---|
+| Child's date of birth | `10 June 2023` |
+| Admission date | `10 June 2026` |
+| Child citizenship | `Singapore Citizen` |
+| Care programme | `Full day` |
+| Gross monthly income | `4500` |
+| Applicant working hours/month | `56` |
+| Household size | `4` |
+| Non-earning dependants | `2` |
+| Home postal code | Any valid six-digit Singapore postal code |
+| Special Approval | Unchecked |
+
+Click **Save and continue to chat**. The chat input should become available.
+After recommendations are generated, eligible schools should show
+**Pre-Nursery (3 yrs old)** because the child is exactly 36 completed months old
+on the admission date.
+
+To test the age boundary, change the admission date to `9 June 2026` and repeat
+the search. The child is then 35 completed months old, so the expected level is
+**Playgroup (18 mths to 2 yrs old)**.
+
+### 6.2 Test conversational preferences and ranking inputs
+
+After saving the family form, enter the following messages into **Compass
+chat**, one at a time:
+
+```text
+I need a preschool that teaches Chinese.
+Montessori is preferred, but transport is required.
+It must be within 2 km from my home.
+```
+
+Check the **Understood preferences** panel after each message. Chinese,
+Montessori, transport, and the 2 km limit should accumulate instead of replacing
+one another. Use the importance selectors to change Montessori between
+**Preferred**, **High priority**, or **Nice to have**.
+
+Click **Show recommendations**. The Results tab should:
+
+- exclude schools with a verified failure of the required transport preference;
+- preserve schools whose transport evidence is genuinely unknown, with reduced
+  evidence confidence;
+- rank the remaining schools by verified preference match and then evidence
+  confidence; and
+- retain only schools within the requested 2 km limit when location evidence is
+  available.
+
+### 6.3 Test fee and potential subsidy inputs
+
+Run the same recommendation search several times while changing only the family
+form values:
+
+| Scenario | Inputs | Expected GUI behaviour |
+|---|---|---|
+| Working SC applicant | Citizenship `Singapore Citizen`, full day, income `4500`, working hours `56` | Uses the matching SC full-day fee and the applicable Basic and Additional Subsidy tables. |
+| Working-hours boundary | Change working hours from `56` to `55` | Treats the applicant as non-working; Additional Subsidy becomes unavailable and the estimate increases. |
+| Qualifying larger household | Income `8000`, household size `6`, non-earning dependants `3` | Uses the qualifying per-capita-income assessment; PCI is approximately `$1,333.33`. |
+| Permanent Resident child | Citizenship `Permanent Resident` | Uses the matching SPR programme fee and applies no SC Basic or Additional Subsidy. |
+| Flexi-care 1 or 3 | Select the corresponding flexi-care programme | Uses a matching centre fee and the programme-specific policy table when the centre offers it. |
+| Flexi-care 2 | Select `Flexi-care 2 (confirm hours with centre)` | Uses a matching Flexi-care 2 fee but requires manual review; no subsidy amount is invented. |
+| Potential Special Approval | Check the Special Approval box | Reports that ECDA review may be required instead of presenting an approved subsidy amount. |
+
+The displayed amount is an indicative monthly estimate based on reported facts.
+It is not an ECDA subsidy approval, and GST treatment or additional centre
+charges may differ.
+
+### 6.4 Test results, map, comparison, and explanations
+
+After clicking **Show recommendations**:
+
+1. Open the **Results** tab and confirm that each card shows match percentage,
+   evidence confidence, eligible level, estimated fee, and home distance where
+   location data is available.
+2. Expand **How this score was calculated**. Verify that each ranked preference
+   shows its importance, contribution, source, evidence state, and last-updated
+   date.
+3. Change the **Distance from home** selector between `None`, `1`, `2`, and `5`
+   km. The visible result count should change while the original ranking order
+   is preserved.
+4. Select two or more schools. Their pins should appear on the map with the home
+   pin and independently calculated straight-line distances.
+5. Ask Compass chat:
+
+   ```text
+   Compare the selected schools.
+   ```
+
+   The response should compare only the selected schools using grounded match,
+   fee, evidence, and distance information. You can also ask:
+
+   ```text
+   Why is the first school ranked highest?
+   What are the trade-offs of the selected schools?
+   Where did the information about this school come from?
+   ```
+
+If a value or official-webpage claim is unavailable, the GUI should say that
+the evidence is unavailable rather than interpreting missing evidence as a
+negative answer.
 
 ## SECTION 7 : Repository structure
 

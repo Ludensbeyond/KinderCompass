@@ -70,7 +70,17 @@ class FamilyDetails(BaseModel):
     dob: dt.date
     admission_date: dt.date
     gross_household_income: float = Field(ge=0)
-    basic_subsidy: float = Field(ge=0)
+    citizenship: str = Field(default="SC", pattern=r"^(SC|SPR|Others)$")
+    programme_type: str = Field(
+        default="full_day",
+        pattern=r"^(full_day|half_day|flexi_care_1|flexi_care_2|flexi_care_3)$",
+    )
+    working_hours_per_month: float = Field(default=56, ge=0)
+    household_size: int = Field(default=1, ge=1)
+    non_earning_dependants: int = Field(default=0, ge=0)
+    special_approval: bool = False
+    # Deprecated compatibility field; new estimates always derive policy amounts.
+    basic_subsidy: float | None = Field(default=None, ge=0)
 
 
 class EvaluateRequest(BaseModel):
@@ -174,12 +184,28 @@ def _load_all_preschools() -> list[dict[str, Any]]:
 def evaluate(request: EvaluateRequest) -> dict[str, Any]:
     """Stage 2: evaluate eligibility and estimated monthly cost."""
     try:
+        catalogue_path = REPO_ROOT / "SystemCode" / "data" / "processed" / "kindercompass_master.json"
+        catalogue = load_json(catalogue_path) if catalogue_path.is_file() else []
+        authoritative = {item.get("school_id"): item for item in catalogue if item.get("school_id")}
+        shortlist = [
+            {**item, **{
+                key: authoritative[item.get("school_id")][key]
+                for key in ("base_fee", "care_levels", "services_menu", "service_model", "operator_scheme")
+                if key in authoritative.get(item.get("school_id"), {})
+            }}
+            for item in request.shortlist
+        ]
         results = evaluate_shortlist(
-            request.shortlist,
+            shortlist,
             dob=request.family.dob,
             admission_date=request.family.admission_date,
             ghi=request.family.gross_household_income,
-            basic_subsidy=request.family.basic_subsidy,
+            citizenship=request.family.citizenship,
+            programme_type=request.family.programme_type,
+            working_hours_per_month=request.family.working_hours_per_month,
+            household_size=request.family.household_size,
+            non_earning_dependants=request.family.non_earning_dependants,
+            special_approval=request.family.special_approval,
             include_ineligible=request.include_ineligible,
         )
     except ValueError as exc:
