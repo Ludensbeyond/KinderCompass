@@ -84,3 +84,8 @@ class SchoolRepository:
     def all(self) -> list[SchoolRecord]:
         self._refresh()
         return [item.model_copy(deep=True) for item in self._by_id.values()]
+
+    @property
+    def catalogue_version(self) -> str:
+        self._refresh()
+        return str(self._mtime_ns)

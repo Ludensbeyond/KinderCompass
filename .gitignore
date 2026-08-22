@@ -6,3 +6,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# Local consented feedback store
+SystemCode/src/backend/output/*.sqlite*

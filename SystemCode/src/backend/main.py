@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import sqlite3
 import uuid
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,7 @@ from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noq
 from stage1.proximity import geocode_postal_code  # noqa: E402
 from SystemCode.src.backend.domain.models import (  # noqa: E402
     DistanceRequest, DistanceResponse, EvaluateRequest, EvaluationResponse,
+    FeedbackRequest, FeedbackResponse,
     GeocodeRequest, GeocodeResponse, HealthResponse, PreferenceRequest,
     PreferenceResponse, ProgrammeEstimateRequest, ProgrammeEstimateResponse,
     RouteRequest, RouteResponse, SearchRequest, SearchResponse,
@@ -40,6 +42,9 @@ from SystemCode.src.backend.services.evaluation_service import (  # noqa: E402
 )
 from SystemCode.src.backend.services.location_service import LocationService  # noqa: E402
 from SystemCode.src.backend.services.preference_service import PreferenceService  # noqa: E402
+from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
+    FeedbackSchoolMismatchError, FeedbackService, FeedbackSnapshotNotFoundError,
+)
 
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
@@ -59,6 +64,9 @@ LOCATION_SERVICE = LocationService(
 )
 PREFERENCE_SERVICE = PreferenceService(
     SCHOOL_REPOSITORY, EVALUATION_SERVICE, LOCATION_SERVICE, REPO_ROOT
+)
+FEEDBACK_SERVICE = FeedbackService(
+    REPO_ROOT / "SystemCode/src/backend/output/recommendation_feedback.sqlite3"
 )
 
 
@@ -120,6 +128,16 @@ def evaluate(request: EvaluateRequest) -> EvaluationResponse:
     except (PolicyUnavailableError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     eligible_count = sum(item.get("eligible") is True for item in results)
+    try:
+        FEEDBACK_SERVICE.record_snapshot(
+            request.trace_id,
+            results,
+            catalogue_version=SCHOOL_REPOSITORY.catalogue_version,
+        )
+    except (OSError, sqlite3.Error, ValueError) as exc:
+        raise HTTPException(
+            status_code=503, detail=f"Recommendation snapshot could not be recorded: {exc}"
+        ) from exc
     return EvaluationResponse(**{
         "eligible_count": eligible_count,
         "centres": results,
@@ -128,8 +146,23 @@ def evaluate(request: EvaluateRequest) -> EvaluationResponse:
             "stage2_input": len(request.school_ids),
             "stage2_eligible": eligible_count,
             "stage2_excluded": len(request.school_ids) - eligible_count,
+            "catalogue_version": SCHOOL_REPOSITORY.catalogue_version,
         },
     })
+
+
+@app.post("/api/feedback", response_model=FeedbackResponse)
+def feedback(request: FeedbackRequest) -> FeedbackResponse:
+    """Record explicit, consented feedback for an immutable recommendation snapshot."""
+    try:
+        event_id = FEEDBACK_SERVICE.record_feedback(request)
+    except FeedbackSnapshotNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FeedbackSchoolMismatchError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return FeedbackResponse(event_id=event_id, status="recorded")
 
 
 @app.post(

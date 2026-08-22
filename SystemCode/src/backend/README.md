@@ -127,6 +127,7 @@ Stop the development server with `Ctrl+C`.
 | `POST /api/search` | Run confirmed Stage 1 constraints and preference ranking against Neo4j. |
 | `POST /api/evaluate` | Run Stage 2 exact-age eligibility and an explainable programme-specific fee/subsidy estimate. |
 | `POST /api/schools/{school_id}/programme-estimate` | Recalculate one authoritative school's fee and subsidy for an exact programme option shown by the GUI. |
+| `POST /api/feedback` | Record explicit, consented anonymous feedback against an immutable recommendation snapshot. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |
 | `POST /api/distances` | Calculate independent home distances for a collection of centres. |
 | `POST /api/route` | Run Stage 3 for one selected authoritative preschool ID and return its two-point map schedule. |

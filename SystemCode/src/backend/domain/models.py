@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import uuid
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -64,6 +65,23 @@ class EvaluateRequest(BaseModel):
 class ProgrammeEstimateRequest(BaseModel):
     family: FamilyDetails
     programme_id: ProgrammeId
+
+
+class FeedbackRequest(BaseModel):
+    trace_id: uuid.UUID
+    anonymous_session_id: uuid.UUID
+    school_id: SchoolId = Field(min_length=1)
+    event_type: Literal["selected", "rejected", "contacted", "visited", "applied", "rated"]
+    reason: Literal[
+        "good_match", "fee", "distance", "programme", "evidence", "other"
+    ] | None = None
+    rating: int | None = Field(default=None, ge=1, le=5)
+    consent: Literal[True]
+
+
+class FeedbackResponse(BaseModel):
+    event_id: uuid.UUID
+    status: Literal["recorded"]
 
 
 class RouteRequest(BaseModel):

@@ -293,6 +293,46 @@ If a value or official-webpage claim is unavailable, the GUI should say that
 the evidence is unavailable rather than interpreting missing evidence as a
 negative answer.
 
+### 6.5 Test recommendation feedback
+
+Generate recommendations first, then open the **Feedback** tab and test
+the following inputs:
+
+1. Choose a school from the feedback **School** selector. Only schools from the
+   current recommendation result should be available.
+2. Select an **Outcome**, such as `Selected for comparison`, `Rejected`,
+   `Contacted centre`, `Visited centre`, or `Applied`.
+3. Select the **Main reason** that best explains the outcome. Available reasons
+   include match quality, fee, distance, programme, and evidence quality.
+4. Leave the consent checkbox unchecked. **Submit feedback** should remain
+   disabled and no feedback should be stored.
+5. Check **I consent to storing this anonymous feedback for recommendation
+   evaluation**, then submit. The GUI should display:
+
+   ```text
+   Thank you. Your anonymous feedback was recorded.
+   ```
+
+6. Select `Rate recommendation`. A **Usefulness** selector should appear. Test
+   ratings from `1 / 5` to `5 / 5`, provide consent again, and submit.
+7. Generate a new recommendation search and submit feedback for it. Feedback is
+   linked to the new immutable recommendation snapshot rather than overwriting
+   the earlier result.
+
+The anonymous session identifier is generated in the browser and contains no
+family information. Recommendation snapshots contain school IDs, ranks,
+scores, selected programme IDs, estimated fees, and data/policy versions. They
+do not store family-form values, postal codes, or chat text. Local development
+feedback is written to the ignored file:
+
+```text
+SystemCode/src/backend/output/recommendation_feedback.sqlite3
+```
+
+This feedback is evaluation data for a future explainable ranking model. It
+does not currently change eligibility, subsidies, required filters, or the live
+ranking order.
+
 ## SECTION 7 : Repository structure
 
 ```text
