@@ -2,6 +2,7 @@ import unittest
 
 from stage1.conversation import update_conversation
 from stage1.dialogue_manager import catalogue_facets, next_best_question
+from stage1.dialogue_manager import propose_constraint_relaxation
 
 
 class DecisionAwareDialogueTests(unittest.TestCase):
@@ -68,6 +69,31 @@ class ContradictionDetectionTests(unittest.TestCase):
         self.assertEqual(conflict["status"], "needs_clarification")
         resolved = update_conversation(conflict["profile"], "keep Montessori")
         self.assertEqual(resolved["profile"]["preferences"]["pedagogy"]["value"], "Montessori")
+
+
+class ControlledRelaxationTests(unittest.TestCase):
+    def test_proposes_smallest_distance_change_without_applying_it(self):
+        profile = update_conversation(None, "within 1 km")["profile"]
+        proposal = propose_constraint_relaxation(profile)
+        self.assertEqual(profile["hard_constraints"]["max_distance_km"], 1)
+        self.assertEqual(proposal["new_value"], 2)
+
+    def test_relaxation_requires_explicit_approval(self):
+        profile = update_conversation(None, "within 1 km")["profile"]
+        profile["pending_relaxation"] = propose_constraint_relaxation(profile)
+        pending = update_conversation(profile, "maybe")
+        self.assertFalse(pending["ready_to_search"])
+        self.assertEqual(pending["profile"]["hard_constraints"]["max_distance_km"], 1)
+
+        approved = update_conversation(pending["profile"], "apply relaxation")
+        self.assertEqual(approved["profile"]["hard_constraints"]["max_distance_km"], 2)
+        self.assertNotIn("pending_relaxation", approved["profile"])
+
+    def test_declining_preserves_constraints(self):
+        profile = update_conversation(None, "Chinese is required")["profile"]
+        profile["pending_relaxation"] = propose_constraint_relaxation(profile)
+        declined = update_conversation(profile, "keep constraints")
+        self.assertEqual(declined["profile"]["hard_constraints"]["language"], "Chinese")
 
 
 if __name__ == "__main__":

@@ -185,3 +185,83 @@ def resolve_contradiction(profile: dict[str, Any], text: str) -> tuple[dict[str,
     updated.pop("pending_contradiction", None)
     updated["recognized"] = [f"resolved {pending['attribute']} contradiction"]
     return sync_preference_schema(updated), True
+
+
+def propose_constraint_relaxation(profile: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Choose the smallest deterministic relaxation after a confirmed empty search."""
+    hard = profile.get("hard_constraints", {})
+    distance = hard.get("max_distance_km")
+    if distance is not None:
+        old_value = float(distance)
+        new_value = max(old_value + 1, old_value * 1.5)
+        return {
+            "kind": "distance",
+            "attribute": "max_distance_km",
+            "old_value": old_value,
+            "new_value": round(new_value, 1),
+            "question": (
+                f"No schools matched all current constraints. The smallest available change is "
+                f"to expand the home-distance limit from {old_value:g} km to {new_value:g} km. "
+                "Say ‘apply relaxation’ to approve it, or ‘keep constraints’ to decline."
+            ),
+        }
+    language = hard.get("language")
+    if language:
+        return {
+            "kind": "downgrade_language",
+            "attribute": "language",
+            "old_value": language,
+            "new_value": language,
+            "question": (
+                f"No schools matched all current constraints. I can change {language} from a "
+                "required language to a preferred language. Say ‘apply relaxation’ to approve "
+                "it, or ‘keep constraints’ to decline."
+            ),
+        }
+    required = next(
+        (item for item in profile.get("preference_items", []) if item.get("importance") == "required"),
+        None,
+    )
+    if required:
+        label = str(required["attribute"]).replace("_", " ")
+        return {
+            "kind": "downgrade_preference",
+            "attribute": required["attribute"],
+            "old_value": required["value"],
+            "new_value": required["value"],
+            "question": (
+                f"No schools matched all current constraints. I can change {label} from required "
+                "to preferred. Say ‘apply relaxation’ to approve it, or ‘keep constraints’ to decline."
+            ),
+        }
+    return None
+
+
+def resolve_constraint_relaxation(
+    profile: dict[str, Any], text: str
+) -> tuple[dict[str, Any], str | None]:
+    pending = profile.get("pending_relaxation")
+    if not pending:
+        return profile, None
+    lowered = text.casefold().strip()
+    approved = lowered in {"yes", "approve", "apply", "apply relaxation"} or "apply relaxation" in lowered
+    declined = lowered in {"no", "decline", "keep constraints", "do not apply"} or "keep constraints" in lowered
+    if not approved and not declined:
+        return profile, "pending"
+    updated = dict(profile)
+    updated.pop("pending_relaxation", None)
+    if declined:
+        return sync_preference_schema(updated), "declined"
+    if pending["kind"] == "distance":
+        updated.setdefault("hard_constraints", {})["max_distance_km"] = pending["new_value"]
+    elif pending["kind"] == "downgrade_language":
+        language = updated.setdefault("hard_constraints", {}).pop("language")
+        updated.setdefault("preferences", {})[f"language:{language}"] = {
+            "value": language, "weight": 4, "desired": True,
+        }
+    elif pending["kind"] == "downgrade_preference":
+        for item in updated.get("preference_items", []):
+            if item.get("attribute") == pending["attribute"] and item.get("value") == pending["old_value"]:
+                item["importance"] = "preferred"
+    updated["recognized"] = [f"relaxed {pending['attribute']}"]
+    return sync_preference_schema(updated), "approved"

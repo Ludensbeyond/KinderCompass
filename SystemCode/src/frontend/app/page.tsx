@@ -226,10 +226,18 @@ export default function Home() {
     try {
       const distancePreference = preferenceProfile.preference_items?.find((item) => item.attribute === "max_distance_km");
       const requestedRadius = distancePreference ? Number(distancePreference.value) : undefined;
-      const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string } }>("/api/search", {
+      const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string }; message: string; profile: PreferenceProfile }>("/api/search", {
         profile: preferenceProfile,
         ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
       });
+      if (searchResult.centres.length === 0) {
+        setPreferenceProfile(searchResult.profile);
+        setReadyToSearch(false);
+        setEligible([]); setSelected([]); setRoutes({});
+        setMessages((items) => [...items, { role: "assistant", text: searchResult.message }]);
+        setStage("search"); setTab("form");
+        return;
+      }
       const evaluationResult = await post<{ centres: Centre[] }>("/api/evaluate", {
         school_ids: searchResult.centres.map((centre) => centre.school_id),
         profile: preferenceProfile,

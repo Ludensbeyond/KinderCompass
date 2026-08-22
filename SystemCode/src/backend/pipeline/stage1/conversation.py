@@ -17,7 +17,8 @@ from stage1.grounded_explainer import explain_school_comparison, explain_school_
 from stage1.intent_router import classify_intent
 from stage1.web_rag import retrieve, retrieve_general_evidence
 from stage1.dialogue_manager import (
-    detect_contradiction, next_best_question, resolve_contradiction,
+    detect_contradiction, next_best_question, resolve_constraint_relaxation,
+    resolve_contradiction,
 )
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
@@ -504,6 +505,31 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     current_profile = sync_preference_schema(
         current or {"hard_constraints": {}, "preferences": {}, "recognized": []}
     )
+    relaxed_profile, relaxation_status = resolve_constraint_relaxation(current_profile, text)
+    if relaxation_status == "approved":
+        return {
+            "profile": relaxed_profile,
+            "understood": summarize_profile(relaxed_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "The approved relaxation has been applied. Click Show recommendations to search again.",
+        }
+    if relaxation_status == "declined":
+        return {
+            "profile": relaxed_profile,
+            "understood": summarize_profile(relaxed_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "I kept your existing constraints unchanged. You can edit a preference or search again.",
+        }
+    if relaxation_status == "pending":
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_confirmation",
+            "ready_to_search": False,
+            "question": current_profile["pending_relaxation"]["question"],
+        }
     repaired_profile, repaired = resolve_contradiction(current_profile, text)
     if repaired:
         return {
