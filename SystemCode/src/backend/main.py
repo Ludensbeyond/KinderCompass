@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import datetime as dt
-import os
 import sys
 import uuid
 from pathlib import Path
@@ -12,7 +10,6 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -26,17 +23,20 @@ if str(POC_SRC) not in sys.path:
 load_dotenv(POC_ENV)
 
 from stage1.runner import run_from_profile  # noqa: E402
-from stage1.intent_router import classify_intent  # noqa: E402
-from stage1.kg_client import get_driver, run_query, verify_connectivity  # noqa: E402
-from stage1.query_builder import build_stage1_query  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
-from stage1.conversation import update_conversation  # noqa: E402
-from stage1.web_rag import load_json  # noqa: E402
 from stage1.proximity import geocode_postal_code  # noqa: E402
-from stage2.engine import evaluate_shortlist  # noqa: E402
-from stage3.optimizer import calculate_home_to_preschool  # noqa: E402
-from stage3.optimizer import haversine_km  # noqa: E402
-from stage3.locations import attach_locations, load_preschool_locations  # noqa: E402
+from SystemCode.src.backend.domain.models import (  # noqa: E402
+    DistanceRequest, DistanceResponse, EvaluateRequest, EvaluationResponse,
+    GeocodeRequest, GeocodeResponse, HealthResponse, PreferenceRequest,
+    PreferenceResponse, RouteRequest, RouteResponse, SearchRequest, SearchResponse,
+)
+from SystemCode.src.backend.repositories.school_repository import (  # noqa: E402
+    SchoolNotFoundError, SchoolRepository,
+)
+from SystemCode.src.backend.repositories.policy_repository import PolicyUnavailableError  # noqa: E402
+from SystemCode.src.backend.services.evaluation_service import EvaluationService  # noqa: E402
+from SystemCode.src.backend.services.location_service import LocationService  # noqa: E402
+from SystemCode.src.backend.services.preference_service import PreferenceService  # noqa: E402
 
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
@@ -49,68 +49,22 @@ app.add_middleware(
 )
 
 
-class SearchRequest(BaseModel):
-    message: str | None = Field(default=None, min_length=2, max_length=500)
-    profile: dict[str, Any] | None = None
-    town: str | None = Field(default=None, max_length=30)
-    within_1km: bool = False
-    home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
-    radius_km: float | None = Field(default=None, gt=0)
+SCHOOL_REPOSITORY = SchoolRepository(REPO_ROOT / "SystemCode/data/processed/kindercompass_master.json")
+EVALUATION_SERVICE = EvaluationService(SCHOOL_REPOSITORY)
+LOCATION_SERVICE = LocationService(
+    SCHOOL_REPOSITORY, REPO_ROOT / "SystemCode/data/raw/PreSchoolsLocation.geojson"
+)
+PREFERENCE_SERVICE = PreferenceService(
+    SCHOOL_REPOSITORY, EVALUATION_SERVICE, LOCATION_SERVICE, REPO_ROOT
+)
 
 
-class PreferenceRequest(BaseModel):
-    message: str = Field(min_length=2, max_length=500)
-    profile: dict[str, Any] | None = None
-    selected_centres: list[dict[str, Any]] = Field(default_factory=list)
-    eligible_centres: list[dict[str, Any]] = Field(default_factory=list)
-    home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
-
-
-class FamilyDetails(BaseModel):
-    dob: dt.date
-    admission_date: dt.date
-    gross_household_income: float = Field(ge=0)
-    citizenship: str = Field(default="SC", pattern=r"^(SC|SPR|Others)$")
-    programme_type: str = Field(
-        default="full_day",
-        pattern=r"^(full_day|half_day|flexi_care_1|flexi_care_2|flexi_care_3)$",
-    )
-    working_hours_per_month: float = Field(default=56, ge=0)
-    household_size: int = Field(default=1, ge=1)
-    non_earning_dependants: int = Field(default=0, ge=0)
-    special_approval: bool = False
-    # Deprecated compatibility field; new estimates always derive policy amounts.
-    basic_subsidy: float | None = Field(default=None, ge=0)
-
-
-class EvaluateRequest(BaseModel):
-    shortlist: list[dict[str, Any]]
-    family: FamilyDetails
-    include_ineligible: bool = False
-    trace_id: str | None = Field(default=None, max_length=36)
-
-
-class RouteRequest(BaseModel):
-    eligible_centres: list[dict[str, Any]]
-    selected_code: str = Field(min_length=1)
-    home_postal_code: str = Field(pattern=r"^\d{6}$")
-
-
-class GeocodeRequest(BaseModel):
-    postal_code: str = Field(pattern=r"^\d{6}$")
-
-
-class DistanceRequest(BaseModel):
-    centres: list[dict[str, Any]]
-    home_postal_code: str = Field(pattern=r"^\d{6}$")
-
-
-@app.get("/api/health")
+@app.get("/api/health", response_model=HealthResponse)
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/api/search")
+@app.post("/api/search", response_model=SearchResponse)
 def search(request: SearchRequest) -> dict[str, Any]:
     """Stage 1: query schools only after explicit profile confirmation."""
     try:
@@ -133,97 +87,49 @@ def search(request: SearchRequest) -> dict[str, Any]:
     }
 
 
-@app.post("/api/preferences")
+@app.post("/api/preferences", response_model=PreferenceResponse)
 def preferences(request: PreferenceRequest) -> dict[str, Any]:
-    """Handle chat turns, querying grounded school data only when the intent requires it."""
-    active_school = (request.profile or {}).get("active_school") or {}
-    intent = classify_intent(request.message, active_school.get("name"))
-    selected_centres = request.selected_centres or ([active_school] if active_school else [])
-    eligible = request.eligible_centres
-    if intent.intent == "find_closest_preschool" and not eligible:
-        if not request.home_postal_code:
+    try:
+        if "closest" in request.message.lower() and not request.home_postal_code:
             raise HTTPException(status_code=422, detail="Enter a six-digit home postal code before asking for the nearest preschool.")
-        eligible = _load_all_preschools()
-    if eligible and request.home_postal_code:
-        eligible = _attach_home_distances(eligible, request.home_postal_code)
-    configured_index = os.getenv("WEB_RAG_INDEX_PATH", "").strip()
-    index_path = (
-        Path(configured_index)
-        if configured_index
-        else REPO_ROOT / "SystemCode" / "src" / "backend" / "output" / "web_rag_pilot_index.json"
-    )
-    try:
-        web_rag_index = load_json(index_path) if index_path.is_file() else None
-    except (OSError, ValueError):
-        web_rag_index = None
-    general_path = REPO_ROOT / "SystemCode" / "src" / "backend" / "resources" / "web_rag" / "general_knowledge_index.json"
-    try:
-        general_knowledge_index = load_json(general_path) if general_path.is_file() else None
-    except (OSError, ValueError):
-        general_knowledge_index = None
-    return update_conversation(
-        request.profile, request.message, selected_centres, eligible, web_rag_index,
-        general_knowledge_index, intent,
-    )
+        return PREFERENCE_SERVICE.handle(
+            message=request.message, profile=request.profile,
+            selected_school_ids=request.selected_school_ids,
+            eligible_school_ids=request.eligible_school_ids,
+            family=request.family, home_postal_code=request.home_postal_code,
+        )
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
-def _load_all_preschools() -> list[dict[str, Any]]:
-    """Load the grounded school catalogue for a location-only chat question."""
-    driver = get_driver()
-    try:
-        verify_connectivity(driver)
-        query, params = build_stage1_query()
-        return run_query(driver, query, params)
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Preschool catalogue lookup failed: {exc}") from exc
-    finally:
-        driver.close()
-
-
-@app.post("/api/evaluate")
-def evaluate(request: EvaluateRequest) -> dict[str, Any]:
+@app.post("/api/evaluate", response_model=EvaluationResponse)
+def evaluate(request: EvaluateRequest) -> EvaluationResponse:
     """Stage 2: evaluate eligibility and estimated monthly cost."""
     try:
-        catalogue_path = REPO_ROOT / "SystemCode" / "data" / "processed" / "kindercompass_master.json"
-        catalogue = load_json(catalogue_path) if catalogue_path.is_file() else []
-        authoritative = {item.get("school_id"): item for item in catalogue if item.get("school_id")}
-        shortlist = [
-            {**item, **{
-                key: authoritative[item.get("school_id")][key]
-                for key in ("base_fee", "care_levels", "services_menu", "service_model", "operator_scheme")
-                if key in authoritative.get(item.get("school_id"), {})
-            }}
-            for item in request.shortlist
-        ]
-        results = evaluate_shortlist(
-            shortlist,
-            dob=request.family.dob,
-            admission_date=request.family.admission_date,
-            ghi=request.family.gross_household_income,
-            citizenship=request.family.citizenship,
-            programme_type=request.family.programme_type,
-            working_hours_per_month=request.family.working_hours_per_month,
-            household_size=request.family.household_size,
-            non_earning_dependants=request.family.non_earning_dependants,
-            special_approval=request.family.special_approval,
+        results = EVALUATION_SERVICE.evaluate(
+            request.school_ids, request.profile, request.family,
             include_ineligible=request.include_ineligible,
         )
-    except ValueError as exc:
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (PolicyUnavailableError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     eligible_count = sum(item.get("eligible") is True for item in results)
-    return {
+    return EvaluationResponse(**{
         "eligible_count": eligible_count,
         "centres": results,
         "trace": {
             "trace_id": request.trace_id,
-            "stage2_input": len(request.shortlist),
+            "stage2_input": len(request.school_ids),
             "stage2_eligible": eligible_count,
-            "stage2_excluded": len(request.shortlist) - eligible_count,
+            "stage2_excluded": len(request.school_ids) - eligible_count,
         },
-    }
+    })
 
 
-@app.post("/api/geocode")
+@app.post("/api/geocode", response_model=GeocodeResponse)
 def geocode(request: GeocodeRequest) -> dict[str, Any]:
     """Resolve a six-digit postal code for immediate map feedback."""
     try:
@@ -233,53 +139,25 @@ def geocode(request: GeocodeRequest) -> dict[str, Any]:
     return {"name": "Home", "type": "home", **coordinates}
 
 
-@app.post("/api/distances")
-def distances(request: DistanceRequest) -> dict[str, Any]:
+@app.post("/api/distances", response_model=DistanceResponse)
+def distances(request: DistanceRequest) -> DistanceResponse:
     """Calculate independent home distances for a batch of preschools."""
-    results = _attach_home_distances(request.centres, request.home_postal_code)
-    return {"distances": [
-        {"school_id": centre.get("school_id") or centre.get("centre_code"), "distance_km": centre["distance_km"]}
-        for centre in results if centre.get("distance_km") is not None
-    ]}
-
-
-def _attach_home_distances(centres: list[dict[str, Any]], home_postal_code: str) -> list[dict[str, Any]]:
-    """Calculate backend-owned home distances and attach them to centre records."""
     try:
-        home = geocode_postal_code(home_postal_code)
-        location_file = REPO_ROOT / "SystemCode" / "data" / "raw" / "PreSchoolsLocation.geojson"
-        locations = load_preschool_locations(location_file)
+        return DistanceResponse(distances=LOCATION_SERVICE.distances(
+            request.school_ids, request.home_postal_code
+        ))
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    results = []
-    for centre in centres:
-        location = locations.get(centre.get("centre_code"))
-        results.append({
-            **centre,
-            "distance_km": round(haversine_km(home, location), 3) if location else None,
-        })
-    return results
 
-
-@app.post("/api/route")
+@app.post("/api/route", response_model=RouteResponse)
 def route(request: RouteRequest) -> dict[str, Any]:
     """Stage 3: calculate the distance from home to one eligible preschool."""
-    by_code = {
-        (centre.get("school_id") or centre.get("centre_code")): centre
-        for centre in request.eligible_centres
-        if centre.get("eligible") is True
-    }
-    if request.selected_code not in by_code:
-        raise HTTPException(status_code=422, detail="The selected centre is absent or ineligible")
-
     try:
-        location_file = REPO_ROOT / "SystemCode" / "data" / "raw" / "PreSchoolsLocation.geojson"
-        selected = by_code[request.selected_code]
-        schools = attach_locations([selected], load_preschool_locations(location_file))
-        home_coordinates = geocode_postal_code(request.home_postal_code)
-        home = {"type": "home", "name": "Home", **home_coordinates}
-        result = calculate_home_to_preschool(home, schools[0])
+        return LOCATION_SERVICE.route(request.school_id, request.home_postal_code)
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return result

@@ -128,10 +128,17 @@ Stop the development server with `Ctrl+C`.
 | `POST /api/evaluate` | Run Stage 2 exact-age eligibility and an explainable programme-specific fee/subsidy estimate. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |
 | `POST /api/distances` | Calculate independent home distances for a collection of centres. |
-| `POST /api/route` | Run Stage 3 for one selected eligible preschool and return its two-point map schedule. |
+| `POST /api/route` | Run Stage 3 for one selected authoritative preschool ID and return its two-point map schedule. |
 
 Request schemas, validation rules, and live examples are available through the
 OpenAPI interface at `/docs` while the server is running.
+
+All post-search endpoints accept stable `school_id` values rather than complete
+school objects from the browser. For example, Stage 2 accepts `school_ids`, the
+confirmed preference profile, and family inputs; distance accepts `school_ids`
+and a postal code; route accepts one `school_id`. The backend resolves names,
+fees, programmes, identifiers, and coordinates from its authoritative catalogue
+before applying domain logic. Unknown IDs return `404`.
 
 The development CORS policy accepts the frontend origins
 `http://localhost:3000` and `http://127.0.0.1:3000`. Update the policy in
@@ -141,7 +148,10 @@ The development CORS policy accepts the frontend origins
 
 | Path | Description |
 |---|---|
-| `main.py` | FastAPI application, request models, CORS policy, endpoint orchestration, resource loading, and API error translation. |
+| `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |
+| `domain/` | Typed Pydantic request, response, and family contracts used by FastAPI and services. |
+| `repositories/` | Authoritative school lookup and admission-date-aware subsidy policy selection. |
+| `services/` | Preference, evaluation, and location orchestration separated from HTTP endpoints. |
 | `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, and OpenAI. |
 | `.gitignore` | Excludes Python bytecode and cache directories. |
 | `pipeline/pipeline.py` | Reusable in-memory Stage 1-to-Stage 2 integration function. |
@@ -251,6 +261,11 @@ the configured ECDA policy source does not contain a separate Flexi-care 2
 subsidy table, these results show the programme fee and require manual review;
 the engine does not interpolate a subsidy from Flexi-care 1 or 3.
 
+Policy files are selected by the requested admission date. The policy
+repository rejects overlapping effective periods and returns an unavailable
+policy error when no single version applies, preventing an out-of-period table
+from being silently used.
+
 ## Security and data boundaries
 
 - Never commit the repository `.env` or expose its values through frontend
@@ -258,6 +273,9 @@ the engine does not interpolate a subsidy from Flexi-care 1 or 3.
 - Neo4j, OneMap, and OpenAI credentials are backend-only.
 - The browser communicates with FastAPI; it does not connect directly to those
   services.
+- The browser submits school IDs and user choices only. School facts are
+  reloaded server-side before scoring, fee estimation, comparison, distance, or
+  route calculation.
 - Family details and chat content are not written into the generated aggregate
   stage traces.
 - Official-webpage evidence is explanation-only and does not change ranking.

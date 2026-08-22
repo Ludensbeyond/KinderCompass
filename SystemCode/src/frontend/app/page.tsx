@@ -124,7 +124,7 @@ export default function Home() {
     }
     let cancelled = false;
     void post<{ distances: DistanceResult[] }>("/api/distances", {
-      centres: eligible,
+      school_ids: eligible.map((centre) => centre.school_id),
       home_postal_code: homePostalCode,
     })
       .then((result) => {
@@ -142,8 +142,7 @@ export default function Home() {
     let cancelled = false;
     setMapBusy(true);
     void Promise.all(selected.map(async (schoolId) => [schoolId, await post<Route>("/api/route", {
-        eligible_centres: eligible,
-        selected_code: schoolId,
+        school_id: schoolId,
         home_postal_code: homePostalCode,
       })] as const))
       .then((results) => { if (!cancelled) { setRoutes(Object.fromEntries(results)); setError(""); } })
@@ -159,12 +158,12 @@ export default function Home() {
     const question = preference.trim();
     setMessages((items) => [...items, { role: "user", text: question }]);
     try {
-      const selectedCentres = eligible.filter((centre) => selected.includes(centre.school_id)).map((centre) => ({ ...centre, distance_km: distances[centre.school_id] }));
       const result = await post<{ profile: PreferenceProfile; understood: string[]; ready_to_search: boolean; question: string; citations?: Citation[] }>("/api/preferences", {
         message: question,
         profile: preferenceProfile,
-        selected_centres: selectedCentres,
-        eligible_centres: eligible,
+        selected_school_ids: selected,
+        eligible_school_ids: eligible.map((centre) => centre.school_id),
+        family: familyDetails,
         home_postal_code: homePostalCode,
       });
       setPreferenceProfile(result.profile); setUnderstood(result.understood);
@@ -190,7 +189,8 @@ export default function Home() {
         ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
       });
       const evaluationResult = await post<{ centres: Centre[] }>("/api/evaluate", {
-        shortlist: searchResult.centres,
+        school_ids: searchResult.centres.map((centre) => centre.school_id),
+        profile: preferenceProfile,
         family: familyDetails,
         trace_id: searchResult.trace.trace_id,
       });

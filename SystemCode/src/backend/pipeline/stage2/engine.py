@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import datetime as dt
-import json
 from collections.abc import Iterable, Mapping
-from functools import lru_cache
 from numbers import Real
 from pathlib import Path
 from typing import Any
 
+from SystemCode.src.backend.repositories.policy_repository import PolicyRepository
+
 
 POLICY_PATH = Path(__file__).resolve().parents[2] / "resources" / "policy" / "ecda_preschool_subsidies_2025-01-01.json"
+POLICY_REPOSITORY = PolicyRepository(POLICY_PATH.parent)
 LEVEL_BY_AGE_MONTHS = (
     (2, 18, "Infant (2 to 18 mths)", "infant_care"),
     (18, 36, "Playgroup (18 mths to 2 yrs old)", "child_care"),
@@ -28,9 +29,9 @@ PROGRAMME_ALIASES = {
 }
 
 
-@lru_cache(maxsize=1)
-def load_policy() -> dict[str, Any]:
-    return json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+def load_policy(applicable_date: dt.date | None = None) -> dict[str, Any]:
+    """Return the single policy version effective on the requested date."""
+    return POLICY_REPOSITORY.for_date(applicable_date or dt.date.today())
 
 
 def age_in_months(dob: dt.date, admission_date: dt.date) -> int:
@@ -111,7 +112,7 @@ def evaluate_preschool_eligibility(
         return {"eligible": False, "status": "fee_unavailable", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "reason": "Programme-specific fee data is unavailable for this preschool"}
 
-    policy = load_policy()
+    policy = load_policy(admission_date)
     source = {key: policy[key] for key in ("policy_id", "effective_from", "effective_to", "authority", "source_url")}
     warnings = ["This is an estimate and is not an ECDA subsidy approval.",
                 "GST treatment and additional centre charges may vary."]
