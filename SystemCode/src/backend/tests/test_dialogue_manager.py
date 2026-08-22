@@ -1,8 +1,15 @@
 import unittest
+import datetime as dt
+from pathlib import Path
+from unittest.mock import Mock
 
+from SystemCode.src.backend.domain.catalogue import EvaluatedSchool
+from SystemCode.src.backend.domain.models import FamilyDetails
+from SystemCode.src.backend.services.preference_service import PreferenceService
 from stage1.conversation import update_conversation
 from stage1.dialogue_manager import catalogue_facets, next_best_question
 from stage1.dialogue_manager import propose_constraint_relaxation
+from stage1.intent_router import classify_intent
 
 
 class DecisionAwareDialogueTests(unittest.TestCase):
@@ -94,6 +101,48 @@ class ControlledRelaxationTests(unittest.TestCase):
         profile["pending_relaxation"] = propose_constraint_relaxation(profile)
         declined = update_conversation(profile, "keep constraints")
         self.assertEqual(declined["profile"]["hard_constraints"]["language"], "Chinese")
+
+
+class WhatIfAndExclusionTests(unittest.TestCase):
+    @staticmethod
+    def centre(fee=160, *, eligible=True, reason=None):
+        return EvaluatedSchool.model_validate({
+            "school_id": "CENTRE:A", "name": "Example Preschool",
+            "status": "estimated" if eligible else "ineligible", "eligible": eligible,
+            "net_monthly_fee": fee if eligible else None,
+            "preferred_programme": "full_day",
+            "preferred_programme_available": eligible,
+            "programme_options": [], "reason": reason,
+        })
+
+    def setUp(self):
+        self.evaluation = Mock()
+        self.service = PreferenceService(Mock(), self.evaluation, Mock(), Path("."))
+        self.family = FamilyDetails(
+            dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+            gross_household_income=4500, working_hours_per_month=56,
+        )
+
+    def test_what_if_is_routed_and_does_not_mutate_family(self):
+        self.assertEqual(classify_intent("What if my working hours are 55?").intent, "run_what_if_scenario")
+        self.evaluation.evaluate.side_effect = [[self.centre(160)], [self.centre(750)]]
+        result = self.service._what_if(
+            "What if my working hours are 55?", ["CENTRE:A"], {}, self.family
+        )
+        self.assertIn("$160", result["question"])
+        self.assertIn("$750", result["question"])
+        self.assertIn("were not changed", result["question"])
+        self.assertEqual(self.family.working_hours_per_month, 56)
+
+    def test_exclusion_uses_stage2_reason(self):
+        self.evaluation.evaluate.return_value = [
+            self.centre(eligible=False, reason="the required age level is not offered")
+        ]
+        result = self.service._explain_exclusion(
+            "Why was Example Preschool excluded?", ["CENTRE:A"], {}, self.family
+        )
+        self.assertIn("required age level is not offered", result["question"])
+        self.assertFalse(result["ranking_affected"])
 
 
 if __name__ == "__main__":

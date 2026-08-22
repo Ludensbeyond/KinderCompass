@@ -115,6 +115,7 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
             message=request.message, profile=request.profile,
             selected_school_ids=request.selected_school_ids,
             eligible_school_ids=request.eligible_school_ids,
+            excluded_school_ids=request.excluded_school_ids,
             family=request.family, home_postal_code=request.home_postal_code,
         )
     except SchoolNotFoundError as exc:

@@ -95,6 +95,7 @@ export default function Home() {
   const [preference, setPreference] = useState("");
   const [eligible, setEligible] = useState<Centre[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [excluded, setExcluded] = useState<string[]>([]);
   const [routes, setRoutes] = useState<Record<string, Route>>({});
   const [homePoint, setHomePoint] = useState<MapPoint | null>(null);
   const [mapBusy, setMapBusy] = useState(false);
@@ -205,6 +206,7 @@ export default function Home() {
         profile: preferenceProfile,
         selected_school_ids: selected,
         eligible_school_ids: eligible.map((centre) => centre.school_id),
+        excluded_school_ids: excluded,
         family: familyDetails,
         home_postal_code: homePostalCode,
       });
@@ -243,13 +245,16 @@ export default function Home() {
         profile: preferenceProfile,
         family: familyDetails,
         trace_id: searchResult.trace.trace_id,
+        include_ineligible: true,
       });
-      setEligible(evaluationResult.centres);
+      const eligibleCentres = evaluationResult.centres.filter((centre) => centre.eligible);
+      setEligible(eligibleCentres);
+      setExcluded(evaluationResult.centres.filter((centre) => !centre.eligible).map((centre) => centre.school_id));
       setRecommendationTrace(searchResult.trace.trace_id);
-      setFeedbackSchoolId(evaluationResult.centres[0]?.school_id ?? "");
+      setFeedbackSchoolId(eligibleCentres[0]?.school_id ?? "");
       setFeedbackStatus("");
       setSelected([]); setRoutes({});
-      setMessages((items) => [...items, { role: "assistant", text: `I found ${searchResult.centres.length} ranked matches, and ${evaluationResult.centres.length} match the age and fee criteria. Choose one or more preschools to compare with home.` }]);
+      setMessages((items) => [...items, { role: "assistant", text: `I found ${searchResult.centres.length} ranked matches, and ${eligibleCentres.length} match the age and fee criteria. Choose one or more preschools to compare with home.` }]);
       setStage("choose"); setTab("results");
     } catch (caught) {
       const message = (caught as Error).message;

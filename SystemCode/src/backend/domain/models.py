@@ -50,6 +50,7 @@ class PreferenceRequest(BaseModel):
     profile: dict[str, Any] | None = None
     selected_school_ids: list[SchoolId] = Field(default_factory=list)
     eligible_school_ids: list[SchoolId] = Field(default_factory=list)
+    excluded_school_ids: list[SchoolId] = Field(default_factory=list)
     family: FamilyDetails | None = None
     home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
 
