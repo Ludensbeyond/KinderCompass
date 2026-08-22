@@ -105,6 +105,26 @@ class FeedbackResponse(BaseModel):
     status: Literal["recorded"]
 
 
+class ChatFeedbackRequest(BaseModel):
+    answer_id: uuid.UUID
+    anonymous_session_id: uuid.UUID
+    helpful: bool
+    reason: Literal["inaccurate", "incomplete", "unclear", "not_relevant", "other"] | None = None
+    consent: Literal[True]
+
+
+class ChatFeedbackResponse(BaseModel):
+    feedback_id: uuid.UUID
+    status: Literal["recorded"]
+
+
+class ChatFeedbackSummaryResponse(BaseModel):
+    responses: int
+    helpful_responses: int
+    helpful_rate: float | None
+    segments: list[dict[str, Any]]
+
+
 class RouteRequest(BaseModel):
     school_id: SchoolId = Field(min_length=1)
     home_postal_code: str = Field(pattern=r"^\d{6}$")
@@ -165,6 +185,7 @@ class PreferenceResponse(BaseModel):
         "authoritative_fact", "school_published_claim", "calculated_estimate",
         "parent_sentiment", "unknown",
     ] | None = None
+    answer_id: uuid.UUID | None = None
 
 
 class GeocodeResponse(BaseModel):

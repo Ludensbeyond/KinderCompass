@@ -28,6 +28,7 @@ from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noq
 from stage1.proximity import geocode_postal_code  # noqa: E402
 from stage1.dialogue_manager import propose_constraint_relaxation  # noqa: E402
 from SystemCode.src.backend.domain.models import (  # noqa: E402
+    ChatFeedbackRequest, ChatFeedbackResponse, ChatFeedbackSummaryResponse,
     ConversationMemoryRequest, ConversationMemoryResponse, DistanceRequest, DistanceResponse,
     EvaluateRequest, EvaluationResponse, ForgetConversationMemoryResponse,
     FeedbackRequest, FeedbackResponse,
@@ -48,6 +49,7 @@ from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
     FeedbackSchoolMismatchError, FeedbackService, FeedbackSnapshotNotFoundError,
 )
 from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
+from SystemCode.src.backend.services.chat_feedback_service import ChatAnswerNotFoundError, ChatFeedbackService  # noqa: E402
 
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
@@ -73,6 +75,9 @@ FEEDBACK_SERVICE = FeedbackService(
 )
 CONVERSATION_MEMORY_SERVICE = ConversationMemoryService(
     REPO_ROOT / "SystemCode/src/backend/output/conversation_memory.sqlite3"
+)
+CHAT_FEEDBACK_SERVICE = ChatFeedbackService(
+    REPO_ROOT / "SystemCode/src/backend/output/chat_answer_feedback.sqlite3"
 )
 
 
@@ -127,6 +132,7 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
             if request.anonymous_session_id is None:
                 raise HTTPException(status_code=422, detail="An anonymous session ID is required to remember preferences.")
             CONVERSATION_MEMORY_SERVICE.save(request.anonymous_session_id, result["profile"])
+        result["answer_id"] = CHAT_FEEDBACK_SERVICE.record_answer(result)
         return result
     except SchoolNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -155,6 +161,22 @@ def save_conversation_memory(request: SaveConversationMemoryRequest) -> dict[str
 def forget_conversation_memory(request: ConversationMemoryRequest) -> dict[str, str]:
     CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id)
     return {"status": "forgotten"}
+
+
+@app.post("/api/chat-feedback", response_model=ChatFeedbackResponse)
+def chat_feedback(request: ChatFeedbackRequest) -> dict[str, str]:
+    try:
+        feedback_id = CHAT_FEEDBACK_SERVICE.record_feedback(request)
+    except ChatAnswerNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"feedback_id": feedback_id, "status": "recorded"}
+
+
+@app.get("/api/chat-feedback/summary", response_model=ChatFeedbackSummaryResponse)
+def chat_feedback_summary() -> dict[str, Any]:
+    return CHAT_FEEDBACK_SERVICE.summary()
 
 
 @app.post("/api/evaluate", response_model=EvaluationResponse)

@@ -44,6 +44,7 @@ class ApiStartupTests(unittest.TestCase):
         self.assertIn("0.30 km", response.json()["question"])
         self.assertEqual(response.json()["profile"]["active_school"]["school_id"], "B")
         self.assertEqual(response.json()["evidence_category"], "calculated_estimate")
+        self.assertIsNotNone(response.json()["answer_id"])
         mock_all.assert_called_once_with()
         mock_distances.assert_any_call(mock_all.return_value, "540231")
 
