@@ -148,6 +148,9 @@ The development CORS policy accepts the frontend origins
 
 ## Folder contents
 
+See the [`doc/` directory guide](doc/README.md) for ownership boundaries and
+more detail about each backend folder.
+
 | Path | Description |
 |---|---|
 | `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |

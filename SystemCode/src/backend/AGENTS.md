@@ -2,6 +2,22 @@
 
 This file supplements [`README.md`](README.md).
 
+## Directory documentation
+
+Read the relevant folder guide before changing backend code or data:
+
+- [`doc/domain.md`](doc/domain.md) for shared domain contracts;
+- [`doc/repositories.md`](doc/repositories.md) for authoritative data access;
+- [`doc/services.md`](doc/services.md) for use-case orchestration;
+- [`doc/pipeline.md`](doc/pipeline.md) for reusable recommendation stages;
+- [`doc/scripts.md`](doc/scripts.md) for offline maintenance tools;
+- [`doc/resources.md`](doc/resources.md) for curated runtime inputs;
+- [`doc/tests.md`](doc/tests.md) for the backend test suite; and
+- [`doc/output.md`](doc/output.md) for generated artifacts.
+
+The [`doc/README.md`](doc/README.md) index summarizes how these directories fit
+together.
+
 ## Architecture boundaries
 
 - Keep `main.py` a thin FastAPI layer for routing, dependency wiring, CORS, and
