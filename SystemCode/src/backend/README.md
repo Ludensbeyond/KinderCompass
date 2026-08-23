@@ -125,13 +125,22 @@ Stop the development server with `Ctrl+C`.
 | `GET /api/health` | Confirm that FastAPI is running. |
 | `POST /api/preferences` | Merge preferences and route chat questions. A nearest-school request queries the grounded catalogue for a location answer, but does not create a ranked recommendation shortlist. |
 | `POST /api/search` | Run confirmed Stage 1 constraints and preference ranking against Neo4j. |
-| `POST /api/evaluate` | Run Stage 2 care-level eligibility and estimated monthly cost calculations. |
+| `POST /api/evaluate` | Run Stage 2 exact-age eligibility and an explainable programme-specific fee/subsidy estimate. |
+| `POST /api/schools/{school_id}/programme-estimate` | Recalculate one authoritative school's fee and subsidy for an exact programme option shown by the GUI. |
+| `POST /api/feedback` | Record explicit, consented anonymous feedback against an immutable recommendation snapshot. |
 | `POST /api/geocode` | Resolve one six-digit postal code through OneMap for map feedback. |
 | `POST /api/distances` | Calculate independent home distances for a collection of centres. |
-| `POST /api/route` | Run Stage 3 for one selected eligible preschool and return its two-point map schedule. |
+| `POST /api/route` | Run Stage 3 for one selected authoritative preschool ID and return its two-point map schedule. |
 
 Request schemas, validation rules, and live examples are available through the
 OpenAPI interface at `/docs` while the server is running.
+
+All post-search endpoints accept stable `school_id` values rather than complete
+school objects from the browser. For example, Stage 2 accepts `school_ids`, the
+confirmed preference profile, and family inputs; distance accepts `school_ids`
+and a postal code; route accepts one `school_id`. The backend resolves names,
+fees, programmes, identifiers, and coordinates from its authoritative catalogue
+before applying domain logic. Unknown IDs return `404`.
 
 The development CORS policy accepts the frontend origins
 `http://localhost:3000` and `http://127.0.0.1:3000`. Update the policy in
@@ -141,7 +150,10 @@ The development CORS policy accepts the frontend origins
 
 | Path | Description |
 |---|---|
-| `main.py` | FastAPI application, request models, CORS policy, endpoint orchestration, resource loading, and API error translation. |
+| `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |
+| `domain/` | Typed Pydantic request, response, and family contracts used by FastAPI and services. |
+| `repositories/` | Authoritative school lookup and admission-date-aware subsidy policy selection. |
+| `services/` | Preference, evaluation, and location orchestration separated from HTTP endpoints. |
 | `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, and OpenAI. |
 | `.gitignore` | Excludes Python bytecode and cache directories. |
 | `pipeline/pipeline.py` | Reusable in-memory Stage 1-to-Stage 2 integration function. |
@@ -152,6 +164,14 @@ The development CORS policy accepts the frontend origins
 | `resources/web_rag/` | Curated general guidance, school/operator decisions, evaluation labels, and audit inputs. |
 | `tests/` | Unit and integration tests for all stages, preference conversation, ranking, provenance, and webpage RAG. |
 | `output/` | Generated shortlist, eligibility, distance, inventory, RAG index, review, and evaluation artifacts. |
+
+The authoritative catalogue is validated into typed `SchoolRecord` and
+`SchoolService` domain objects when the repository starts or reloads. Invalid
+records stop loading with the record index, school ID, and failing field rather
+than reaching ranking or fee evaluation. Stage 2 returns typed
+`ProgrammeOption` and `EvaluatedSchool` objects, and the FastAPI evaluation
+response uses the same domain contract. These models remain mapping-compatible
+while the older Stage 1 scoring functions are migrated incrementally.
 
 ### Stage 1 modules
 
@@ -231,6 +251,39 @@ Treat changes there as source changes requiring review. In particular:
 - `production_audit_labels.json` and `answer_quality_labels.json` support
   evaluation and readiness checks.
 
+### Stage 2 policy estimates
+
+Stage 2 selects the fee matching the child's completed age in months, reported
+citizenship, and selected programme from the catalogue's detailed
+`services_menu`. It derives potential Basic and Additional Subsidy amounts from
+the dated ECDA policy resource under `resources/policy/`, including the relevant
+minimum co-payment. Larger qualifying households are assessed using reported
+per-capita income criteria.
+
+The evaluation response also lists the exact programmes available for each
+school and age level, such as Half Day AM and Half Day PM. If the preferred
+programme is unavailable, the school remains visible with its lowest-fee
+supported option and an explicit warning. Selecting another programme in the
+GUI calls the programme-estimate endpoint, which resolves the school and fee
+again from the authoritative catalogue rather than accepting a browser-supplied
+fee.
+
+The result is an estimate, not subsidy approval. Class C kindergarten, reported
+Special Approval circumstances, missing programme fees, and unsupported
+programme types are routed to review or an unavailable state instead of being
+assigned an invented amount. GST treatment and additional centre charges may
+vary.
+
+Flexi-care 2 can be selected when a centre publishes a matching fee. Because
+the configured ECDA policy source does not contain a separate Flexi-care 2
+subsidy table, these results show the programme fee and require manual review;
+the engine does not interpolate a subsidy from Flexi-care 1 or 3.
+
+Policy files are selected by the requested admission date. The policy
+repository rejects overlapping effective periods and returns an unavailable
+policy error when no single version applies, preventing an out-of-period table
+from being silently used.
+
 ## Security and data boundaries
 
 - Never commit the repository `.env` or expose its values through frontend
@@ -238,6 +291,9 @@ Treat changes there as source changes requiring review. In particular:
 - Neo4j, OneMap, and OpenAI credentials are backend-only.
 - The browser communicates with FastAPI; it does not connect directly to those
   services.
+- The browser submits school IDs and user choices only. School facts are
+  reloaded server-side before scoring, fee estimation, comparison, distance, or
+  route calculation.
 - Family details and chat content are not written into the generated aggregate
   stage traces.
 - Official-webpage evidence is explanation-only and does not change ranking.

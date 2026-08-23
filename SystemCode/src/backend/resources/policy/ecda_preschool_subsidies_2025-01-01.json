@@ -1,0 +1,21 @@
+{
+  "policy_id": "ecda-preschool-subsidies-2025-01-01",
+  "effective_from": "2025-01-01",
+  "effective_to": null,
+  "authority": "Early Childhood Development Agency (ECDA)",
+  "source_url": "https://www.ecda.gov.sg/docs/default-source/default-document-library/parents/child-care-infant-care-subsidy-cc-subsidy-tables-%28current-and-new-rates-wef-jan-2025%29.pdf?sfvrsn=ad91a76a_1",
+  "working_hours_threshold": 56,
+  "additional_subsidy_bands": [
+    {"household_income_max": 3000, "per_capita_income_max": 750, "infant_care": {"full_day": [710, 40], "half_day": [355, 20], "flexi_care_1": [265, 15], "flexi_care_3": [515, 30]}, "child_care": {"full_day": [467, 3], "half_day": [235, 2], "flexi_care_1": [175, 1], "flexi_care_3": [340, 2]}},
+    {"household_income_max": 4500, "per_capita_income_max": 1125, "infant_care": {"full_day": [640, 110], "half_day": [320, 60], "flexi_care_1": [235, 45], "flexi_care_3": [465, 80]}, "child_care": {"full_day": [440, 25], "half_day": [220, 15], "flexi_care_1": [165, 10], "flexi_care_3": [320, 20]}},
+    {"household_income_max": 6000, "per_capita_income_max": 1500, "infant_care": {"full_day": [500, 250], "half_day": [250, 130], "flexi_care_1": [185, 95], "flexi_care_3": [365, 180]}, "child_care": {"full_day": [340, 85], "half_day": [170, 43], "flexi_care_1": [125, 32], "flexi_care_3": [250, 62]}},
+    {"household_income_max": 7500, "per_capita_income_max": 1875, "infant_care": {"full_day": [380, 360], "half_day": [190, 185], "flexi_care_1": [140, 135], "flexi_care_3": [275, 265]}, "child_care": {"full_day": [260, 143], "half_day": [130, 72], "flexi_care_1": [95, 53], "flexi_care_3": [190, 105]}},
+    {"household_income_max": 9000, "per_capita_income_max": 2250, "infant_care": {"full_day": [240, 500], "half_day": [120, 255], "flexi_care_1": [90, 185], "flexi_care_3": [175, 365]}, "child_care": {"full_day": [190, 206], "half_day": [95, 103], "flexi_care_1": [70, 77], "flexi_care_3": [140, 151]}},
+    {"household_income_max": 10500, "per_capita_income_max": 2625, "infant_care": {"full_day": [100, 640], "half_day": [50, 325], "flexi_care_1": [35, 240], "flexi_care_3": [70, 465]}, "child_care": {"full_day": [130, 272], "half_day": [65, 136], "flexi_care_1": [50, 101], "flexi_care_3": [95, 199]}},
+    {"household_income_max": 12000, "per_capita_income_max": 3000, "infant_care": {"full_day": [40, 700], "half_day": [20, 355], "flexi_care_1": [15, 260], "flexi_care_3": [25, 510]}, "child_care": {"full_day": [80, 339], "half_day": [40, 170], "flexi_care_1": [30, 126], "flexi_care_3": [55, 248]}}
+  ],
+  "basic_subsidies": {
+    "infant_care": {"working": {"full_day": 600, "half_day": 300, "flexi_care_1": 220, "flexi_care_3": 440}, "non_working": {"full_day": 150, "half_day": 150, "flexi_care_1": 55, "flexi_care_3": 150}},
+    "child_care": {"working": {"full_day": 300, "half_day": 150, "flexi_care_1": 110, "flexi_care_3": 220}, "non_working": {"full_day": 150, "half_day": 150, "flexi_care_1": 55, "flexi_care_3": 150}}
+  }
+}

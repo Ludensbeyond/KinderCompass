@@ -16,6 +16,10 @@ from stage1.llm_extractor import merge_preference_profile_with_llm
 from stage1.grounded_explainer import explain_school_comparison, explain_school_decision, synthesize_web_evidence
 from stage1.intent_router import classify_intent
 from stage1.web_rag import retrieve, retrieve_general_evidence
+from stage1.dialogue_manager import (
+    detect_contradiction, next_best_question, resolve_constraint_relaxation,
+    resolve_contradiction,
+)
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
@@ -400,6 +404,7 @@ def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: 
         "status": "comparison",
         "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
         "question": grounded,
+        "evidence_category": "calculated_estimate",
     }
 
 
@@ -491,7 +496,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -501,6 +506,48 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     current_profile = sync_preference_schema(
         current or {"hard_constraints": {}, "preferences": {}, "recognized": []}
     )
+    relaxed_profile, relaxation_status = resolve_constraint_relaxation(current_profile, text)
+    if relaxation_status == "approved":
+        return {
+            "profile": relaxed_profile,
+            "understood": summarize_profile(relaxed_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "The approved relaxation has been applied. Click Show recommendations to search again.",
+        }
+    if relaxation_status == "declined":
+        return {
+            "profile": relaxed_profile,
+            "understood": summarize_profile(relaxed_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "I kept your existing constraints unchanged. You can edit a preference or search again.",
+        }
+    if relaxation_status == "pending":
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_confirmation",
+            "ready_to_search": False,
+            "question": current_profile["pending_relaxation"]["question"],
+        }
+    repaired_profile, repaired = resolve_contradiction(current_profile, text)
+    if repaired:
+        return {
+            "profile": repaired_profile,
+            "understood": summarize_profile(repaired_profile),
+            "status": "ready_to_search",
+            "ready_to_search": True,
+            "question": "The conflicting preference has been resolved. Add another preference or click Show recommendations.",
+        }
+    if current_profile.get("pending_contradiction"):
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_clarification",
+            "ready_to_search": False,
+            "question": current_profile["pending_contradiction"]["question"],
+        }
     has_preferences = bool(
         current_profile.get("hard_constraints") or current_profile.get("preferences")
     )
@@ -538,7 +585,14 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             profile["active_school"] = {
                 key: closest.get(key) for key in ("school_id", "centre_code", "name") if closest.get(key) is not None
             }
-        return {"profile": profile, "understood": summarize_profile(profile), "status": "comparison", "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")), "question": answer}
+        return {
+            "profile": profile,
+            "understood": summarize_profile(profile),
+            "status": "comparison",
+            "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
+            "question": answer,
+            "evidence_category": "calculated_estimate",
+        }
     if intent.intent == "explain_top_ranked_preschool":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
@@ -574,6 +628,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "ranking_affected": False,
             "web_answer_method": answer_method,
             "web_answer_fallback_reason": fallback_reason,
+            "evidence_category": "school_published_claim" if citations else "unknown",
         }
     if intent.intent == "ask_general_knowledge":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
@@ -586,6 +641,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
             "question": answer, "citations": citations,
             "evidence_scope": "general" if citations else "unavailable", "ranking_affected": False,
+            "evidence_category": "authoritative_fact" if citations else "unknown",
         }
     if intent.intent == "ask_combined_evidence":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
@@ -673,6 +729,16 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         }
 
     incoming = map_text_to_filters(text)
+    contradiction = detect_contradiction(current_profile, incoming, text)
+    if contradiction:
+        current_profile["pending_contradiction"] = contradiction
+        return {
+            "profile": current_profile,
+            "understood": summarize_profile(current_profile),
+            "status": "needs_clarification",
+            "ready_to_search": False,
+            "question": contradiction["question"],
+        }
     profile = merge_preference_profile_with_llm(current, text)
     if profile.get("clarification_needed"):
         return {
@@ -743,7 +809,13 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     if incoming.get("hard_constraints", {}).get("max_distance_km") is not None:
         question = _distance_acknowledgement(profile)
     else:
-        question = "Would you like to add another preference or show recommendations?"
+        selected_question = next_best_question(profile, candidate_facets)
+        if selected_question:
+            profile["next_question_attribute"] = selected_question[0]
+            question = selected_question[1] + " You can also click Show recommendations now."
+        else:
+            profile.pop("next_question_attribute", None)
+            question = "Would you like to add another preference or show recommendations?"
     return {
         "profile": profile,
         "understood": understood,

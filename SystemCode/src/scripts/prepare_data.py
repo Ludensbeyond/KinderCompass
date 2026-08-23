@@ -101,7 +101,8 @@ def prepare_catalogue(raw_dir: str | Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
     )
     services_json = (
         services.groupby("centre_code")[[
-            "levels_offered", "type_of_service", "type_of_citizenship", "fees"
+            "class_of_licence", "levels_offered", "type_of_service",
+            "type_of_citizenship", "fees", "last_updated"
         ]]
         .apply(lambda frame: frame.to_dict(orient="records"), include_groups=False)
         .reset_index(name="services_menu")

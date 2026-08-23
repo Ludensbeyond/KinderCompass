@@ -14,16 +14,17 @@ class ApiStartupTests(unittest.TestCase):
         self.assertTrue(main.POC_SRC.is_dir())
         self.assertEqual(main.health(), {"status": "ok"})
 
-    @patch("SystemCode.src.backend.main._attach_home_distances")
-    @patch("SystemCode.src.backend.main._load_all_preschools")
-    @patch("SystemCode.src.backend.main.classify_intent")
+    @patch.object(main.LOCATION_SERVICE, "attach_distances")
+    @patch.object(main.SCHOOL_REPOSITORY, "get_many")
+    @patch.object(main.SCHOOL_REPOSITORY, "all")
+    @patch("SystemCode.src.backend.services.preference_service.classify_intent")
     def test_nearest_chat_uses_postal_code_and_full_grounded_catalogue(
-        self, mock_intent, mock_load, mock_distances
+        self, mock_intent, mock_all, mock_get_many, mock_distances
     ) -> None:
         from stage1.intent_router import IntentResult
 
         mock_intent.return_value = IntentResult(intent="find_closest_preschool", confidence=0.99, method="llm")
-        mock_load.return_value = [
+        mock_all.return_value = [
             {"school_id": "A", "centre_code": "A", "name": "Far School"},
             {"school_id": "B", "centre_code": "B", "name": "Near School"},
         ]
@@ -31,6 +32,7 @@ class ApiStartupTests(unittest.TestCase):
             {"school_id": "A", "centre_code": "A", "name": "Far School", "distance_km": 1.2},
             {"school_id": "B", "centre_code": "B", "name": "Near School", "distance_km": 0.3},
         ]
+        mock_get_many.return_value = [mock_distances.return_value[1]]
 
         response = TestClient(main.app).post("/api/preferences", json={
             "message": "Which is the nearest school?",
@@ -41,8 +43,10 @@ class ApiStartupTests(unittest.TestCase):
         self.assertIn("Near School", response.json()["question"])
         self.assertIn("0.30 km", response.json()["question"])
         self.assertEqual(response.json()["profile"]["active_school"]["school_id"], "B")
-        mock_load.assert_called_once_with()
-        mock_distances.assert_called_once_with(mock_load.return_value, "540231")
+        self.assertEqual(response.json()["evidence_category"], "calculated_estimate")
+        self.assertIsNotNone(response.json()["answer_id"])
+        mock_all.assert_called_once_with()
+        mock_distances.assert_any_call(mock_all.return_value, "540231")
 
         mock_intent.return_value = IntentResult(intent="ask_selected_school_evidence", confidence=0.99, method="llm")
         follow_up = TestClient(main.app).post("/api/preferences", json={
@@ -53,6 +57,7 @@ class ApiStartupTests(unittest.TestCase):
 
         self.assertEqual(follow_up.status_code, 200)
         self.assertNotIn("Select one preschool", follow_up.json()["question"])
+        self.assertIn(follow_up.json()["evidence_category"], {"school_published_claim", "unknown"})
 
 
 if __name__ == "__main__":

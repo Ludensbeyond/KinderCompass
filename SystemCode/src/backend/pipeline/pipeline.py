@@ -16,7 +16,7 @@ def search_and_evaluate(
     dob: dt.date,
     admission_date: dt.date,
     ghi: Real,
-    basic_subsidy: Real,
+    basic_subsidy: Real | None = None,
     town: str | None = None,
     include_ineligible: bool = False,
 ) -> list[dict[str, Any]]:

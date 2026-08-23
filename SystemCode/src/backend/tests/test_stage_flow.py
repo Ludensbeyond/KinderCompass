@@ -41,7 +41,7 @@ class Stage2Tests(unittest.TestCase):
     def test_evaluates_eligible_school(self):
         result = evaluate_preschool_eligibility(
             dob=dt.date(2023, 6, 10),
-            admission_date=dt.date(2026, 1, 1),
+            admission_date=dt.date(2026, 6, 10),
             ghi=4500,
             base_fee=1200,
             basic_subsidy=600,
@@ -49,14 +49,14 @@ class Stage2Tests(unittest.TestCase):
         )
         self.assertTrue(result["eligible"])
         self.assertEqual(result["eligible_level"], "Pre-Nursery (3 yrs old)")
-        self.assertEqual(result["net_monthly_fee"], 350.0)
+        self.assertEqual(result["net_monthly_fee"], 160.0)
 
     def test_filters_school_without_required_level(self):
         school = {**SCHOOL, "care_levels": ["Kindergarten 1 (5 yrs old)"]}
         result = evaluate_shortlist(
             [school],
             dob=dt.date(2023, 6, 10),
-            admission_date=dt.date(2026, 1, 1),
+            admission_date=dt.date(2026, 6, 10),
             ghi=4500,
             basic_subsidy=600,
         )
@@ -73,7 +73,7 @@ class Stage2Tests(unittest.TestCase):
         result = evaluate_shortlist(
             [incomplete, SCHOOL],
             dob=dt.date(2023, 6, 10),
-            admission_date=dt.date(2026, 1, 1),
+            admission_date=dt.date(2026, 6, 10),
             ghi=4500,
             basic_subsidy=600,
         )
@@ -88,7 +88,7 @@ class Stage2Tests(unittest.TestCase):
         result = evaluate_shortlist(
             [incomplete],
             dob=dt.date(2023, 6, 10),
-            admission_date=dt.date(2026, 1, 1),
+            admission_date=dt.date(2026, 6, 10),
             ghi=4500,
             basic_subsidy=600,
             include_ineligible=True,
@@ -821,13 +821,13 @@ class PipelineTests(unittest.TestCase):
         result = search_and_evaluate(
             "play-based learning",
             dob=dt.date(2023, 6, 10),
-            admission_date=dt.date(2026, 1, 1),
+            admission_date=dt.date(2026, 6, 10),
             ghi=4500,
             basic_subsidy=600,
         )
         stage1_search.assert_called_once_with(text="play-based learning", town=None)
         self.assertEqual(result[0]["centre_code"], "ST0001")
-        self.assertEqual(result[0]["net_monthly_fee"], 350.0)
+        self.assertEqual(result[0]["net_monthly_fee"], 160.0)
 
     def test_stage2_reads_stage1_json_and_writes_result(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -838,7 +838,7 @@ class PipelineTests(unittest.TestCase):
             result = run_from_file(
                 input_path,
                 dob=dt.date(2023, 6, 10),
-                admission_date=dt.date(2026, 1, 1),
+                admission_date=dt.date(2026, 6, 10),
                 ghi=4500,
                 basic_subsidy=600,
                 output_path=output_path,
@@ -846,7 +846,7 @@ class PipelineTests(unittest.TestCase):
 
             saved = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(result, saved)
-            self.assertEqual(saved[0]["net_monthly_fee"], 350.0)
+            self.assertEqual(saved[0]["net_monthly_fee"], 160.0)
 
 
 if __name__ == "__main__":

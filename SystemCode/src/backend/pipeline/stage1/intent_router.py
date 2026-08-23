@@ -18,6 +18,8 @@ IntentName = Literal[
     "compare_selected_preschools",
     "explain_selected_tradeoffs",
     "explain_evidence_provenance",
+    "run_what_if_scenario",
+    "explain_school_exclusion",
     "ask_selected_school_evidence",
     "ask_general_knowledge",
     "ask_combined_evidence",
@@ -69,6 +71,12 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
         lowered,
     ):
         return IntentResult(intent="update_preferences", confidence=1)
+    if "what if" in lowered or re.search(r"\bif my (?:income|working hours|work hours)\b", lowered):
+        return IntentResult(intent="run_what_if_scenario", confidence=1)
+    if "why" in lowered and any(
+        phrase in lowered for phrase in ("excluded", "not eligible", "not shown", "left out")
+    ):
+        return IntentResult(intent="explain_school_exclusion", confidence=1)
     if any(word in lowered for word in ("closest", "nearest")) and any(
         word in lowered for word in ("school", "preschool", "centre", "center")
     ):
@@ -156,6 +164,8 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
             "compare_selected_preschools compares two or more selected results; "
             "explain_selected_tradeoffs asks about drawbacks of selected results. "
             "explain_evidence_provenance asks where selected-school facts came from, how reliable they are, or what evidence is missing. "
+            "run_what_if_scenario asks how fees or eligibility would change under hypothetical family inputs without changing saved details. "
+            "explain_school_exclusion asks why a school was removed from eligible recommendations. "
             "ask_selected_school_evidence asks a factual question about exactly one selected school, such as its curriculum, languages, fees, facilities, or philosophy. "
             "ask_general_knowledge explains an early-childhood curriculum, pedagogy, framework, or educational concept without making a claim about one school. "
             "ask_combined_evidence combines a selected school's verified claim with a separately sourced general explanation. "
