@@ -33,12 +33,12 @@ def create_selected_school_evidence_tool(index: dict[str, Any]) -> BaseTool:
         matches = retrieve(index, request.school_id, request.question)
         return [
             RetrievedEvidence(
-                school_id=request.school_id,
+                school_id=match["school_id"],
                 chunk_id=match["chunk_id"],
                 text=match["text"],
                 citation=EvidenceCitation(
                     citation_id=match["citation"]["chunk_id"],
-                    school_id=request.school_id,
+                    school_id=match["school_id"],
                     chunk_id=match["citation"]["chunk_id"],
                     url=match["citation"]["url"],
                     title=match["citation"]["title"],
@@ -46,6 +46,7 @@ def create_selected_school_evidence_tool(index: dict[str, Any]) -> BaseTool:
                 ),
             )
             for match in matches
+            if match.get("school_id") == request.school_id
         ]
 
     return StructuredTool.from_function(

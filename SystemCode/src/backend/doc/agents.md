@@ -22,6 +22,11 @@ outputs are not edited by hand.
 - The browser sends family inputs and stable school IDs to FastAPI. FastAPI and
   backend services reload authoritative school, policy, and evidence data; the
   graph never trusts browser-supplied school records.
+- Preserve the existing `POST /api/preferences` wire contract throughout the
+  migration. The agent remains a backend implementation detail: the frontend
+  must not import agent contracts or send prompts, evidence records, tool
+  configuration, or provider credentials. Agent results map back to the
+  existing `PreferenceResponse` fields, including its optional answer metadata.
 - The first graph is limited to selected-school webpage evidence. Ranking,
   eligibility, fees, distance, preference extraction, intent classification,
   and other explanations remain outside it.
@@ -97,13 +102,13 @@ no shared model factory and no LangGraph invocation at baseline.
 | 1. Record baseline | complete | Architecture and progress owner | 2026-08-23 | `backend/AGENTS.md`; `backend/doc/README.md`; `backend/doc/agents.md` | `test_web_rag.py`: 53 passed. Conversation collection was also attempted but is blocked in the available Python 3.9 environment: the project uses Python 3.10+ union annotations, and `neo4j` is absent. No live services were called. |
 | 2. Add dependencies and configuration | complete | Graph and configuration owner | 2026-08-23 | `backend/requirements.txt`; `backend/agents/__init__.py`; `backend/agents/config.py`; `backend/tests/test_agent_config.py`; `backend/README.md`; `backend/doc/README.md`; `backend/doc/agents.md` | `test_agent_config.py`: 4 passed under Python 3.12. Dependency resolution and `pip check` passed with `langgraph==1.2.11`, `langchain-openai==1.6.0`, and the existing `openai<3` constraint. No graph or live service was invoked. |
 | 3. Define agent contracts | complete | Graph and configuration owner | 2026-08-23 | `backend/agents/contracts.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_contracts.py`; `backend/doc/agents.md` | `test_agent_contracts.py`: 5 passed under Python 3.12. A combined rerun with `test_agent_config.py` was also attempted: all contract and mode tests passed, while the pre-existing dependency import test could not collect `langgraph` because the current virtual environment does not have that declared package installed. No live services were called. |
-| 4. Extract the first tool | pending | Retrieval-tool owner | — | — | Not run. Required: valid, missing-school, empty-evidence, and cross-school isolation tests. |
-| 5. Add the shared model factory | pending | Graph and configuration owner | — | — | Not run. Required: mocked lazy-client, configuration, and secret-safe typed-error tests. |
+| 4. Extract the first tool | complete | Retrieval-tool owner | 2026-08-27 | `backend/agents/tools.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_tools.py`; `backend/doc/agents.md` | `test_agent_tools.py`: 4 passed under Python 3.12, covering valid typed evidence, missing school, empty evidence, and cross-school isolation. `test_web_rag.py`: 53 passed. No graph or live service was invoked. |
+| 5. Add the shared model factory | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/model_factory.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_model_factory.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_model_factory.py`: 5 passed under Python 3.12, covering deterministic lazy behavior, explicit/default configuration, bounded timeouts, missing credentials, and secret-safe initialization errors. A combined run with answer-mode and contract tests passed 13 tests. `py_compile` and `git diff --check` passed. No client or live service was invoked. The dependency import test remains unavailable because the current virtual environment lacks the already-declared LangGraph/LangChain packages. |
 | 6. Build the bounded LangGraph | pending | Graph and configuration owner | — | — | Not run. Required: mocked successful sequence and termination-limit tests. |
 | 7. Add citation validation and fallback | pending | Validation and safety-test owner | — | — | Not run. Required: malformed output, timeout, tool failure, and invalid-citation fallback tests. |
-| 8. Integrate the vertical slice | pending | Graph and configuration owner | — | — | Not run. Required: deterministic, successful-agent, and agent-fallback endpoint tests. |
+| 8. Integrate the vertical slice | pending | Graph and configuration owner | — | — | Not run. Required: deterministic, successful-agent, and agent-fallback endpoint tests using the frontend-compatible `PreferenceRequest` and `PreferenceResponse` wire contract. |
 | 9. Add evaluation and observability | pending | Evaluation and observability owner | — | — | Not run. Required: reproducible comparison and safe-metadata tests/evaluation. |
-| 10. Rollout decision | pending | Architecture and progress owner | — | — | Not run. Required: complete backend suite and acceptance evaluation. |
+| 10. Rollout decision | pending | Architecture and progress owner | — | — | Not run. Required: complete backend suite, frontend production build, API contract verification, and acceptance evaluation. |
 
 ## Decision log
 
@@ -129,11 +134,26 @@ no shared model factory and no LangGraph invocation at baseline.
   the existing colon-delimited identifier format; retrieved evidence must
   match its citation's school and chunk IDs; generated answers have bounded,
   unique citation IDs consistent with whether evidence is available.
+- 2026-08-27 — Register `search_selected_school_evidence` as a typed
+  `StructuredTool` over the server-supplied evidence index. It delegates to
+  the existing school-isolated retriever, returns `RetrievedEvidence`, and
+  defensively discards any match whose school ID differs from the authoritative
+  request instead of relabelling it.
+- 2026-08-27 — Treat frontend/backend compatibility as a rollout gate. Keep
+  agent-specific state behind `PreferenceService`, preserve the existing HTTP
+  request and response models, exercise deterministic/success/fallback paths
+  through FastAPI, and require a successful frontend production build before
+  rollout.
+- 2026-08-27 — Centralize future agent model construction in a lazy backend
+  factory. Deterministic mode returns without reading credentials, importing a
+  provider, or constructing a client. Agent mode reuses the selected-school
+  model settings, enforces a 1–30 second timeout, and reduces configuration,
+  dependency, credential, and initialization failures to stable typed errors
+  whose messages do not include provider details or secrets.
 
 ## Next step
 
-Step 4 — Extract the selected-school evidence search as the first explicitly
-registered agent tool. Accept the typed request boundary, use authoritative
-school-isolated retrieval, and return the typed retrieved-evidence contract.
-Add valid, missing-school, empty-evidence, and cross-school isolation tests;
-do not add a shared model factory or build or invoke a graph.
+Step 6 — Build the bounded LangGraph around the selected-school evidence tool
+and shared model factory. Enforce explicit tool-call and graph-iteration limits,
+and add mocked successful-sequence and termination-limit tests. Do not integrate
+the graph into `PreferenceService` or the HTTP endpoint yet.

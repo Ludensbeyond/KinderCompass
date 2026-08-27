@@ -98,7 +98,9 @@ class SelectedSchoolEvidenceToolTests(unittest.TestCase):
 
         result = invoke(create_selected_school_evidence_tool(index))
 
-        self.assertTrue(result)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].chunk_id, f"{SCHOOL_A}:c881ac611498:1")
+        self.assertEqual(result[0].text, "Our play-based curriculum supports exploration.")
         self.assertEqual({item.school_id for item in result}, {SCHOOL_A})
         self.assertEqual({item.citation.school_id for item in result}, {SCHOOL_A})
 

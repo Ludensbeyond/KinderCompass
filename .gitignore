@@ -1,6 +1,7 @@
 # Python bytecode and cache directories
 __pycache__/
 *.py[cod]
+.venv/
 
 # Local environment files may contain credentials
 .env
