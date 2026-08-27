@@ -1,3 +1,4 @@
+
 # Backend contributor guidance
 
 This file supplements [`README.md`](README.md).
@@ -14,9 +15,15 @@ Read the relevant folder guide before changing backend code or data:
 - [`doc/resources.md`](doc/resources.md) for curated runtime inputs;
 - [`doc/tests.md`](doc/tests.md) for the backend test suite; and
 - [`doc/output.md`](doc/output.md) for generated artifacts.
+- [`doc/agents.md`](doc/agents.md) for the incremental LangGraph migration
+  architecture, safety rules, decisions, and step-by-step progress.
 
 The [`doc/README.md`](doc/README.md) index summarizes how these directories fit
 together.
+
+Before working on the LangGraph migration, read `doc/agents.md` and complete
+only its single recorded next step. Run that step's tests, update the progress
+record, and stop before beginning another step.
 
 ## Architecture boundaries
 

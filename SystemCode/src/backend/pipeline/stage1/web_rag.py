@@ -905,7 +905,11 @@ def retrieve(
     for page in index.get("pages", []):
         if page.get("school_id") != school_id:
             continue
-        chunks.extend(page.get("chunks", []))
+        chunks.extend(
+            chunk
+            for chunk in page.get("chunks", [])
+            if chunk.get("school_id") == school_id
+        )
     matches = _rank_chunks(chunks, query, limit=max(0, limit), min_relevance=min_relevance)
     for item in matches:
         item["citation"] = {

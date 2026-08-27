@@ -72,6 +72,9 @@ OPENAI_WEB_RAG_ANSWERS_ENABLED=false
 OPENAI_WEB_RAG_MODEL=gpt-4o-mini
 OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
 
+# Selected-school webpage answer implementation (deterministic or agent)
+WEB_RAG_ANSWER_MODE=deterministic
+
 # Optional override for the generated school-webpage index
 WEB_RAG_INDEX_PATH=
 ```
@@ -80,6 +83,10 @@ The LLM features are independently disabled by default. Deterministic
 preference extraction, intent routing, recommendation explanations, and RAG
 answer formatting remain available when their LLM feature is disabled or its
 request fails.
+
+`WEB_RAG_ANSWER_MODE` accepts `deterministic` or `agent`. Missing, empty, and
+invalid values resolve to `deterministic`; agent execution is introduced only
+in a later migration step.
 
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
 takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.
@@ -154,10 +161,11 @@ more detail about each backend folder.
 | Path | Description |
 |---|---|
 | `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |
+| `agents/` | Backend-only configuration and, in later migration steps, bounded selected-school evidence orchestration. |
 | `domain/` | Typed Pydantic request, response, and family contracts used by FastAPI and services. |
 | `repositories/` | Authoritative school lookup and admission-date-aware subsidy policy selection. |
 | `services/` | Preference, evaluation, and location orchestration separated from HTTP endpoints. |
-| `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, and OpenAI. |
+| `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, OpenAI, LangGraph, and LangChain OpenAI. |
 | `.gitignore` | Excludes Python bytecode and cache directories. |
 | `pipeline/pipeline.py` | Reusable in-memory Stage 1-to-Stage 2 integration function. |
 | `pipeline/stage1/` | Preference extraction, schema validation, intent routing, Neo4j queries, scoring, evidence metadata, proximity filtering, explanations, and webpage retrieval. |
