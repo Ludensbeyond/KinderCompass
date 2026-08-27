@@ -32,6 +32,8 @@ def grounded_explanations_enabled() -> bool:
 
 
 def web_rag_answers_enabled() -> bool:
+    if os.getenv("WEB_RAG_ANSWER_MODE", "deterministic").strip().lower() == "agent":
+        return False
     return os.getenv("OPENAI_WEB_RAG_ANSWERS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 

@@ -85,9 +85,12 @@ answer formatting remain available when their LLM feature is disabled or its
 request fails.
 
 `WEB_RAG_ANSWER_MODE` accepts `deterministic` or `agent`. Missing, empty, and
-invalid values resolve to `deterministic`; agent execution is introduced only
-in a later migration step. Deterministic mode does not construct a model client
-or require `OPENAI_API_KEY`. Agent-mode model construction uses
+invalid values resolve to `deterministic`. Agent mode runs the bounded
+selected-school evidence graph behind the existing preferences endpoint and
+falls back to its deterministic answer on any failure. It supersedes the
+legacy `OPENAI_WEB_RAG_ANSWERS_ENABLED` synthesis path for this intent.
+Deterministic mode does not construct an agent model client or require
+`OPENAI_API_KEY`. Agent-mode model construction uses
 `OPENAI_WEB_RAG_MODEL` and requires `OPENAI_WEB_RAG_TIMEOUT_SECONDS` to be
 between 1 and 30 seconds.
 

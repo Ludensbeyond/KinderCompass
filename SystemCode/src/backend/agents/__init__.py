@@ -20,16 +20,41 @@ __all__ = [
     "ModelFactoryErrorCode",
     "RetrievedEvidence",
     "SelectedSchoolAgentRequest",
+    "SelectedSchoolGraphLimits",
+    "SelectedSchoolGraphResult",
     "SELECTED_SCHOOL_EVIDENCE_TOOL_NAME",
     "WebRagAnswerMode",
     "create_agent_model",
+    "create_selected_school_evidence_graph",
     "create_selected_school_evidence_tool",
     "get_web_rag_answer_mode",
+    "run_selected_school_evidence_graph",
 ]
 
 
 def __getattr__(name: str):
     """Keep optional LangChain tool dependencies lazy at package import time."""
+
+    if name in {
+        "SelectedSchoolGraphLimits",
+        "SelectedSchoolGraphResult",
+        "create_selected_school_evidence_graph",
+        "run_selected_school_evidence_graph",
+    }:
+        from .graph import (
+            SelectedSchoolGraphLimits,
+            SelectedSchoolGraphResult,
+            create_selected_school_evidence_graph,
+            run_selected_school_evidence_graph,
+        )
+
+        exports = {
+            "SelectedSchoolGraphLimits": SelectedSchoolGraphLimits,
+            "SelectedSchoolGraphResult": SelectedSchoolGraphResult,
+            "create_selected_school_evidence_graph": create_selected_school_evidence_graph,
+            "run_selected_school_evidence_graph": run_selected_school_evidence_graph,
+        }
+        return exports[name]
 
     if name in {"SELECTED_SCHOOL_EVIDENCE_TOOL_NAME", "create_selected_school_evidence_tool"}:
         from .tools import (

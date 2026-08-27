@@ -104,9 +104,9 @@ no shared model factory and no LangGraph invocation at baseline.
 | 3. Define agent contracts | complete | Graph and configuration owner | 2026-08-23 | `backend/agents/contracts.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_contracts.py`; `backend/doc/agents.md` | `test_agent_contracts.py`: 5 passed under Python 3.12. A combined rerun with `test_agent_config.py` was also attempted: all contract and mode tests passed, while the pre-existing dependency import test could not collect `langgraph` because the current virtual environment does not have that declared package installed. No live services were called. |
 | 4. Extract the first tool | complete | Retrieval-tool owner | 2026-08-27 | `backend/agents/tools.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_tools.py`; `backend/doc/agents.md` | `test_agent_tools.py`: 4 passed under Python 3.12, covering valid typed evidence, missing school, empty evidence, and cross-school isolation. `test_web_rag.py`: 53 passed. No graph or live service was invoked. |
 | 5. Add the shared model factory | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/model_factory.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_model_factory.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_model_factory.py`: 5 passed under Python 3.12, covering deterministic lazy behavior, explicit/default configuration, bounded timeouts, missing credentials, and secret-safe initialization errors. A combined run with answer-mode and contract tests passed 13 tests. `py_compile` and `git diff --check` passed. No client or live service was invoked. The dependency import test remains unavailable because the current virtual environment lacks the already-declared LangGraph/LangChain packages. |
-| 6. Build the bounded LangGraph | pending | Graph and configuration owner | — | — | Not run. Required: mocked successful sequence and termination-limit tests. |
-| 7. Add citation validation and fallback | pending | Validation and safety-test owner | — | — | Not run. Required: malformed output, timeout, tool failure, and invalid-citation fallback tests. |
-| 8. Integrate the vertical slice | pending | Graph and configuration owner | — | — | Not run. Required: deterministic, successful-agent, and agent-fallback endpoint tests using the frontend-compatible `PreferenceRequest` and `PreferenceResponse` wire contract. |
+| 6. Build the bounded LangGraph | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_graph.py`; `backend/doc/agents.md` | `test_agent_graph.py`: 3 passed under Python 3.12, covering the mocked retrieval-to-answer sequence, the one-call tool limit, and the graph-iteration limit. All 21 `test_agent*.py` tests passed; `py_compile` and `git diff --check` passed. The complete backend suite was also attempted and passed through all agent tests, then stalled in the pre-existing `test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` startup test until interrupted. No live model or external service was called by the scoped tests. |
+| 7. Add citation validation and fallback | complete | Validation and safety-test owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_validation.py`; `backend/doc/agents.md` | `test_agent_validation.py`: 5 passed under Python 3.12, covering malformed output, model timeout, tool failure, invalid-citation fallback, and a valid grounded answer. All 26 `test_agent*.py` tests and all 53 `test_web_rag.py` tests passed; `py_compile` and `git diff --check` passed. No live model or external service was called. |
+| 8. Integrate the vertical slice | complete | Graph and configuration owner | 2026-08-27 | `backend/services/preference_service.py`; `backend/pipeline/stage1/grounded_explainer.py`; `backend/tests/test_agent_integration.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_integration.py`: 3 passed under Python 3.12, covering deterministic, successful-agent, and agent-fallback behavior through the FastAPI endpoint handler with `PreferenceRequest` and `PreferenceResponse` validation. All 29 `test_agent*.py`, all 53 `test_web_rag.py`, and all 76 `test_stage_flow.py` tests passed. `py_compile` and `git diff --check` passed. Starlette's deprecated `TestClient` transport was not used because it reproduces the pre-existing request-startup stall in this environment. No live model or external service was called. |
 | 9. Add evaluation and observability | pending | Evaluation and observability owner | — | — | Not run. Required: reproducible comparison and safe-metadata tests/evaluation. |
 | 10. Rollout decision | pending | Architecture and progress owner | — | — | Not run. Required: complete backend suite, frontend production build, API contract verification, and acceptance evaluation. |
 
@@ -150,10 +150,31 @@ no shared model factory and no LangGraph invocation at baseline.
   model settings, enforces a 1–30 second timeout, and reduces configuration,
   dependency, credential, and initialization failures to stable typed errors
   whose messages do not include provider details or secrets.
+- 2026-08-27 — Compile the first graph with one registered evidence-search
+  tool, a default one-call tool budget, and a three-iteration model budget.
+  Ignore model-supplied retrieval arguments in favor of the authoritative
+  request, retain the retrieval transcript for generation, and accept no
+  generated answer before the tool has run. Limit termination returns graph
+  state without an answer so the next step can apply the deterministic
+  fallback consistently.
+- 2026-08-27 — Put a single validation boundary around graph construction and
+  invocation. Accept an agent answer only after successful graph completion,
+  authoritative-school verification, and exact resolution of every citation
+  ID to retrieved evidence. Malformed output, timeouts, tool errors, rejected
+  retrieved evidence, invalid citations, and execution-limit termination all
+  return the caller-supplied deterministic answer and citations. Expose only
+  the exception class as the fallback reason so provider messages, prompts,
+  and retrieved context cannot escape as metadata.
+- 2026-08-27 — Integrate the graph only after the existing conversation path
+  has produced its grounded deterministic answer. `PreferenceService` supplies
+  the authoritative rebuilt school and server-loaded evidence index, maps the
+  internal answer metadata to the existing `PreferenceResponse` fields, and
+  preserves that answer and its citations on every agent failure. Agent mode
+  supersedes the legacy selected-school OpenAI synthesizer so a request cannot
+  invoke two model paths.
 
 ## Next step
 
-Step 6 — Build the bounded LangGraph around the selected-school evidence tool
-and shared model factory. Enforce explicit tool-call and graph-iteration limits,
-and add mocked successful-sequence and termination-limit tests. Do not integrate
-the graph into `PreferenceService` or the HTTP endpoint yet.
+Step 9 — Add reproducible evaluation comparing deterministic and agent answers,
+plus observability tests that expose only safe execution metadata. Do not begin
+the rollout decision or its production acceptance checks.
