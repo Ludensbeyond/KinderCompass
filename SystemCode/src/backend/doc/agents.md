@@ -1,17 +1,17 @@
-# Incremental LangGraph migration
+# Incremental LangGraph migrations
 
-This document is the persistent source of truth for migrating selected-school
-webpage answers to LangGraph. It records the architecture boundary, safety
-rules, baseline, decisions, test evidence, and the only step a future session
-may start.
+This document is the persistent source of truth for backend LangGraph
+migrations. The selected-school webpage-answer migration is closed and retained
+below as historical evidence. The active migration will move every natural-
+language turn submitted to `POST /api/preferences` behind a backend conversation
+supervisor without changing the frontend or HTTP wire contract.
 
 ## Session protocol
 
-Every migration session must read the repository `AGENTS.md`,
-`backend/AGENTS.md`, and this document. It must complete only the one step named
-under **Next step**, run that step's tests, update the checklist and decision
-log, replace the single **Next step** entry, and stop without starting the
-following step.
+Every migration session must read `src/AGENTS.md`, `backend/AGENTS.md`, and this
+document. It must complete only the one step named under **Next step**, run that
+step's tests, update the active checklist and decision log, replace the single
+**Next step** entry, and stop without starting the following step.
 
 Checklist statuses are `pending`, `in progress`, and `complete`. A step is not
 complete until its scoped tests and evidence are recorded here. Generated
@@ -95,7 +95,7 @@ no shared model factory and no LangGraph invocation at baseline.
    `PreferenceResponse.answer_method` and `PreferenceResponse.fallback_reason`
    fields. Web evidence never affects ranking.
 
-## Migration checklist
+## Selected-school migration checklist (closed)
 
 | Step | Status | Owner | Completion date | Files changed | Tests run |
 |---|---|---|---|---|---|
@@ -187,8 +187,231 @@ no shared model factory and no LangGraph invocation at baseline.
   acceptance evidence from actual grounded agent executions with an acceptable
   fallback rate.
 
+## Full-conversation migration
+
+### Goal and scope
+
+Every natural-language message submitted to `POST /api/preferences` will enter
+a backend conversation supervisor when shadow or agent mode is enabled. The
+supervisor decides which registered capability tools to call and what grounded
+answer to return. It orchestrates only: deterministic backend code remains
+authoritative for preference state, ranking, eligibility, fees, distance,
+school facts, and citations.
+
+No frontend change is permitted. The browser continues to call `/api/search`,
+`/api/evaluate`, map, route, memory, and feedback endpoints through the existing
+UI flow. In particular, the supervisor cannot initiate a browser search or UI
+transition through the current `PreferenceResponse`; `ready_to_search` remains
+the existing signal that lets the user proceed with Show recommendations.
+
+### Architecture and safety additions
+
+- Preserve the exact `PreferenceRequest`, `PreferenceResponse`, and OpenAPI
+  shapes. Agent prompts, tool arguments, execution state, retrieved passages,
+  and provider configuration remain backend-only.
+- Add a backend-only `CONVERSATION_AGENT_MODE` with `deterministic`, `shadow`,
+  and `agent` values. Missing, empty, or invalid configuration resolves to
+  `deterministic`. Model clients remain lazy and unavailable in deterministic
+  mode.
+- In shadow mode, the existing deterministic result is the only served result.
+  The agent runs without request-time writes, and comparison telemetry cannot
+  contain conversation text, family data, prompts, evidence text, credentials,
+  or provider error messages.
+- All tool context comes from the validated request and authoritative backend
+  repositories. Model-supplied school records, IDs, family values, policy
+  values, rankings, prices, distances, citations, or tool configuration are
+  rejected or replaced by server-owned context.
+- Every turn must execute at least one registered capability tool before an
+  agent answer can be accepted. A turn may make at most three tool calls, at
+  most one of which may mutate preference state, and graph iterations remain
+  independently bounded.
+- Tools return an authoritative profile/state result, a deterministic answer
+  candidate, grounding facts, and allowed citations. The model may select
+  tools, compose bounded wording from those results, and select citation IDs;
+  it may not generate or override profile state, calculations, action fields,
+  evidence provenance, or other authoritative output.
+- Multiple read-only tools are allowed only when the request genuinely needs
+  more than one evidence scope, such as combined selected-school and general
+  guidance. Existing mixed-message behavior continues to prioritize the
+  requested immediate action rather than silently applying multiple state
+  changes.
+- Unknown tools, invalid arguments, missing required context, conflicting tool
+  results, multiple mutations, malformed output, unsupported citations,
+  timeouts, and execution-limit termination fail closed to the current
+  deterministic conversation controller.
+- The fallback path must disable conversation and selected-school agent
+  re-entry so one request cannot recurse or invoke duplicate model paths.
+  Memory persistence and answer-feedback recording remain outside the graph and
+  occur once, after the served result is selected.
+- Tests use injected models and tools and never call live providers. A rollout
+  decision requires separate staged evidence from actual grounded agent
+  executions in addition to deterministic automated tests.
+
+### Capability coverage
+
+The migration is incomplete until the supervisor covers all current
+`IntentName` values and the state transitions that precede intent handling:
+
+| Capability group | Required behavior |
+|---|---|
+| Preference state | Update and reset preferences; resolve pending language or pedagogy priority, contradictions, and proposed constraint relaxations; request clarification when needed. |
+| Recommendation decisions | Find the closest preschool; explain the top-ranked result; compare selections; explain trade-offs and provenance; recommend or assess selected preschools. |
+| Calculated scenarios | Run fee or eligibility what-if scenarios and explain Stage 2 exclusions using authoritative family, school, and policy inputs. |
+| Evidence answers | Retrieve selected-school webpage evidence, curated general guidance, or both while preserving school/general evidence scopes and resolvable citations. |
+| Missing context | Return the existing actionable guidance when a school selection, eligible result set, excluded result set, family details, postal code, or evidence index is unavailable. |
+
+### Full-conversation migration checklist
+
+| Step | Status | Owner | Completion date | Files changed | Tests run |
+|---|---|---|---|---|---|
+| 1. Record the full-conversation baseline | pending | Architecture and progress owner | — | — | — |
+| 2. Define supervisor configuration, contracts, and authoritative context | pending | Graph and configuration owner | — | — | — |
+| 3. Extract preference-state tools | pending | Conversation-state tool owner | — | — | — |
+| 4. Extract decision and calculation tools | pending | Decision-tool owner | — | — | — |
+| 5. Complete the evidence toolset | pending | Evidence-tool owner | — | — | — |
+| 6. Build the bounded conversation supervisor | pending | Graph and configuration owner | — | — | — |
+| 7. Add result validation and legacy fallback | pending | Validation and safety-test owner | — | — | — |
+| 8. Integrate deterministic, shadow, and agent modes | pending | Service integration owner | — | — | — |
+| 9. Add full-conversation evaluation and observability | pending | Evaluation and observability owner | — | — | — |
+| 10. Run compatibility gates and decide rollout | pending | Architecture and progress owner | — | — | — |
+
+### Step definitions
+
+#### Step 1 — Record the full-conversation baseline
+
+- Inventory every current intent and every pre-intent state transition in
+  `PreferenceService` and the Stage 1 conversation controller. Record the
+  authoritative inputs, output fields, missing-context response, side effects,
+  and existing test coverage for each capability in the table above.
+- Snapshot the `POST /api/preferences` OpenAPI request and response references
+  and all currently required fields so later steps can prove compatibility.
+- Run the complete backend suite and frontend production build without changing
+  executable code. Investigate and record the known TestClient startup stall;
+  do not treat a partial run as a passing baseline.
+
+#### Step 2 — Define supervisor configuration, contracts, and context
+
+- Add strict framework-independent contracts for a server-built conversation
+  request context, capability-tool result, generated answer, public citations,
+  execution limits, and privacy-safe metadata. Extra fields are forbidden and
+  all text and collections are bounded.
+- Add `CONVERSATION_AGENT_MODE=deterministic|shadow|agent`, defaulting safely to
+  `deterministic`, and reuse the lazy shared model factory without constructing
+  a client in deterministic mode.
+- Build one authoritative context in `PreferenceService` from the request's
+  stable IDs, repository data, evaluated schools, family details, postal-code
+  distances, current profile, and server-loaded evidence indexes. No agent
+  contract is added to the HTTP models.
+
+#### Step 3 — Extract preference-state tools
+
+- Register typed tools for updating preferences, resetting preferences, and
+  continuing pending clarification, contradiction, and relaxation flows.
+- Refactor existing deterministic functions rather than duplicating their
+  rules. Each tool operates on a copy and returns the complete proposed profile
+  plus its deterministic answer candidate; it performs no persistence.
+- Mark these tools as state-mutating so graph validation can enforce the
+  one-mutation-per-turn rule and preserve existing mixed-message precedence.
+
+#### Step 4 — Extract decision and calculation tools
+
+- Register typed read-only tools for closest-school lookup, top-ranking
+  explanation, selected-school comparison, trade-offs, provenance,
+  recommendation, suitability, what-if scenarios, and exclusion explanations.
+- Inject selected, eligible, and excluded schools plus family and distance
+  context server-side. Tools must delegate to existing ranking, evaluation,
+  policy, and location logic and return deterministic answer candidates.
+- Cover missing selections, family details, postal codes, eligible results, and
+  excluded results with the current actionable responses rather than allowing
+  the model to infer absent facts.
+
+#### Step 5 — Complete the evidence toolset
+
+- Reuse `search_selected_school_evidence` and add a typed curated-general-
+  knowledge retrieval tool. Both accept the user's bounded question but use
+  server-owned indexes and authoritative school scope.
+- Support combined evidence by calling both read-only tools. Preserve school
+  and general citation metadata, reject cross-school evidence, and distinguish
+  unavailable information from negative evidence.
+- Retain deterministic answer candidates for selected, general, and combined
+  evidence so validation or model failure always has a grounded fallback.
+
+#### Step 6 — Build the bounded conversation supervisor
+
+- Compile a supervisor graph that receives the authoritative context, requires
+  a registered capability tool, and lets the model choose the next applicable
+  tool based on the newest message and bounded profile context.
+- Enforce three total tool calls, one state mutation, and a separately bounded
+  model-iteration count. Ignore or reject model arguments that conflict with
+  authoritative context.
+- After tool execution, require structured output containing only bounded
+  answer wording and citation IDs. Assemble all other response fields from the
+  accepted tool result.
+
+#### Step 7 — Add result validation and legacy fallback
+
+- Validate tool identity, call counts, mutation counts, profile invariants,
+  authoritative result consistency, answer bounds, and exact citation
+  resolution before accepting an agent result.
+- Reduce failures to a fixed non-sensitive reason vocabulary. On every failure,
+  invoke the existing controller once with both agent entry points disabled and
+  return its complete deterministic result.
+- Test malformed output, unknown tools, forged IDs or facts, cross-school and
+  mixed-scope citations, multiple mutations, tool/model exceptions, timeouts,
+  and both execution limits.
+
+#### Step 8 — Integrate deterministic, shadow, and agent modes
+
+- Make `PreferenceService.handle` the single mode dispatcher for every
+  `/api/preferences` message. Deterministic mode retains the existing path;
+  shadow mode serves that exact result while evaluating the agent without
+  writes; agent mode serves only a validated graph result or legacy fallback.
+- Ensure the existing selected-school answer mode cannot cause nested graph or
+  duplicate model execution. Keep conversation memory and answer-feedback
+  writes after served-result selection.
+- Validate results through the unchanged `PreferenceResponse` and add endpoint-
+  level tests proving identical frontend-visible shapes in every mode.
+
+#### Step 9 — Add evaluation and observability
+
+- Create an ordered, curated evaluation set covering every intent, combined
+  evidence, missing context, ambiguous requests, and multi-turn pending,
+  contradiction, relaxation, and reset transitions.
+- Compare deterministic and agent tool choice, profile/state output, grounding,
+  citations, and response usefulness. Tests use injected models; a documented
+  staged command is reserved for real grounded executions.
+- Emit only allowlisted aggregate and per-case booleans, tool names, bounded
+  counts, latency, termination reason, validation outcome, and normalized
+  fallback reason. Do not emit request or response content or private context.
+
+#### Step 10 — Run compatibility gates and decide rollout
+
+- Require a complete backend suite, frontend production build, unchanged
+  OpenAPI request/response schemas, and confirmation that no frontend files or
+  frontend agent contracts changed.
+- Require staged results with 100% structural and citation validity, zero
+  authoritative profile/calculation discrepancies, at least 95% accepted tool
+  selection, and at most 5% agent fallback across the curated suite.
+- Record a go/no-go decision. Keep `CONVERSATION_AGENT_MODE=deterministic` on
+  any failed or unevaluated gate; if every gate passes, make agent mode an
+  explicit backend opt-in rather than the default.
+
+### Full-conversation decisions
+
+- 2026-08-29 — Define “all conversation” as every natural-language turn sent
+  to `POST /api/preferences`. Preserve the browser-controlled search,
+  evaluation, map, route, memory, and feedback flows because changing those
+  flows would require a new frontend contract.
+- 2026-08-29 — Use the model as a bounded supervisor and response composer,
+  not as an authority for profile state, ranking, eligibility, fees, distance,
+  school facts, or evidence provenance.
+- 2026-08-29 — Preserve the current deterministic conversation controller as
+  the universal fallback and introduce the supervisor through deterministic,
+  shadow, and explicit opt-in agent modes.
+- 2026-08-29 — Split the migration into ten independently testable steps and
+  retain the one-step-per-session gate.
+
 ## Next step
 
-None — this migration sequence is closed with agent rollout declined and
-deterministic mode retained. Define and approve a new checklist before doing
-further LangGraph migration or reconsidering rollout.
+Step 1 — Record the full-conversation baseline. Do not begin Step 2 in the same
+session.
