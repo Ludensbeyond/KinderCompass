@@ -57,6 +57,21 @@ class SelectedSchoolGraphResult:
     citations: tuple[EvidenceCitation, ...]
     answer_method: str
     fallback_reason: Optional[str] = None
+    tool_calls: int = 0
+    graph_iterations: int = 0
+    termination_reason: str = "error"
+
+    @property
+    def execution_metadata(self) -> dict[str, Any]:
+        """Return the complete, privacy-safe observability surface."""
+
+        return {
+            "answer_method": self.answer_method,
+            "fallback_reason": self.fallback_reason,
+            "tool_calls": self.tool_calls,
+            "graph_iterations": self.graph_iterations,
+            "termination_reason": self.termination_reason,
+        }
 
 
 class SelectedSchoolGraphState(TypedDict, total=False):
@@ -205,11 +220,7 @@ def run_selected_school_evidence_graph(
     retrieved text, and other potentially sensitive execution details do not.
     """
 
-    fallback = SelectedSchoolGraphResult(
-        answer=deterministic_answer,
-        citations=tuple(deterministic_citations),
-        answer_method="deterministic_fallback",
-    )
+    state: SelectedSchoolGraphState = {}
     try:
         graph = create_selected_school_evidence_graph(
             index,
@@ -238,11 +249,32 @@ def run_selected_school_evidence_graph(
             answer=answer.answer,
             citations=citations,
             answer_method="agent_grounded",
+            tool_calls=state.get("tool_calls", 0),
+            graph_iterations=state.get("graph_iterations", 0),
+            termination_reason="completed",
         )
     except Exception as exc:
         return SelectedSchoolGraphResult(
-            answer=fallback.answer,
-            citations=fallback.citations,
-            answer_method=fallback.answer_method,
-            fallback_reason=type(exc).__name__,
+            answer=deterministic_answer,
+            citations=tuple(deterministic_citations),
+            answer_method="deterministic_fallback",
+            fallback_reason=_safe_fallback_reason(exc),
+            tool_calls=state.get("tool_calls", 0),
+            graph_iterations=state.get("graph_iterations", 0),
+            termination_reason=state.get("termination_reason", "error"),
         )
+
+
+def _safe_fallback_reason(exc: Exception) -> str:
+    """Reduce arbitrary provider failures to a small non-sensitive vocabulary."""
+
+    allowed = {
+        "ValidationError",
+        "TimeoutError",
+        "RuntimeError",
+        "ValueError",
+        "TypeError",
+        "ModelFactoryError",
+    }
+    name = type(exc).__name__
+    return name if name in allowed else "AgentExecutionError"

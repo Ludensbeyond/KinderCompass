@@ -222,11 +222,25 @@ while the older Stage 1 scoring functions are migrated incrementally.
 | `query_web_rag_pilot.py` | Query one school's indexed evidence from the command line. |
 | `evaluate_web_rag_pilot.py` | Check school isolation and citation behavior against offline golden cases. |
 | `evaluate_web_rag_answers.py` | Evaluate deterministic or optional LLM-synthesized chat answers. |
+| `evaluate_selected_school_agent.py` | Compare deterministic and LangGraph selected-school answers over the same curated cases without recording prompts, answers, or evidence text. |
 | `audit_web_rag_readiness.py` | Measure labelled identity, fetch, retrieval, and citation readiness gates. |
 | `review_web_rag_audit.py` | Export human-review CSV packets and import validated labels. |
 
 The Phase 9 commands, review workflow, and quality gates are documented in
 [PHASE9_WEBPAGE_RAG.md](../../../docs/poc1/PHASE9_WEBPAGE_RAG.md).
+
+Run the selected-school agent comparison deliberately with agent mode enabled:
+
+```bash
+WEB_RAG_ANSWER_MODE=agent PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  .venv/bin/python SystemCode/src/backend/scripts/evaluate_selected_school_agent.py \
+  --output /tmp/selected-school-agent-evaluation.json
+```
+
+It evaluates both implementations against the same ordered curated cases. The
+report contains quality booleans, aggregate rates, bounded execution counts,
+and normalized fallback categories; it does not record questions, generated
+answers, prompts, school or family context, credentials, or evidence text.
 
 Run the Neo4j diagnostic from the repository root with:
 

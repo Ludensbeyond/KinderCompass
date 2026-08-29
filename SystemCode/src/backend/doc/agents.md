@@ -107,8 +107,8 @@ no shared model factory and no LangGraph invocation at baseline.
 | 6. Build the bounded LangGraph | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_graph.py`; `backend/doc/agents.md` | `test_agent_graph.py`: 3 passed under Python 3.12, covering the mocked retrieval-to-answer sequence, the one-call tool limit, and the graph-iteration limit. All 21 `test_agent*.py` tests passed; `py_compile` and `git diff --check` passed. The complete backend suite was also attempted and passed through all agent tests, then stalled in the pre-existing `test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` startup test until interrupted. No live model or external service was called by the scoped tests. |
 | 7. Add citation validation and fallback | complete | Validation and safety-test owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_validation.py`; `backend/doc/agents.md` | `test_agent_validation.py`: 5 passed under Python 3.12, covering malformed output, model timeout, tool failure, invalid-citation fallback, and a valid grounded answer. All 26 `test_agent*.py` tests and all 53 `test_web_rag.py` tests passed; `py_compile` and `git diff --check` passed. No live model or external service was called. |
 | 8. Integrate the vertical slice | complete | Graph and configuration owner | 2026-08-27 | `backend/services/preference_service.py`; `backend/pipeline/stage1/grounded_explainer.py`; `backend/tests/test_agent_integration.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_integration.py`: 3 passed under Python 3.12, covering deterministic, successful-agent, and agent-fallback behavior through the FastAPI endpoint handler with `PreferenceRequest` and `PreferenceResponse` validation. All 29 `test_agent*.py`, all 53 `test_web_rag.py`, and all 76 `test_stage_flow.py` tests passed. `py_compile` and `git diff --check` passed. Starlette's deprecated `TestClient` transport was not used because it reproduces the pre-existing request-startup stall in this environment. No live model or external service was called. |
-| 9. Add evaluation and observability | pending | Evaluation and observability owner | — | — | Not run. Required: reproducible comparison and safe-metadata tests/evaluation. |
-| 10. Rollout decision | pending | Architecture and progress owner | — | — | Not run. Required: complete backend suite, frontend production build, API contract verification, and acceptance evaluation. |
+| 9. Add evaluation and observability | complete | Evaluation and observability owner | 2026-08-29 | `backend/agents/graph.py`; `backend/scripts/evaluate_selected_school_agent.py`; `backend/tests/test_agent_observability.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_observability.py`, `test_agent_validation.py`, and `test_agent_integration.py`: 11 passed. All 32 `test_agent*.py` tests and all 53 `test_web_rag.py` tests passed under Python 3.12. `py_compile` and `git diff --check` passed. Evaluation uses injected models in tests; no live model or external service was called. |
+| 10. Rollout decision | complete | Architecture and progress owner | 2026-08-29 | `backend/doc/agents.md` | No-go: keep `WEB_RAG_ANSWER_MODE=deterministic`. The complete backend suite passed 33 tests, including all 32 agent tests, before the pre-existing `test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` TestClient request stalled and the run was interrupted. The frontend production build passed. The `POST /api/preferences` OpenAPI request/response references and required existing request/response fields were verified. The four-case acceptance evaluation reported deterministic and agent pass rates of 1.0 with no regressions, but every agent result was a `ModelFactoryError` deterministic fallback (fallback rate 1.0, zero tool calls and graph iterations), so it supplied no evidence for enabling agent mode. The documented evaluation command also initially failed to import `SystemCode`; the evaluation ran after adding the repository root to `PYTHONPATH`. No live model or external service was called. |
 
 ## Decision log
 
@@ -172,9 +172,23 @@ no shared model factory and no LangGraph invocation at baseline.
   preserves that answer and its citations on every agent failure. Agent mode
   supersedes the legacy selected-school OpenAI synthesizer so a request cannot
   invoke two model paths.
+- 2026-08-29 — Compare deterministic and agent answers over the same ordered,
+  curated selected-school cases. Store only per-case quality booleans, aggregate
+  rates, and a fixed execution-metadata allowlist; omit questions, answers,
+  prompts, school and family context, credentials, and retrieved evidence text.
+  Normalize unknown exception classes to `AgentExecutionError` so provider
+  implementation details cannot escape through fallback observability.
+- 2026-08-29 — Do not enable the selected-school agent in rollout. Keep
+  `WEB_RAG_ANSWER_MODE=deterministic` because the full backend gate did not
+  complete and the acceptance run exercised only deterministic fallback, with
+  a 1.0 fallback rate caused by `ModelFactoryError`. The frontend build and API
+  contract checks passed, and deterministic behavior passed all four acceptance
+  cases. A future rollout proposal requires a fully passing backend suite and
+  acceptance evidence from actual grounded agent executions with an acceptable
+  fallback rate.
 
 ## Next step
 
-Step 9 — Add reproducible evaluation comparing deterministic and agent answers,
-plus observability tests that expose only safe execution metadata. Do not begin
-the rollout decision or its production acceptance checks.
+None — this migration sequence is closed with agent rollout declined and
+deterministic mode retained. Define and approve a new checklist before doing
+further LangGraph migration or reconsidering rollout.
