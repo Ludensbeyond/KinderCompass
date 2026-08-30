@@ -34,7 +34,7 @@ def grounded_explanations_enabled() -> bool:
 def web_rag_answers_enabled() -> bool:
     if os.getenv("WEB_RAG_ANSWER_MODE", "deterministic").strip().lower() == "agent":
         return False
-    return os.getenv("OPENAI_WEB_RAG_ANSWERS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("OPENAI_WEB_RAG_ANSWERS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _focused_web_passage(question: str, text: str, *, window_words: int = 28) -> str:

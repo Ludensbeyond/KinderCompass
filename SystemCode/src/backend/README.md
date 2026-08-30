@@ -62,13 +62,13 @@ OPENAI_API_KEY=
 OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
 OPENAI_PREFERENCE_MODEL=gpt-4o-mini
 OPENAI_PREFERENCE_TIMEOUT_SECONDS=8
-OPENAI_INTENT_CLASSIFICATION_ENABLED=false
+OPENAI_INTENT_CLASSIFICATION_ENABLED=true
 OPENAI_INTENT_MODEL=gpt-4o-mini
 OPENAI_INTENT_TIMEOUT_SECONDS=8
 OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
 OPENAI_EXPLANATION_MODEL=gpt-4o-mini
 OPENAI_EXPLANATION_TIMEOUT_SECONDS=8
-OPENAI_WEB_RAG_ANSWERS_ENABLED=false
+OPENAI_WEB_RAG_ANSWERS_ENABLED=true
 OPENAI_WEB_RAG_MODEL=gpt-4o-mini
 OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
 
@@ -79,10 +79,11 @@ WEB_RAG_ANSWER_MODE=deterministic
 WEB_RAG_INDEX_PATH=
 ```
 
-The LLM features are independently disabled by default. Deterministic
-preference extraction, intent routing, recommendation explanations, and RAG
-answer formatting remain available when their LLM feature is disabled or its
-request fails.
+Intent classification and legacy selected-school webpage synthesis default to
+enabled when their environment variables are absent. Preference extraction and
+grounded recommendation explanations remain disabled by default. Deterministic
+fallbacks remain available when an LLM feature is explicitly disabled or its
+request fails. The enabled features require `OPENAI_API_KEY` to call OpenAI.
 
 `WEB_RAG_ANSWER_MODE` accepts `deterministic` or `agent`. Missing, empty, and
 invalid values resolve to `deterministic`. Agent mode runs the bounded
