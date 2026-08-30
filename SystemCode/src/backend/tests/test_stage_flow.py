@@ -522,6 +522,20 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("School B", turn["question"])
         self.assertIn("90%", turn["question"])
 
+    def test_stage1_comparative_wording_recommends_from_selected_schools(self):
+        question = "which of the selected school is better for me?"
+        selected = [
+            {"name": "School A", "match_score": 80, "net_monthly_fee": 500, "distance_km": 1.2},
+            {"name": "School B", "match_score": 90, "net_monthly_fee": 700, "distance_km": 2.1},
+        ]
+
+        self.assertEqual(classify_intent(question).intent, "recommend_selected_preschool")
+        turn = update_conversation(None, question, selected)
+
+        self.assertEqual(turn["status"], "comparison")
+        self.assertIn("School B", turn["question"])
+        self.assertNotIn("Select only one", turn["question"])
+
     def test_stage1_chat_requests_a_selection_before_comparing(self):
         turn = update_conversation(None, "Which of the selected preschool will you recommend to me?", [])
         self.assertIn("select at least one preschool", turn["question"])

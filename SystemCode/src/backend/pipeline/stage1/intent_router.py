@@ -38,6 +38,11 @@ TopicCategory = Literal[
     "other",
 ]
 
+RECOMMENDATION_PHRASES = (
+    "recommend", "best", "better", "better for me", "choose", "pick",
+    "which should i select", "which should i prefer",
+)
+
 
 class TopicEntity(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -95,7 +100,7 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
     asks_for_fact = lowered.startswith(("does ", "do ", "is ", "are ", "what ", "which ", "how ", "tell me "))
     asks_for_decision = any(
         phrase in lowered
-        for phrase in ("suitable", "good fit", "right for me", "recommend", "best", "choose", "pick")
+        for phrase in ("suitable", "good fit", "right for me", *RECOMMENDATION_PHRASES)
     )
     general_topics = (
         "montessori", "reggio", "play-based", "play based", "pedagogy", "curriculum approach",
@@ -126,7 +131,7 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
         return IntentResult(intent="compare_selected_preschools", confidence=1)
     if ("why" in lowered and any(phrase in lowered for phrase in ("ranked first", "ranked highest", "top ranked", "top-ranked"))) or "why is this first" in lowered:
         return IntentResult(intent="explain_top_ranked_preschool", confidence=1)
-    if "selected" in lowered and any(word in lowered for word in ("recommend", "best", "choose", "pick")):
+    if "selected" in lowered and any(phrase in lowered for phrase in RECOMMENDATION_PHRASES):
         return IntentResult(intent="recommend_selected_preschool", confidence=1)
     if any(word in lowered for word in ("school", "preschool")) and any(
         phrase in lowered for phrase in ("suitable", "good fit", "right for me")

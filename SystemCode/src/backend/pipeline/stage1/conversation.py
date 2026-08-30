@@ -23,7 +23,10 @@ from stage1.dialogue_manager import (
 
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
-RECOMMEND_SELECTED_MARKERS = ("recommend", "best", "choose", "pick")
+RECOMMEND_SELECTED_MARKERS = (
+    "recommend", "best", "better", "better for me", "choose", "pick",
+    "which should i select", "which should i prefer",
+)
 
 
 def _contains_any(text: str, markers: tuple[str, ...]) -> bool:
@@ -42,7 +45,11 @@ def _distance_acknowledgement(profile: dict) -> str | None:
 
 
 def _is_selected_school_question(text: str) -> bool:
-    return "selected" in text and "preschool" in text and _contains_any(text, RECOMMEND_SELECTED_MARKERS)
+    return (
+        "selected" in text
+        and ("school" in text or "preschool" in text)
+        and _contains_any(text, RECOMMEND_SELECTED_MARKERS)
+    )
 
 
 def _is_suitability_question(text: str) -> bool:
