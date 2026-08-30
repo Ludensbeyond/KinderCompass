@@ -63,6 +63,14 @@ class GeneralKnowledgeRagTests(unittest.TestCase):
         self.assertEqual(turn["citations"][0]["evidence_scope"], "general")
         self.assertNotIn("school_id", turn["citations"][0])
 
+    def test_routes_and_retrieves_misspelled_montessori_question(self):
+        question = "what is montesorri?"
+        self.assertEqual(classify_intent(question).intent, "ask_general_knowledge")
+        turn = update_conversation(None, question, general_knowledge_index=GENERAL_INDEX)
+        self.assertEqual(turn["status"], "general_knowledge")
+        self.assertEqual(turn["citations"][0]["chunk_id"], "GENERAL:montessori:0")
+        self.assertIn("prepared environment", turn["question"])
+
     def test_general_retrieval_carries_authority_and_scope(self):
         result = retrieve_general_evidence(GENERAL_INDEX, "Explain play-based learning", limit=1)[0]
         self.assertEqual(result["evidence_scope"], "general")

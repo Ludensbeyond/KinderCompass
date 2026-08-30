@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .topic_normalization import GENERAL_TOPIC_NAMES, normalize_topic_spelling
+
 
 IntentName = Literal[
     "update_preferences",
@@ -190,7 +192,8 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
 
 def classify_intent(text: str, active_school_name: str | None = None) -> IntentResult:
     """Protect explicit operations, then prioritize LLM semantics when enabled."""
-    deterministic = _rules(text, active_school_name)
+    normalized_text = normalize_topic_spelling(text, GENERAL_TOPIC_NAMES)
+    deterministic = _rules(normalized_text, active_school_name)
     llm_priority_intents = {
         "ask_general_knowledge",
         "ask_combined_evidence",

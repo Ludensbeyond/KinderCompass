@@ -289,6 +289,24 @@ After clicking **Show recommendations**:
    Where did the information about this school come from?
    ```
 
+9. Test general early-childhood guidance without selecting a school:
+
+   ```text
+   What is Montessori?
+   What is the difference between Montessori and Reggio Emilia?
+   what is montesorri?
+   ```
+
+   The first and third questions should return the same cited Montessori
+   guidance. Common topic misspellings are corrected before deterministic
+   intent routing and again before general-knowledge retrieval, so this
+   behavior does not depend on the optional LLM classifier being available.
+   Fuzzy correction is deliberately limited to words of at least five
+   characters from the curated early-childhood topic vocabulary. A candidate
+   must have at least `0.88` similarity and clearly exceed the next-best match.
+   The original chat message is retained, and fuzzy matching is not applied to
+   school names, postal codes, fees, or unrestricted text.
+
 If a value or official-webpage claim is unavailable, the GUI should say that
 the evidence is unavailable rather than interpreting missing evidence as a
 negative answer.

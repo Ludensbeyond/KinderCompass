@@ -21,6 +21,8 @@ from urllib.parse import urljoin, urlsplit
 from urllib.request import Request, build_opener
 from urllib.robotparser import RobotFileParser
 
+from .topic_normalization import normalize_topic_spelling
+
 
 USER_AGENT = "KinderCompassResearchBot/0.1 (Phase 9 pilot; explanation-only)"
 MAX_RESPONSE_BYTES = 2_000_000
@@ -946,8 +948,10 @@ def retrieve_general_evidence(
 ) -> list[dict[str, Any]]:
     """Return cited, authoritative general early-childhood knowledge."""
     chunks = list(index.get("chunks", []))
-    matches = _rank_chunks(chunks, query, limit=len(chunks), min_relevance=min_relevance)
-    query_tokens = set(_search_tokens(query))
+    topic_names = [str(chunk.get("topic") or "") for chunk in chunks]
+    normalized_query = normalize_topic_spelling(query, topic_names)
+    matches = _rank_chunks(chunks, normalized_query, limit=len(chunks), min_relevance=min_relevance)
+    query_tokens = set(_search_tokens(normalized_query))
     for item in matches:
         topic_overlap = len(query_tokens & set(_search_tokens(str(item.get("topic") or ""))))
         item["relevance"] = round(float(item["relevance"]) + 0.1 * topic_overlap, 4)
