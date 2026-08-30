@@ -745,6 +745,29 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(resolved["ready_to_search"])
         self.assertIn("language:Chinese", resolved["profile"]["preferences"])
 
+    def test_pending_pedagogy_answer_overrides_llm_clarification(self):
+        first = update_conversation(None, "Play-based")
+        self.assertEqual(first["profile"]["pending"]["value"], "Play-based")
+        clarification = IntentResult(
+            intent="needs_clarification",
+            confidence=0.6,
+            clarification="What specific information or preference are you referring to with essential?",
+            method="llm",
+        )
+
+        resolved = update_conversation(
+            first["profile"], "essential", classified_intent=clarification
+        )
+
+        pedagogy = next(
+            item for item in resolved["profile"]["preference_items"]
+            if item["attribute"] == "pedagogy"
+        )
+        self.assertTrue(resolved["ready_to_search"])
+        self.assertEqual(pedagogy["value"], "Play-based")
+        self.assertEqual(pedagogy["importance"], "required")
+        self.assertNotIn("specific information", resolved["question"])
+
     def test_stage1_chat_explicit_preference_is_ready(self):
         turn = update_conversation(None, "Montessori is preferred")
         self.assertEqual(turn["status"], "ready_to_search")

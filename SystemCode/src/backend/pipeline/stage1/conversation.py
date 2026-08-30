@@ -503,6 +503,33 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
+def _pending_resolution_turn(profile: dict) -> dict:
+    """Build the next turn after a pending importance answer is resolved."""
+    queue = profile.get("pending_queue", [])
+    if queue:
+        profile["pending"] = queue.pop(0)
+        if queue:
+            profile["pending_queue"] = queue
+        else:
+            profile.pop("pending_queue", None)
+        pending = profile["pending"]
+        wording = "required or merely preferred" if pending["kind"] == "language" else "essential or merely preferred"
+        return {
+            "profile": profile,
+            "understood": summarize_profile(profile),
+            "status": "needs_clarification",
+            "ready_to_search": False,
+            "question": f"Next, is {pending['value']} {wording}?",
+        }
+    return {
+        "profile": profile,
+        "understood": summarize_profile(profile),
+        "status": "ready_to_search",
+        "ready_to_search": True,
+        "question": "Preference updated. Add another preference or click show recommendations.",
+    }
+
+
 def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
@@ -579,6 +606,9 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
             "question": "I’ll use your understood preferences. Click Show recommendations to find and rank matching schools.",
         }
     if intent.intent == "needs_clarification":
+        pending_profile, pending_resolved = _resolve_pending(current_profile, lowered)
+        if pending_resolved:
+            return _pending_resolution_turn(pending_profile)
         profile = current_profile
         profile["intent"] = intent.intent
         profile["intent_method"] = intent.method
@@ -699,30 +729,7 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         }
     profile, resolved = _resolve_pending(current or {}, lowered)
     if resolved:
-        queue = profile.get("pending_queue", [])
-        if queue:
-            profile["pending"] = queue.pop(0)
-            if queue:
-                profile["pending_queue"] = queue
-            else:
-                profile.pop("pending_queue", None)
-            pending = profile["pending"]
-            wording = "required or merely preferred" if pending["kind"] == "language" else "essential or merely preferred"
-            return {
-                "profile": profile,
-                "understood": summarize_profile(profile),
-                "status": "needs_clarification",
-                "ready_to_search": False,
-                "question": f"Next, is {pending['value']} {wording}?",
-            }
-        understood = summarize_profile(profile)
-        return {
-            "profile": profile,
-            "understood": understood,
-            "status": "ready_to_search",
-            "ready_to_search": True,
-            "question": "Preference updated. Add another preference or click show recommendations.",
-        }
+        return _pending_resolution_turn(profile)
 
     if current and current.get("pending"):
         pending = current["pending"]
