@@ -136,7 +136,7 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
 
 
 def _llm_enabled() -> bool:
-    return os.getenv("OPENAI_INTENT_CLASSIFICATION_ENABLED", "false").strip().lower() in {
+    return os.getenv("OPENAI_INTENT_CLASSIFICATION_ENABLED", "true").strip().lower() in {
         "1", "true", "yes", "on",
     }
 

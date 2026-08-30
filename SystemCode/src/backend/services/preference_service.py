@@ -6,6 +6,8 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from SystemCode.src.backend.agents.config import WebRagAnswerMode, get_web_rag_answer_mode
+from SystemCode.src.backend.agents.contracts import EvidenceCitation, SelectedSchoolAgentRequest
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
 from SystemCode.src.backend.services.evaluation_service import EvaluationService
@@ -27,6 +29,79 @@ class PreferenceService:
         self.evaluation = evaluation
         self.locations = locations
         self.repo_root = repo_root
+
+    @staticmethod
+    def _run_selected_school_agent(
+        index: dict[str, Any], request: SelectedSchoolAgentRequest,
+        deterministic_answer: str, deterministic_citations: list[EvidenceCitation],
+    ) -> Any:
+        # Keep LangGraph and its provider-facing dependencies out of the
+        # deterministic request path.
+        from SystemCode.src.backend.agents.graph import run_selected_school_evidence_graph
+
+        return run_selected_school_evidence_graph(
+            index,
+            request,
+            deterministic_answer=deterministic_answer,
+            deterministic_citations=deterministic_citations,
+        )
+
+    def _apply_selected_school_answer_mode(
+        self, result: dict[str, Any], *, message: str,
+        selected: list[dict[str, Any]], web_index: dict | None,
+    ) -> dict[str, Any]:
+        """Map internal answer metadata and optionally replace it via the graph."""
+
+        result["answer_method"] = result.get("web_answer_method") or "deterministic"
+        result["fallback_reason"] = result.get("web_answer_fallback_reason")
+        if get_web_rag_answer_mode() is not WebRagAnswerMode.AGENT:
+            return result
+
+        try:
+            if len(selected) != 1 or not web_index:
+                raise ValueError("agent execution requires one authoritative school and an evidence index")
+            school = selected[0]
+            school_id = str(school.get("school_id") or "")
+            request = SelectedSchoolAgentRequest(
+                question=message,
+                school_id=school_id,
+                school_name=str(school.get("name") or "this preschool"),
+            )
+            deterministic_citations = [
+                EvidenceCitation(
+                    citation_id=str(citation["chunk_id"]),
+                    school_id=school_id,
+                    chunk_id=str(citation["chunk_id"]),
+                    url=str(citation["url"]),
+                    title=str(citation["title"]),
+                    retrieved_at=citation["retrieved_at"],
+                )
+                for citation in result.get("citations", [])
+            ]
+            agent_result = self._run_selected_school_agent(
+                web_index, request, result["question"], deterministic_citations,
+            )
+            result["question"] = agent_result.answer
+            result["citations"] = [
+                {
+                    "url": citation.url,
+                    "title": citation.title,
+                    "retrieved_at": citation.retrieved_at.isoformat(),
+                    "chunk_id": citation.chunk_id,
+                    "evidence_scope": "school",
+                }
+                for citation in agent_result.citations
+            ]
+            result["answer_method"] = agent_result.answer_method
+            result["fallback_reason"] = agent_result.fallback_reason
+            result["evidence_scope"] = "school" if agent_result.citations else "unavailable"
+            result["evidence_category"] = (
+                "school_published_claim" if agent_result.citations else "unknown"
+            )
+        except Exception as exc:
+            result["answer_method"] = "deterministic_fallback"
+            result["fallback_reason"] = type(exc).__name__
+        return result
 
     def _resources(self) -> tuple[dict | None, dict | None]:
         configured = os.getenv("WEB_RAG_INDEX_PATH", "").strip()
@@ -155,4 +230,8 @@ class PreferenceService:
             profile, message, selected, eligible, web_index, general_index, intent,
             self.schools.facet_summary(),
         )
+        if intent.intent == "ask_selected_school_evidence":
+            result = self._apply_selected_school_answer_mode(
+                result, message=message, selected=selected, web_index=web_index,
+            )
         return enrich_decision_state(before, result, intent=intent.intent)
