@@ -10,7 +10,12 @@ export type MapPoint = {
   longitude: number;
 };
 
-export default function LiveMap({ points }: { points: MapPoint[] }) {
+type MapRoute = {
+  route_method: string;
+  route_coordinates: { latitude: number; longitude: number }[];
+};
+
+export default function LiveMap({ points, routes = [] }: { points: MapPoint[]; routes?: MapRoute[] }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<LeafletMap | null>(null);
   const markers = useRef<LayerGroup | null>(null);
@@ -49,7 +54,18 @@ export default function LiveMap({ points }: { points: MapPoint[] }) {
 
       if (coordinates.length > 1) {
         coordinates.slice(1).forEach((preschool) => {
-          L.polyline([coordinates[0], preschool], { color: "#176b5a", weight: 4, opacity: 0.8, dashArray: "8 7" }).addTo(routeLayer);
+          L.polyline([coordinates[0], preschool], {
+            color: "#6f8f87",
+            weight: 2,
+            opacity: 0.75,
+            dashArray: "4 7",
+          }).addTo(routeLayer);
+        });
+        routes.forEach((route) => {
+          const path = route.route_coordinates.map((point) => [point.latitude, point.longitude] as L.LatLngTuple);
+          if (route.route_method === "onemap_driving" && path.length > 1) {
+            L.polyline(path, { color: "#176b5a", weight: 4, opacity: 0.85 }).addTo(routeLayer);
+          }
         });
       }
       if (coordinates.length) {
@@ -59,7 +75,7 @@ export default function LiveMap({ points }: { points: MapPoint[] }) {
 
     });
     return () => { active = false; };
-  }, [points]);
+  }, [points, routes]);
 
   useEffect(() => () => {
     map.current?.remove();

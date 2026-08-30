@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from stage1.proximity import get_driving_route
 from stage3.optimizer import calculate_home_to_preschool, haversine_km
 from stage3.runner import run_from_file
 
@@ -20,6 +21,28 @@ class Stage3Tests(unittest.TestCase):
         self.assertEqual([stop["type"] for stop in result["schedule"]], ["home", "preschool"])
         self.assertNotIn("optimizer", result)
         self.assertGreater(result["total_distance_km"], 0)
+        self.assertIsNone(result["travel_duration_minutes"])
+        self.assertEqual(result["route_method"], "haversine_straight_line")
+
+    @patch("stage1.proximity.get_onemap_token", return_value="token")
+    @patch("stage1.proximity._request_driving_route")
+    def test_parses_onemap_driving_distance_duration_and_geometry(self, request_route, token):
+        request_route.return_value = {
+            "status": 0,
+            "route_summary": {"total_distance": 2450, "total_time": 481},
+            "route_geometry": "_p~iF~ps|U_ulLnnqC_mqNvxq`@",
+        }
+        start = {"latitude": 1.30, "longitude": 103.80}
+        end = {"latitude": 1.31, "longitude": 103.81}
+
+        result = get_driving_route(start, end)
+
+        self.assertEqual(result["travel_distance_km"], 2.45)
+        self.assertEqual(result["travel_duration_minutes"], 9)
+        self.assertEqual(result["travel_mode"], "drive")
+        self.assertEqual(result["route_method"], "onemap_driving")
+        self.assertGreater(len(result["route_coordinates"]), 1)
+        request_route.assert_called_once_with(start, end, "token")
 
     @patch("stage3.runner.geocode_postal_code", return_value={"latitude": 1.30, "longitude": 103.80})
     def test_file_pipeline_joins_selected_school_to_geojson(self, geocode):

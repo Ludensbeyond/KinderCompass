@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
-from stage1.proximity import geocode_postal_code
+from stage1.proximity import geocode_postal_code, get_driving_route
 from stage3.locations import attach_locations, load_preschool_locations
 from stage3.optimizer import calculate_home_to_preschool, haversine_km
 
@@ -38,6 +38,18 @@ class LocationService:
         selected = self.schools.get(school_id)
         located = attach_locations([selected], self._school_locations())
         home_coordinates = geocode_postal_code(postal_code)
-        return calculate_home_to_preschool(
-            {"type": "home", "name": "Home", **home_coordinates}, located[0]
-        )
+        home = {"type": "home", "name": "Home", **home_coordinates}
+        fallback = calculate_home_to_preschool(home, located[0])
+        try:
+            driving = get_driving_route(home, located[0])
+        except (OSError, RuntimeError, ValueError):
+            return fallback
+        travel_distance = driving["travel_distance_km"]
+        fallback["schedule"][1]["leg_distance_km"] = travel_distance
+        fallback["schedule"][1]["cumulative_distance_km"] = travel_distance
+        return {
+            **fallback,
+            **driving,
+            "total_distance_km": travel_distance,
+            "distance_method": driving["route_method"],
+        }

@@ -198,4 +198,11 @@ class GeocodeResponse(BaseModel):
 class RouteResponse(BaseModel):
     total_distance_km: float
     distance_method: str
+    travel_distance_km: float
+    travel_duration_minutes: int | None
+    travel_mode: Literal["drive", "unavailable"]
+    route_method: str
+    route_coordinates: list[dict[str, float]]
+    estimated: bool = True
+    fallback_reason: str | None = None
     schedule: list[dict[str, Any]]

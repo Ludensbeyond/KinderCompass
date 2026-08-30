@@ -2,7 +2,7 @@
 
 Stage 3 takes one eligible preschool and the family's six-digit home postal code.
 It resolves home through OneMap, joins the preschool to its ECDA coordinates,
-and calculates the Haversine straight-line distance:
+and the web API requests a OneMap driving route:
 
 ```text
 home -> selected preschool
@@ -25,9 +25,13 @@ python -m stage3.runner `
 
 `--select` accepts exactly one eligible `school_id` (or a legacy centre code in
 older Stage 2 output). The web UI supports selecting multiple schools by calling
-this calculation independently for each one. The result contains the resolved home and preschool coordinates,
-the straight-line distance, and a two-point schedule for the live map.
+the route independently for each one. Its API result contains driving distance,
+estimated duration, decoded road geometry, and a two-point schedule for the
+live map. If routing fails, it returns a labelled Haversine straight-line
+fallback without inventing a travel-duration estimate. The CLI runner remains
+an offline straight-line calculation and does not call routing.
 
-Every selected centre must have matching coordinates in the ECDA GeoJSON. This
-proof of concept does not calculate road distance, traffic, travel time, or
-turn-by-turn directions.
+Every selected centre must have matching coordinates in the ECDA GeoJSON.
+Driving duration is a routing estimate and is not presented as live traffic
+time. Broad shortlist filtering continues to use straight-line distance so the
+application does not issue a OneMap routing request for every candidate.

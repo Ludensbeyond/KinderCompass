@@ -31,7 +31,7 @@ KinderCompass implements a three-stage workflow:
 |---|---|
 | Stage 1 | Convert conversational preferences into validated constraints and explainably ranked Neo4j results. |
 | Stage 2 | Evaluate exact-age and programme eligibility, then estimate fees using citizenship-specific centre fees and dated ECDA subsidy rules. |
-| Stage 3 | Compare selected eligible centres with home using OneMap geocoding and straight-line distance. |
+| Stage 3 | Compare selected eligible centres with home using OneMap geocoding and estimated driving routes. |
 
 The system also provides evidence provenance, recommendation explanations, and
 school-isolated official-webpage retrieval. Data is sourced from
@@ -273,7 +273,11 @@ After clicking **Show recommendations**:
    km. The visible result count should change while the original ranking order
    is preserved.
 7. Select two or more schools. Their pins should appear on the map with the home
-   pin and independently calculated straight-line distances.
+   pin, OneMap driving route, travel distance, and estimated driving duration.
+   Until a school is selected, broad distance filtering uses straight-line
+   distance to avoid a routing request for every result. If OneMap routing is
+   unavailable, the selected school remains visible with a clearly labelled
+   straight-line fallback and no invented travel duration.
 8. Ask Compass chat:
 
    ```text

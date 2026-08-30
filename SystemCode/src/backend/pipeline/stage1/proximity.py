@@ -65,6 +65,67 @@ def geocode_postal_code(postal_code):
         raise ValueError(f"Postal code {postal_code} was not found by OneMap")
     return {"latitude": float(matches[0]["LATITUDE"]), "longitude": float(matches[0]["LONGITUDE"])}
 
+def _decode_polyline(value):
+    """Decode a Google-encoded polyline into latitude/longitude points."""
+    coordinates = []
+    latitude = longitude = index = 0
+    while index < len(value):
+        deltas = []
+        for _ in range(2):
+            result = shift = 0
+            while True:
+                if index >= len(value):
+                    raise ValueError("OneMap returned invalid route geometry")
+                byte = ord(value[index]) - 63
+                index += 1
+                result |= (byte & 0x1f) << shift
+                shift += 5
+                if byte < 0x20:
+                    break
+            deltas.append(~(result >> 1) if result & 1 else result >> 1)
+        latitude += deltas[0]
+        longitude += deltas[1]
+        coordinates.append({"latitude": latitude / 1e5, "longitude": longitude / 1e5})
+    return coordinates
+
+def _request_driving_route(start, end, token):
+    query = urlencode({
+        "start": f"{start['latitude']},{start['longitude']}",
+        "end": f"{end['latitude']},{end['longitude']}",
+        "routeType": "drive",
+    })
+    request = Request(
+        f"https://www.onemap.gov.sg/api/public/routingsvc/route?{query}",
+        headers={"Authorization": token, "Accept": "application/json"},
+    )
+    with urlopen(request, timeout=15) as response:
+        return json.load(response)
+
+def get_driving_route(start, end):
+    """Return OneMap driving distance, duration and decoded road geometry."""
+    payload = _request_driving_route(start, end, get_onemap_token())
+    if payload.get("status") not in (0, "0", None) or not payload.get("route_summary"):
+        message = payload.get("status_message") or payload.get("message") or "route unavailable"
+        if "token" in str(message).lower():
+            payload = _request_driving_route(start, end, get_onemap_token(force_refresh=True))
+    summary = payload.get("route_summary") or {}
+    try:
+        distance_metres = float(summary["total_distance"])
+        duration_seconds = float(summary["total_time"])
+    except (KeyError, TypeError, ValueError) as exc:
+        message = payload.get("status_message") or payload.get("message") or "invalid response"
+        raise RuntimeError(f"OneMap driving route unavailable: {message}") from exc
+    geometry = payload.get("route_geometry") or ""
+    return {
+        "travel_distance_km": round(distance_metres / 1000, 3),
+        "travel_duration_minutes": max(1, math.ceil(duration_seconds / 60)),
+        "travel_mode": "drive",
+        "route_method": "onemap_driving",
+        "route_coordinates": _decode_polyline(geometry) if geometry else [start, end],
+        "estimated": True,
+        "fallback_reason": None,
+    }
+
 def _haversine_km(first, second):
     radius = 6371.0088
     lat1, lat2 = math.radians(first["latitude"]), math.radians(second["latitude"])

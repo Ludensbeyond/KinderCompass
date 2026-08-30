@@ -49,5 +49,15 @@ def calculate_home_to_preschool(
     return {
         "distance_method": "haversine_straight_line",
         "total_distance_km": round(distance, 3),
+        "travel_distance_km": round(distance, 3),
+        "travel_duration_minutes": None,
+        "travel_mode": "unavailable",
+        "route_method": "haversine_straight_line",
+        "route_coordinates": [
+            {"latitude": home["latitude"], "longitude": home["longitude"]},
+            {"latitude": preschool["latitude"], "longitude": preschool["longitude"]},
+        ],
+        "estimated": True,
+        "fallback_reason": "OneMap driving route unavailable; showing straight-line distance.",
         "schedule": schedule,
     }
