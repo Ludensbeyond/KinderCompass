@@ -5,10 +5,34 @@ from SystemCode.src.backend.agents.model_factory import (
     ModelFactoryError,
     ModelFactoryErrorCode,
     create_agent_model,
+    create_conversation_agent_model,
 )
 
 
 class AgentModelFactoryTests(unittest.TestCase):
+    def test_conversation_deterministic_mode_is_lazy(self):
+        client_factory = Mock()
+
+        self.assertIsNone(create_conversation_agent_model({}, client_factory=client_factory))
+        client_factory.assert_not_called()
+
+    def test_conversation_shadow_and_agent_modes_use_shared_factory(self):
+        for mode in ("shadow", "agent"):
+            client = object()
+            client_factory = Mock(return_value=client)
+            with self.subTest(mode=mode):
+                result = create_conversation_agent_model(
+                    {
+                        "CONVERSATION_AGENT_MODE": mode,
+                        "OPENAI_API_KEY": "test-api-key",
+                    },
+                    client_factory=client_factory,
+                )
+                self.assertIs(result, client)
+                client_factory.assert_called_once_with(
+                    model="gpt-4o-mini", timeout=8.0, api_key="test-api-key",
+                )
+
     def test_deterministic_mode_does_not_construct_a_client_or_require_credentials(self):
         client_factory = Mock()
 

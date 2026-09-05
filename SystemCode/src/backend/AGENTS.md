@@ -15,8 +15,10 @@ Read the relevant folder guide before changing backend code or data:
 - [`doc/resources.md`](doc/resources.md) for curated runtime inputs;
 - [`doc/tests.md`](doc/tests.md) for the backend test suite; and
 - [`doc/output.md`](doc/output.md) for generated artifacts.
-- [`doc/agents.md`](doc/agents.md) for the incremental LangGraph migration
-  architecture, safety rules, decisions, and step-by-step progress.
+- [`doc/agents.md`](doc/agents.md) for the active full-conversation LangGraph
+  migration architecture, safety rules, decisions, and step-by-step progress;
+- [`doc/impl1-agent-step1.md`](doc/impl1-agent-step1.md) for the closed first
+  implementation's selected-school evidence migration record.
 
 The [`doc/README.md`](doc/README.md) index summarizes how these directories fit
 together.

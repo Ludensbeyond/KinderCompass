@@ -2,7 +2,9 @@ import importlib
 import unittest
 
 from SystemCode.src.backend.agents.config import (
+    ConversationAgentMode,
     WebRagAnswerMode,
+    get_conversation_agent_mode,
     get_web_rag_answer_mode,
 )
 
@@ -39,6 +41,26 @@ class WebRagAnswerModeTests(unittest.TestCase):
             WebRagAnswerMode.DETERMINISTIC,
         )
 
+
+class ConversationAgentModeTests(unittest.TestCase):
+    def test_missing_empty_and_invalid_modes_fail_closed(self):
+        for environ in ({}, {"CONVERSATION_AGENT_MODE": ""}, {"CONVERSATION_AGENT_MODE": "other"}):
+            with self.subTest(environ=environ):
+                self.assertEqual(
+                    get_conversation_agent_mode(environ),
+                    ConversationAgentMode.DETERMINISTIC,
+                )
+
+    def test_all_supported_modes_are_parsed_case_insensitively(self):
+        for value, expected in (
+            (" deterministic ", ConversationAgentMode.DETERMINISTIC),
+            ("SHADOW", ConversationAgentMode.SHADOW),
+            ("agent", ConversationAgentMode.AGENT),
+        ):
+            with self.subTest(value=value):
+                self.assertEqual(
+                    get_conversation_agent_mode({"CONVERSATION_AGENT_MODE": value}), expected,
+                )
 
 if __name__ == "__main__":
     unittest.main()

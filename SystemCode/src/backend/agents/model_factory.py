@@ -7,7 +7,12 @@ import os
 from enum import Enum
 from typing import Any, Callable, Mapping, Optional
 
-from .config import WebRagAnswerMode, get_web_rag_answer_mode
+from .config import (
+    ConversationAgentMode,
+    WebRagAnswerMode,
+    get_conversation_agent_mode,
+    get_web_rag_answer_mode,
+)
 
 
 DEFAULT_WEB_RAG_MODEL = "gpt-4o-mini"
@@ -63,6 +68,23 @@ def _model_configuration(source: Mapping[str, str]) -> tuple[str, float, str]:
     return model, timeout, api_key
 
 
+def _create_configured_model(
+    source: Mapping[str, str], client_factory: Optional[Callable[..., Any]],
+) -> Any:
+    model, timeout, api_key = _model_configuration(source)
+    if client_factory is None:
+        try:
+            from langchain_openai import ChatOpenAI
+        except (ImportError, ModuleNotFoundError):
+            raise ModelFactoryError(ModelFactoryErrorCode.DEPENDENCY_UNAVAILABLE) from None
+        client_factory = ChatOpenAI
+
+    try:
+        return client_factory(model=model, timeout=timeout, api_key=api_key)
+    except Exception:
+        raise ModelFactoryError(ModelFactoryErrorCode.INITIALIZATION_FAILED) from None
+
+
 def create_agent_model(
     environ: Optional[Mapping[str, str]] = None,
     *,
@@ -79,15 +101,18 @@ def create_agent_model(
     if get_web_rag_answer_mode(source) is WebRagAnswerMode.DETERMINISTIC:
         return None
 
-    model, timeout, api_key = _model_configuration(source)
-    if client_factory is None:
-        try:
-            from langchain_openai import ChatOpenAI
-        except (ImportError, ModuleNotFoundError):
-            raise ModelFactoryError(ModelFactoryErrorCode.DEPENDENCY_UNAVAILABLE) from None
-        client_factory = ChatOpenAI
+    return _create_configured_model(source, client_factory)
 
-    try:
-        return client_factory(model=model, timeout=timeout, api_key=api_key)
-    except Exception:
-        raise ModelFactoryError(ModelFactoryErrorCode.INITIALIZATION_FAILED) from None
+
+def create_conversation_agent_model(
+    environ: Optional[Mapping[str, str]] = None,
+    *,
+    client_factory: Optional[Callable[..., Any]] = None,
+) -> Optional[Any]:
+    """Lazily build the shared model only for shadow or agent supervisor modes."""
+
+    source = os.environ if environ is None else environ
+    if get_conversation_agent_mode(source) is ConversationAgentMode.DETERMINISTIC:
+        return None
+
+    return _create_configured_model(source, client_factory)

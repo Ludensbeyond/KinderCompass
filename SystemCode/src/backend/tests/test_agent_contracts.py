@@ -4,9 +4,18 @@ from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from SystemCode.src.backend.agents.contracts import (
+    AuthoritativeSchoolContext,
+    CapabilityToolResult,
+    ConversationExecutionLimits,
+    ConversationExecutionMetadata,
+    ConversationRequestContext,
+    EvidenceIndexContext,
     EvidenceCitation,
+    GeneratedConversationAnswer,
     GeneratedEvidenceAnswer,
+    PublicCitation,
     RetrievedEvidence,
+    RoutingDecision,
     SelectedSchoolAgentRequest,
 )
 
@@ -29,6 +38,87 @@ def citation(**overrides):
 
 
 class AgentContractTests(unittest.TestCase):
+    def test_conversation_contracts_are_strict_and_bounded(self):
+        school = AuthoritativeSchoolContext(
+            school_id=SCHOOL_ID,
+            facts={"school_id": SCHOOL_ID, "name": "School A", "distance_km": 1.25},
+        )
+        context = ConversationRequestContext(
+            message="Compare this school with general guidance.",
+            profile={"preferences": {"pedagogy": {"value": "Montessori"}}},
+            selected_school_ids=[SCHOOL_ID],
+            selected_schools=[school],
+            selected_school_evidence=EvidenceIndexContext(
+                scope="school", available=True, index={"pages": []},
+            ),
+            general_knowledge_evidence=EvidenceIndexContext(
+                scope="general", available=False,
+            ),
+            catalogue_version="12345",
+        )
+        route = RoutingDecision(
+            scope="combined", intent="ask_combined_evidence", confidence=0.95,
+        )
+        public_citation = PublicCitation(
+            citation_id=CHUNK_ID,
+            evidence_scope="school",
+            school_id=SCHOOL_ID,
+            url="https://school.example/centre-a",
+            title="School A curriculum",
+            retrieved_at=datetime(2026, 8, 23, tzinfo=timezone.utc),
+        )
+        result = CapabilityToolResult(
+            tool_name="search_selected_school_evidence",
+            mutates_profile=False,
+            profile=context.profile,
+            understood=["Montessori is preferred"],
+            ready_to_search=True,
+            answer_candidate="The retrieved school page describes its curriculum.",
+            grounding_facts=["The school page describes its curriculum."],
+            citations=[public_citation],
+            evidence_category="school_published_claim",
+        )
+        answer = GeneratedConversationAnswer(
+            answer="The school page describes its curriculum.", citation_ids=[CHUNK_ID],
+        )
+        metadata = ConversationExecutionMetadata(
+            mode="agent", route_scope=route.scope,
+            tool_names=[result.tool_name], tool_calls=1, graph_iterations=2,
+            validation_succeeded=True, termination_reason="completed",
+        )
+
+        self.assertEqual(context.selected_schools[0].school_id, SCHOOL_ID)
+        self.assertEqual(answer.citation_ids, [public_citation.citation_id])
+        self.assertEqual(metadata.tool_calls, 1)
+        self.assertEqual(ConversationExecutionLimits().max_tool_calls, 3)
+
+        with self.assertRaises(ValidationError):
+            RoutingDecision(
+                scope="general_knowledge", intent="ask_general_knowledge",
+                confidence=1, prompt="secret",
+            )
+        with self.assertRaises(ValidationError):
+            GeneratedConversationAnswer(answer="Valid answer", citation_ids=[CHUNK_ID, CHUNK_ID])
+        with self.assertRaises(ValidationError):
+            ConversationExecutionLimits(max_tool_calls=4)
+
+    def test_context_rejects_mismatched_records_and_oversized_text(self):
+        indexes = {
+            "selected_school_evidence": EvidenceIndexContext(scope="school", available=False),
+            "general_knowledge_evidence": EvidenceIndexContext(scope="general", available=False),
+        }
+        with self.assertRaises(ValidationError):
+            ConversationRequestContext(
+                message="Tell me about this school.", profile={},
+                selected_school_ids=[SCHOOL_ID], selected_schools=[],
+                catalogue_version="1", **indexes,
+            )
+        with self.assertRaises(ValidationError):
+            ConversationRequestContext(
+                message="Tell me about this school.", profile={"note": "x" * 5_001},
+                catalogue_version="1", **indexes,
+            )
+
     def test_valid_contracts(self):
         request = SelectedSchoolAgentRequest(
             question="What curriculum does it use?",

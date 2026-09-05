@@ -1,195 +1,22 @@
-# Incremental LangGraph migrations
+# Implementation 2 — full-conversation agent
 
-This document is the persistent source of truth for backend LangGraph
-migrations. The selected-school webpage-answer migration is closed and retained
-below as historical evidence. The active migration will move every natural-
+This document is the active source of truth for migrating every natural-
 language turn submitted to `POST /api/preferences` behind a backend conversation
-supervisor without changing the frontend or HTTP wire contract.
+supervisor. The completed selected-school evidence migration is preserved in
+[the Implementation 1 archive](impl1-agent-step1.md).
 
 ## Session protocol
 
 Every migration session must read `src/AGENTS.md`, `backend/AGENTS.md`, and this
 document. It must complete only the one step named under **Next step**, run that
-step's tests, update the active checklist and decision log, replace the single
+step's tests, update the checklist and decision log, replace the single
 **Next step** entry, and stop without starting the following step.
 
 Checklist statuses are `pending`, `in progress`, and `complete`. A step is not
 complete until its scoped tests and evidence are recorded here. Generated
 outputs are not edited by hand.
 
-## Architecture and safety rules
-
-- The browser sends family inputs and stable school IDs to FastAPI. FastAPI and
-  backend services reload authoritative school, policy, and evidence data; the
-  graph never trusts browser-supplied school records.
-- Preserve the existing `POST /api/preferences` wire contract throughout the
-  migration. The agent remains a backend implementation detail: the frontend
-  must not import agent contracts or send prompts, evidence records, tool
-  configuration, or provider credentials. Agent results map back to the
-  existing `PreferenceResponse` fields, including its optional answer metadata.
-- The first graph is limited to selected-school webpage evidence. Ranking,
-  eligibility, fees, distance, preference extraction, intent classification,
-  and other explanations remain outside it.
-- LangGraph may orchestrate explicitly registered tools, but it may not control
-  authoritative ranking or policy calculations. The first graph may call only
-  the selected-school evidence-search tool.
-- Retrieval is required before generation. Evidence must be filtered by the
-  authoritative school ID before it reaches a model, and every returned
-  citation must resolve to that retrieval result.
-- Tool calls and graph iterations are bounded. Timeouts, tool failures,
-  malformed model output, and invalid citations return the existing grounded
-  deterministic answer.
-- Deterministic mode is the default and must work without OpenAI credentials or
-  eager model-client construction. Tests must mock model access and never call
-  a live external service.
-- Contracts stay independent of FastAPI and LangGraph internals, reject extra
-  fields, bound generated text, and validate school and citation identifiers.
-- Credentials, prompts, family information, and retrieved private context are
-  never logged or returned as execution metadata. OpenAI and other provider
-  access remains backend-only.
-- New tools require a typed contract, an authoritative-data boundary,
-  deterministic tests, defined failure behavior, and their own checklist step.
-
-## Recorded baseline
-
-### Current OpenAI entry points
-
-All clients are imported and created lazily inside optional functions. Each
-capability is disabled unless its own environment flag is truthy, and each
-falls back to deterministic behavior on failure.
-
-| Capability | Entry point | Configuration | Existing fallback |
-|---|---|---|---|
-| Preference extraction | `pipeline/stage1/llm_extractor.py::_extract_with_openai` | `OPENAI_PREFERENCE_EXTRACTION_ENABLED`, `OPENAI_PREFERENCE_MODEL`, `OPENAI_PREFERENCE_TIMEOUT_SECONDS` | Rule extraction; records `rules_fallback` and exception type. |
-| Intent classification | `pipeline/stage1/intent_router.py::_classify_with_openai` | `OPENAI_INTENT_CLASSIFICATION_ENABLED`, `OPENAI_INTENT_MODEL`, `OPENAI_INTENT_TIMEOUT_SECONDS` | Protected/rule intent or `update_preferences`, marked `rules_fallback`. |
-| Deterministic-decision explanations | `pipeline/stage1/grounded_explainer.py::_explain_with_openai` | `OPENAI_GROUNDED_EXPLANATIONS_ENABLED`, `OPENAI_EXPLANATION_MODEL`, `OPENAI_EXPLANATION_TIMEOUT_SECONDS` | Original deterministic explanation with `deterministic_fallback` and exception type. |
-| Selected-school webpage synthesis | `pipeline/stage1/grounded_explainer.py::_answer_web_evidence_with_openai` | `OPENAI_WEB_RAG_ANSWERS_ENABLED`, `OPENAI_WEB_RAG_MODEL`, `OPENAI_WEB_RAG_TIMEOUT_SECONDS` | Original cited deterministic answer with `deterministic_fallback` and exception type. |
-
-These entry points currently instantiate `openai.OpenAI` separately. There is
-no shared model factory and no LangGraph invocation at baseline.
-
-### Current selected-school evidence behavior
-
-1. `POST /api/preferences` accepts stable `selected_school_ids` in the existing
-   `PreferenceRequest`; `PreferenceService` reloads those schools through the
-   authoritative repository rather than accepting browser school facts.
-2. `PreferenceService._resources` loads the school evidence index server-side
-   from `WEB_RAG_INDEX_PATH` or `output/web_rag_pilot_index.json`. Missing or
-   malformed files safely become unavailable evidence.
-3. Intent routing selects `ask_selected_school_evidence`. The conversation path
-   requires exactly one selected school and an authoritative `school_id`.
-4. `stage1.web_rag.retrieve` considers only pages whose `school_id` exactly
-   matches that ID, then BM25-ranks at most three relevant chunks and attaches
-   URL, title, retrieval date, and chunk ID citations. Operator and general
-   evidence use separate retrieval functions and are not included here.
-5. `_answer_web_evidence` extracts a concise deterministic passage and cites
-   its retrieved chunk. Empty evidence is described as unavailable, explicitly
-   not as a negative fact; multiple selections are rejected to prevent mixing.
-6. Optional OpenAI synthesis receives only retrieved passages. It must return
-   at least one citation ID from those passages. Rejected evidence, missing or
-   invented citations, parse errors, timeouts, and other exceptions return the
-   deterministic answer.
-7. The conversation result exposes internal `web_answer_method` and
-   `web_answer_fallback_reason`. They are consumed by evaluation and feedback
-   code, but are not currently mapped to the existing
-   `PreferenceResponse.answer_method` and `PreferenceResponse.fallback_reason`
-   fields. Web evidence never affects ranking.
-
-## Selected-school migration checklist (closed)
-
-| Step | Status | Owner | Completion date | Files changed | Tests run |
-|---|---|---|---|---|---|
-| 1. Record baseline | complete | Architecture and progress owner | 2026-08-23 | `backend/AGENTS.md`; `backend/doc/README.md`; `backend/doc/agents.md` | `test_web_rag.py`: 53 passed. Conversation collection was also attempted but is blocked in the available Python 3.9 environment: the project uses Python 3.10+ union annotations, and `neo4j` is absent. No live services were called. |
-| 2. Add dependencies and configuration | complete | Graph and configuration owner | 2026-08-23 | `backend/requirements.txt`; `backend/agents/__init__.py`; `backend/agents/config.py`; `backend/tests/test_agent_config.py`; `backend/README.md`; `backend/doc/README.md`; `backend/doc/agents.md` | `test_agent_config.py`: 4 passed under Python 3.12. Dependency resolution and `pip check` passed with `langgraph==1.2.11`, `langchain-openai==1.6.0`, and the existing `openai<3` constraint. No graph or live service was invoked. |
-| 3. Define agent contracts | complete | Graph and configuration owner | 2026-08-23 | `backend/agents/contracts.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_contracts.py`; `backend/doc/agents.md` | `test_agent_contracts.py`: 5 passed under Python 3.12. A combined rerun with `test_agent_config.py` was also attempted: all contract and mode tests passed, while the pre-existing dependency import test could not collect `langgraph` because the current virtual environment does not have that declared package installed. No live services were called. |
-| 4. Extract the first tool | complete | Retrieval-tool owner | 2026-08-27 | `backend/agents/tools.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_tools.py`; `backend/doc/agents.md` | `test_agent_tools.py`: 4 passed under Python 3.12, covering valid typed evidence, missing school, empty evidence, and cross-school isolation. `test_web_rag.py`: 53 passed. No graph or live service was invoked. |
-| 5. Add the shared model factory | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/model_factory.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_model_factory.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_model_factory.py`: 5 passed under Python 3.12, covering deterministic lazy behavior, explicit/default configuration, bounded timeouts, missing credentials, and secret-safe initialization errors. A combined run with answer-mode and contract tests passed 13 tests. `py_compile` and `git diff --check` passed. No client or live service was invoked. The dependency import test remains unavailable because the current virtual environment lacks the already-declared LangGraph/LangChain packages. |
-| 6. Build the bounded LangGraph | complete | Graph and configuration owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_graph.py`; `backend/doc/agents.md` | `test_agent_graph.py`: 3 passed under Python 3.12, covering the mocked retrieval-to-answer sequence, the one-call tool limit, and the graph-iteration limit. All 21 `test_agent*.py` tests passed; `py_compile` and `git diff --check` passed. The complete backend suite was also attempted and passed through all agent tests, then stalled in the pre-existing `test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` startup test until interrupted. No live model or external service was called by the scoped tests. |
-| 7. Add citation validation and fallback | complete | Validation and safety-test owner | 2026-08-27 | `backend/agents/graph.py`; `backend/agents/__init__.py`; `backend/tests/test_agent_validation.py`; `backend/doc/agents.md` | `test_agent_validation.py`: 5 passed under Python 3.12, covering malformed output, model timeout, tool failure, invalid-citation fallback, and a valid grounded answer. All 26 `test_agent*.py` tests and all 53 `test_web_rag.py` tests passed; `py_compile` and `git diff --check` passed. No live model or external service was called. |
-| 8. Integrate the vertical slice | complete | Graph and configuration owner | 2026-08-27 | `backend/services/preference_service.py`; `backend/pipeline/stage1/grounded_explainer.py`; `backend/tests/test_agent_integration.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_integration.py`: 3 passed under Python 3.12, covering deterministic, successful-agent, and agent-fallback behavior through the FastAPI endpoint handler with `PreferenceRequest` and `PreferenceResponse` validation. All 29 `test_agent*.py`, all 53 `test_web_rag.py`, and all 76 `test_stage_flow.py` tests passed. `py_compile` and `git diff --check` passed. Starlette's deprecated `TestClient` transport was not used because it reproduces the pre-existing request-startup stall in this environment. No live model or external service was called. |
-| 9. Add evaluation and observability | complete | Evaluation and observability owner | 2026-08-29 | `backend/agents/graph.py`; `backend/scripts/evaluate_selected_school_agent.py`; `backend/tests/test_agent_observability.py`; `backend/README.md`; `backend/doc/agents.md` | `test_agent_observability.py`, `test_agent_validation.py`, and `test_agent_integration.py`: 11 passed. All 32 `test_agent*.py` tests and all 53 `test_web_rag.py` tests passed under Python 3.12. `py_compile` and `git diff --check` passed. Evaluation uses injected models in tests; no live model or external service was called. |
-| 10. Rollout decision | complete | Architecture and progress owner | 2026-08-29 | `backend/doc/agents.md` | No-go: keep `WEB_RAG_ANSWER_MODE=deterministic`. The complete backend suite passed 33 tests, including all 32 agent tests, before the pre-existing `test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` TestClient request stalled and the run was interrupted. The frontend production build passed. The `POST /api/preferences` OpenAPI request/response references and required existing request/response fields were verified. The four-case acceptance evaluation reported deterministic and agent pass rates of 1.0 with no regressions, but every agent result was a `ModelFactoryError` deterministic fallback (fallback rate 1.0, zero tool calls and graph iterations), so it supplied no evidence for enabling agent mode. The documented evaluation command also initially failed to import `SystemCode`; the evaluation ran after adding the repository root to `PYTHONPATH`. No live model or external service was called. |
-
-## Decision log
-
-- 2026-08-23 — Migrate one vertical slice only:
-  `ask_selected_school_evidence`. Existing ranking and policy decisions remain
-  deterministic and authoritative.
-- 2026-08-23 — Preserve deterministic behavior as the default and universal
-  safety fallback throughout the migration.
-- 2026-08-23 — Use this file as the cross-session gate: exactly one checklist
-  step may be completed per session.
-- 2026-08-23 — Record the baseline retrieval suite as 53 passing tests. Do not
-  treat the unavailable conversation-suite collection as a product failure;
-  rerun it under the project's supported Python/dependency environment during
-  the first step that changes executable code.
-- 2026-08-23 — Pin `langgraph==1.2.11` and `langchain-openai==1.6.0`; dependency
-  resolution selects an OpenAI 2.x release compatible with the existing
-  `openai>=1.66,<3` constraint.
-- 2026-08-23 — Parse `WEB_RAG_ANSWER_MODE` in the backend-only `agents`
-  package. Missing, empty, and invalid values resolve to `deterministic`;
-  `agent` is recognized but does not invoke a graph in this step.
-- 2026-08-23 — Keep the selected-school agent boundary framework-independent
-  with strict Pydantic contracts. School, chunk, and citation identifiers use
-  the existing colon-delimited identifier format; retrieved evidence must
-  match its citation's school and chunk IDs; generated answers have bounded,
-  unique citation IDs consistent with whether evidence is available.
-- 2026-08-27 — Register `search_selected_school_evidence` as a typed
-  `StructuredTool` over the server-supplied evidence index. It delegates to
-  the existing school-isolated retriever, returns `RetrievedEvidence`, and
-  defensively discards any match whose school ID differs from the authoritative
-  request instead of relabelling it.
-- 2026-08-27 — Treat frontend/backend compatibility as a rollout gate. Keep
-  agent-specific state behind `PreferenceService`, preserve the existing HTTP
-  request and response models, exercise deterministic/success/fallback paths
-  through FastAPI, and require a successful frontend production build before
-  rollout.
-- 2026-08-27 — Centralize future agent model construction in a lazy backend
-  factory. Deterministic mode returns without reading credentials, importing a
-  provider, or constructing a client. Agent mode reuses the selected-school
-  model settings, enforces a 1–30 second timeout, and reduces configuration,
-  dependency, credential, and initialization failures to stable typed errors
-  whose messages do not include provider details or secrets.
-- 2026-08-27 — Compile the first graph with one registered evidence-search
-  tool, a default one-call tool budget, and a three-iteration model budget.
-  Ignore model-supplied retrieval arguments in favor of the authoritative
-  request, retain the retrieval transcript for generation, and accept no
-  generated answer before the tool has run. Limit termination returns graph
-  state without an answer so the next step can apply the deterministic
-  fallback consistently.
-- 2026-08-27 — Put a single validation boundary around graph construction and
-  invocation. Accept an agent answer only after successful graph completion,
-  authoritative-school verification, and exact resolution of every citation
-  ID to retrieved evidence. Malformed output, timeouts, tool errors, rejected
-  retrieved evidence, invalid citations, and execution-limit termination all
-  return the caller-supplied deterministic answer and citations. Expose only
-  the exception class as the fallback reason so provider messages, prompts,
-  and retrieved context cannot escape as metadata.
-- 2026-08-27 — Integrate the graph only after the existing conversation path
-  has produced its grounded deterministic answer. `PreferenceService` supplies
-  the authoritative rebuilt school and server-loaded evidence index, maps the
-  internal answer metadata to the existing `PreferenceResponse` fields, and
-  preserves that answer and its citations on every agent failure. Agent mode
-  supersedes the legacy selected-school OpenAI synthesizer so a request cannot
-  invoke two model paths.
-- 2026-08-29 — Compare deterministic and agent answers over the same ordered,
-  curated selected-school cases. Store only per-case quality booleans, aggregate
-  rates, and a fixed execution-metadata allowlist; omit questions, answers,
-  prompts, school and family context, credentials, and retrieved evidence text.
-  Normalize unknown exception classes to `AgentExecutionError` so provider
-  implementation details cannot escape through fallback observability.
-- 2026-08-29 — Do not enable the selected-school agent in rollout. Keep
-  `WEB_RAG_ANSWER_MODE=deterministic` because the full backend gate did not
-  complete and the acceptance run exercised only deterministic fallback, with
-  a 1.0 fallback rate caused by `ModelFactoryError`. The frontend build and API
-  contract checks passed, and deterministic behavior passed all four acceptance
-  cases. A future rollout proposal requires a fully passing backend suite and
-  acceptance evidence from actual grounded agent executions with an acceptable
-  fallback rate.
-
-## Full-conversation migration
-
-### Goal and scope
+## Goal and scope
 
 Every natural-language message submitted to `POST /api/preferences` will enter
 a backend conversation supervisor when shadow or agent mode is enabled. The
@@ -198,13 +25,33 @@ answer to return. It orchestrates only: deterministic backend code remains
 authoritative for preference state, ranking, eligibility, fees, distance,
 school facts, and citations.
 
+The supervisor's primary responsibility is intent and data-source routing. At
+the start of each turn it must distinguish among:
+
+1. application workflow, such as changing preferences, comparing results, or
+   running a fee scenario;
+2. structured KinderCompass facts, such as a school's food policy, programmes,
+   fees, or available vacancy data, which must come from the authoritative
+   catalogue/knowledge-graph boundary;
+3. general early-childhood or Singapore policy guidance, such as how government
+   preschool subsidies work, which must come from a separately cited general-
+   knowledge retrieval boundary; and
+4. a combined question that requires more than one of these sources.
+
+The model is not the source of facts in any route. It selects one or more
+registered tools, the backend executes them, and the final answer is composed
+only from their returned facts and citations. The current curated general-
+knowledge index is an initial implementation of the general retrieval boundary;
+it may later be replaced by a vector store without changing the supervisor or
+public API contracts.
+
 No frontend change is permitted. The browser continues to call `/api/search`,
 `/api/evaluate`, map, route, memory, and feedback endpoints through the existing
 UI flow. In particular, the supervisor cannot initiate a browser search or UI
 transition through the current `PreferenceResponse`; `ready_to_search` remains
 the existing signal that lets the user proceed with Show recommendations.
 
-### Architecture and safety additions
+## Architecture and safety rules
 
 - Preserve the exact `PreferenceRequest`, `PreferenceResponse`, and OpenAPI
   shapes. Agent prompts, tool arguments, execution state, retrieved passages,
@@ -225,6 +72,12 @@ the existing signal that lets the user proceed with Show recommendations.
   agent answer can be accepted. A turn may make at most three tool calls, at
   most one of which may mutate preference state, and graph iterations remain
   independently bounded.
+- Intent classification and tool routing are distinct contracts. The routing
+  result identifies application-workflow, structured-KinderCompass,
+  general-knowledge, or combined scope; the selected tool then validates its
+  own typed operation and server-owned context. Low-confidence or unsupported
+  routing asks for clarification or falls back rather than querying every
+  source.
 - Tools return an authoritative profile/state result, a deterministic answer
   candidate, grounding facts, and allowed citations. The model may select
   tools, compose bounded wording from those results, and select citation IDs;
@@ -246,8 +99,10 @@ the existing signal that lets the user proceed with Show recommendations.
 - Tests use injected models and tools and never call live providers. A rollout
   decision requires separate staged evidence from actual grounded agent
   executions in addition to deterministic automated tests.
+- New tools require a typed contract, an authoritative-data boundary,
+  deterministic tests, defined failure behavior, and their own checklist step.
 
-### Capability coverage
+## Capability coverage
 
 The migration is incomplete until the supervisor covers all current
 `IntentName` values and the state transitions that precede intent handling:
@@ -257,15 +112,187 @@ The migration is incomplete until the supervisor covers all current
 | Preference state | Update and reset preferences; resolve pending language or pedagogy priority, contradictions, and proposed constraint relaxations; request clarification when needed. |
 | Recommendation decisions | Find the closest preschool; explain the top-ranked result; compare selections; explain trade-offs and provenance; recommend or assess selected preschools. |
 | Calculated scenarios | Run fee or eligibility what-if scenarios and explain Stage 2 exclusions using authoritative family, school, and policy inputs. |
-| Evidence answers | Retrieve selected-school webpage evidence, curated general guidance, or both while preserving school/general evidence scopes and resolvable citations. |
+| Structured school facts | Query typed, allowlisted school facts through the authoritative catalogue/knowledge-graph boundary, including food, programmes, fees, and vacancy fields when that data exists; never allow model-generated Cypher or unrestricted database access. |
+| General guidance | Retrieve cited general guidance through a replaceable retrieval interface. Start with the current curated index and permit a later vector-store implementation without changing agent or HTTP contracts. |
+| Combined answers | Call both structured-school and general-guidance tools when a question genuinely spans them, while keeping their evidence scopes and citations distinct. |
+| School-published evidence | Retrieve selected-school webpage evidence for claims that are not authoritative structured fields, preserving school scope and resolvable citations. |
 | Missing context | Return the existing actionable guidance when a school selection, eligible result set, excluded result set, family details, postal code, or evidence index is unavailable. |
 
-### Full-conversation migration checklist
+## Step 1 baseline — 2026-08-31
+
+### Request lifecycle and authoritative boundaries
+
+`POST /api/preferences` validates the HTTP body, rejects a message containing
+`closest` when no six-digit postal code is supplied, and calls
+`PreferenceService.handle`. The service classifies the newest message, rebuilds
+every supplied selected or eligible stable school ID through
+`SchoolRepository`, optionally evaluates those records with the submitted
+validated `FamilyDetails`, and attaches server-calculated distances. It then
+calls the Stage 1 conversation controller. Exclusion and what-if intents are
+handled directly by the service before that controller.
+
+At this baseline, `family` and the top-level request fields are typed, and all
+school facts are reloaded for stable IDs. By contrast, `profile` is an
+unstructured request dictionary: the controller canonicalizes preference
+fields, but `PreferenceService` also reads `active_school.school_id` and
+`active_school.name` from it before repository resolution. Unknown explicit or
+remembered school IDs become 404 responses; service `RuntimeError` and
+`ValueError` failures become 422 responses.
+
+The endpoint always records privacy-minimised answer metadata through
+`ChatFeedbackService` and adds `answer_id`. When `remember_preferences` is true,
+it also persists the returned structured profile through
+`ConversationMemoryService`; a missing `anonymous_session_id` is a 422. These
+are the only request-time writes. Every service result is enriched with bounded
+`profile.decision_state` containing the current goal, recent intent names,
+structured preference changes, unresolved-question metadata, and the internal
+status. It does not store the conversation text.
+
+The public response always requires `profile`, `understood`, `ready_to_search`,
+and `question`. It may also expose `citations`, `answer_method`,
+`fallback_reason`, `evidence_category`, and `answer_id`. Internal controller
+fields such as `status`, `evidence_scope`, `ranking_affected`, and
+`web_answer_method` are removed by FastAPI response-model serialization.
+
+### Pre-intent state-transition inventory
+
+These controller transitions take precedence over normal intent handling in
+the order shown, except that service-level what-if and exclusion handling has
+already returned before the controller is entered.
+
+| Transition | Authoritative inputs and result | Missing or unresolved response | Side effects | Existing coverage |
+|---|---|---|---|---|
+| Pending constraint relaxation | Request profile's server-created `pending_relaxation` plus explicit approval/decline text. Approval changes distance, downgrades required language, or downgrades one required preference; decline removes the proposal unchanged. Returns the common fields and a ready-to-search answer. | Any other reply repeats the stored proposal with `ready_to_search=false`. | Mutates the returned profile only; endpoint persistence occurs only when requested. | `test_dialogue_manager.py`: `test_relaxation_requires_explicit_approval`, `test_declining_preserves_constraints`, `test_proposes_smallest_distance_change_without_applying_it`. |
+| Pending contradiction | Request profile's `pending_contradiction` plus an explicit keep/use reply. Resolution applies the selected language or pedagogy value and clears the pending record. | An unrecognised reply repeats the contradiction question with `ready_to_search=false`. | Mutates the returned profile only. | `test_dialogue_manager.py`: conflicting-language and conflicting-pedagogy tests. |
+| Finish preference collection | Existing supported preferences plus “use/based on preferences” or an exact no/no-thanks reply, with no pending importance question and no eligible results. | Not applicable; unmatched text continues routing. | Adds intent metadata and returns `ready_to_search=true`; no search is initiated. | `test_stage_flow.py`: `test_stage1_uses_understood_preferences_after_clarification`, `test_stage1_no_means_finish_preferences_when_profile_is_ready`. |
+| Router clarification | `IntentResult` with confidence below 0.7 and its bounded clarification. | Uses “Could you clarify what you would like me to do?” when the classifier supplies no question. | Adds intent metadata; no preference mutation. | Intent fallback and LLM routing tests in `test_stage_flow.py`; no dedicated low-confidence assertion. |
+| Pending language/pedagogy importance | Existing `pending`/`pending_queue` plus required/preferred markers. A valid answer converts the item to a hard constraint or weighted preference, then advances the queue or becomes ready. | A reply without either marker repeats “required/essential or merely preferred”. | Mutates the returned profile only. | `test_stage_flow.py`: follow-up, queued-follow-up, and understood-after-clarification tests. |
+| New contradiction detection | Current canonical profile, deterministic extraction of the newest text, and explicit required markers. Stores a language or pedagogy repair choice instead of overwriting state. | Returns the repair question with `ready_to_search=false`. | Adds `pending_contradiction` to the returned profile. | `test_dialogue_manager.py`: conflicting-language, unresolved-overwrite, and pedagogy-repair tests. |
+| Preference extraction clarification | Current profile and optional structured OpenAI extraction; deterministic extraction is authoritative fallback. | A low-confidence extractor question is returned with `ready_to_search=false`. | Adds extraction method/fallback metadata and possible `clarification_needed` to the returned profile. | `test_stage_flow.py`: valid extraction, extraction failure, and invalid-value fallback tests. |
+| Unsupported or empty preference | Deterministic/validated extracted preference items and the supported schema. | Unsupported-only input names the unranked attributes; empty input asks for a supported preference. | Retains unsupported items in the returned profile but they cannot affect ranking. | `test_stage_flow.py`: unsupported-only and unsupported-with-existing-profile tests. |
+| New importance clarification / next-best question | Newly extracted language or pedagogy without explicit importance creates `pending` (and possibly `pending_queue`). Otherwise catalogue-wide facet counts select an unanswered optional question. | If no informative facet remains, asks whether to add a preference or show recommendations. | Mutates only returned conversational profile metadata. | `test_stage_flow.py`: language, explicit-preference, and queued-follow-up tests; `test_dialogue_manager.py`: next-question tests. |
+
+### Intent and capability inventory
+
+All rows return the common public fields above and receive bounded decision
+state. “Catalogue” below means the generated
+`SystemCode/data/processed/kindercompass_master.json` reloaded by stable ID,
+not browser-supplied records.
+
+| Intent / capability | Authoritative inputs and actual runtime source | Intent-specific output and missing-context behavior | State or write effects | Existing coverage |
+|---|---|---|---|---|
+| `update_preferences` | Newest message, current profile, deterministic schema/rules, optional bounded extractor, and catalogue facet summary. | Updates `profile`/`understood`; asks importance or another useful preference; unsupported-only or empty input remains not ready. | Preference state changes only in returned profile; optional endpoint memory write. | Broad Stage 1 coverage in `test_stage_flow.py`, including extraction, accumulation, distance, unsupported evidence, and clarification tests. |
+| `reset_preferences` | Explicit reset phrase and the deterministic preference mapper. | Clears preference state, then returns the standard “Tell me a preference…” clarification with `ready_to_search=false`. | Returned profile is reset; optional endpoint memory write. | `test_stage_flow.py::test_stage1_chat_can_reset_preferences`. |
+| `needs_clarification` | Low-confidence typed router result. | Returns the router clarification and leaves search disabled. | Intent metadata only. | Indirect classifier fallback coverage; no dedicated response test. |
+| `find_closest_preschool` | Eligible IDs, or the full catalogue when none are supplied; catalogue records; postal-code geocode plus authoritative location GeoJSON; haversine distance. | Returns the nearest name and distance and labels it a location result. With no records: asks for grounded records/distances; with no distances: says comparison is unavailable. A literal `closest` without postal code is rejected by the endpoint with 422; `nearest` currently reaches the no-distance response. | Sets `profile.active_school`; does not search, rank for recommendation, or change preferences. | `test_api_startup.py::test_nearest_chat_uses_postal_code_and_full_grounded_catalogue` (currently blocked by TestClient stall); closest routing and missing-candidate tests in `test_stage_flow.py`. |
+| `explain_top_ranked_preschool` | Eligible IDs rebuilt from catalogue, optional family evaluation from catalogue plus policy repository, and existing ranking metrics/evidence metadata. Optional grounded wording cannot change the facts. | Explains the first eligible result; without eligible results asks the user to show recommendations first. | Explanation metadata only. | `test_stage_flow.py`: top-ranked and grounded-explanation validation/fallback tests. |
+| `compare_selected_preschools` | Selected stable IDs rebuilt from catalogue, optional policy evaluation, distances when a postal code exists, and deterministic comparison facts. | Compares every selection; fewer than two asks for at least two Results-panel selections. | Explanation metadata only. | `test_stage_flow.py`: comparison, required-school grounding, and missing-selection tests. |
+| `explain_selected_tradeoffs` | Selected rebuilt catalogue/evaluation records and their scorer-produced trade-offs. | Explains recorded mismatches; no selection asks for at least one Results-panel selection. | Explanation metadata only. | `test_stage_flow.py::test_phase5_explains_selected_tradeoffs` plus grounded comparison tests. |
+| `explain_evidence_provenance` | Selected rebuilt records and `match_breakdown` provenance created by Stage 1 scoring from catalogue/Neo4j-compatible fields. | Lists source, reliability, and freshness, or evidence unavailable; no selection asks for a Results-panel selection. | Explanation metadata only. | `test_stage_flow.py::test_phase8_chat_explains_selected_school_sources` and evidence metadata/audit tests. |
+| `recommend_selected_preschool` | Selected rebuilt records; deterministic order is match score, then estimated fee, distance, and name. Optional grounded wording cannot select a different winner. | Recommends the winning selected school; no selection asks for at least one selection. | No preference mutation; explanation metadata only. | Recommendation and deterministic-winner grounding/fallback tests in `test_stage_flow.py`. |
+| `assess_selected_preschool` | Exactly one selected rebuilt record, score, strengths, trade-offs, optional evaluated fee, and optional distance. | Gives a deterministic suitability band; zero selections asks for one, multiple selections asks the user to narrow or request a recommendation. | No preference mutation; explanation metadata only. | Suitability and one-selection requirement tests in `test_stage_flow.py`. |
+| `run_what_if_scenario` | Selected IDs, falling back to eligible IDs; catalogue/service fee records; submitted family; dated subsidy policy repository. Only hypothetical income and working-hours changes are parsed. | Returns baseline-versus-scenario fees/status for up to five schools. Missing family or IDs asks to show recommendations; missing hypothetical values asks for income or hours. `citations=[]`, `evidence_category=calculated_estimate`. | Copies family details and never changes saved family or profile. | `test_dialogue_manager.py::test_what_if_is_routed_and_does_not_mutate_family`; policy calculations in `test_stage2_policy.py`. |
+| `explain_school_exclusion` | Excluded stable IDs reloaded from catalogue, submitted family, evaluation engine, and dated policy repository. | Returns the Stage 2 `reason`/status for a named school or first three exclusions. Missing IDs or family says no exclusions are available. `citations=[]`, `evidence_category=authoritative_fact`. | No preference mutation. | `test_dialogue_manager.py::test_exclusion_uses_stage2_reason` and Stage 2 policy tests. |
+| `ask_selected_school_evidence` | Exactly one selected stable ID rebuilt from catalogue, then server-loaded `WEB_RAG_INDEX_PATH` or generated `output/web_rag_pilot_index.json`; retrieval is restricted to that school. Optional selected-school graph changes wording only after validated retrieval. | Returns school-scoped resolvable citations and `school_published_claim`. Zero/multiple selections, missing index, no matching chunks, or no concise passage produce explicit actionable/unavailable wording; absence is not treated as “no”. | No ranking/profile change; answer method/fallback metadata may be exposed. | `test_stage_flow.py` selected-school evidence tests; `test_web_rag.py`; selected-school agent tool, graph, validation, and integration tests. |
+| `ask_general_knowledge` | Server-loaded curated `resources/web_rag/general_knowledge_index.json`; topic-aware deterministic retrieval. | Returns general-scoped citations and `authoritative_fact`; missing index or no relevant passage reports unavailable/not found. | Intent metadata only; no ranking change. | All routes, retrieval, comparison, semantic-priority, and subsidy cases in `test_general_knowledge_rag.py`. |
+| `ask_combined_evidence` | Both the selected-school webpage index and curated general-knowledge index, with their scopes retained separately. | Prefixes school evidence and general guidance and concatenates scoped citations. Each component independently reports its own missing selection/index/evidence condition. | No ranking/profile change. | `test_general_knowledge_rag.py::test_combined_answer_keeps_school_and_general_sources_distinct`. |
+
+### Factual-source reachability
+
+| Source | Current `/api/preferences` use | Structured facts present but not directly answerable |
+|---|---|---|
+| Generated school catalogue | Direct runtime source for selected, eligible, excluded, fee/programme, ranking, and catalogue-wide closest-school records. `SchoolRecord` permits extra generated fields, but there is no allowlisted fact-query operation. | Food, service model, operating hours, transport, contact details, location, update date, and 42 level/month vacancy fields plus `has_vacancy_data` exist in the current 1,867-record file. A factual question about them is currently routed to webpage evidence rather than these fields. |
+| Live Neo4j | Not queried by `/api/preferences`. It is queried by `/api/search`; IDs returned by the browser are subsequently reloaded from the generated catalogue for conversation. | The loader/query schema includes `food_offered`, `weekday_full_day`, `provision_of_transport`, `service_model`, fees, care levels, language, pedagogy, SPARK, location, and `last_updated`. These fields have no typed factual-answer route. The current graph loader does **not** copy `has_vacancy_data` or the 42 vacancy values, so those values exist only in the generated catalogue at this baseline, not in the declared Neo4j schema. |
+| Dated policy repository | Used by `EvaluationService` for what-if, exclusion, and any selected/eligible rebuild that includes family details. | It supplies eligibility and subsidy calculations, not the prose used by general-guidance answers. |
+| Selected-school webpage index | Used only for `ask_selected_school_evidence` and the school portion of combined answers. | It is school-published evidence, not the authority for structured catalogue fields. |
+| Curated general-knowledge index | Used only for `ask_general_knowledge` and the general portion of combined answers. | It currently supplies pedagogy/framework and dated subsidy guidance; it does not establish facts about a selected school. |
+
+Optional OpenAI intent classification, preference extraction, grounded decision
+wording, and webpage synthesis are not factual sources. Each is bounded by
+deterministic inputs and has a deterministic fallback.
+
+### OpenAPI compatibility snapshot
+
+The generated OpenAPI document references
+`#/components/schemas/PreferenceRequest` for the required JSON request body and
+`#/components/schemas/PreferenceResponse` for a 200 response; 422 references
+`HTTPValidationError`.
+
+| Schema | Required fields | Optional/defaulted fields at baseline |
+|---|---|---|
+| `PreferenceRequest` | `message` (string, 2–500 characters) | `profile`; `selected_school_ids=[]`; `eligible_school_ids=[]`; `excluded_school_ids=[]`; `family`; `home_postal_code` (six digits); `anonymous_session_id` (UUID); `remember_preferences=false`. |
+| `FamilyDetails` | `dob` (date), `admission_date` (date), `gross_household_income` (number, at least 0) | `citizenship=SC`; `programme_type=full_day`; `working_hours_per_month=56`; `household_size=1`; `non_earning_dependants=0`; `special_approval=false`. |
+| `PreferenceResponse` | `profile`, `understood`, `ready_to_search`, `question` | `citations=[]`; nullable `answer_method`, `fallback_reason`, `evidence_category`, and `answer_id`. `evidence_category`, when set, is one of `authoritative_fact`, `school_published_claim`, `calculated_estimate`, `parent_sentiment`, or `unknown`. |
+
+### Baseline verification
+
+- Full backend command: **incomplete / not passing**. It passed the first 33
+  tests and then stalled for more than 60 seconds in
+  `test_api_startup.ApiStartupTests.test_nearest_chat_uses_postal_code_and_full_grounded_catalogue`.
+- Isolated reproduction: the same test stalled at the first
+  `TestClient(main.app).post(...)`. A 15-second `SIGABRT` stack capture showed
+  the test thread waiting in `starlette.testclient.handle_request` /
+  `anyio.from_thread`, while the AnyIO portal thread was idle in its asyncio
+  selector. The environment has FastAPI 0.141.1, Starlette 1.6.0, and HTTPX
+  0.28.1 and emits Starlette's warning that its `httpx` TestClient integration
+  is deprecated in favor of `httpx2`. No application handler frame appeared in
+  the dump, so the evidence points to the test transport boundary rather than
+  `PreferenceService` or a live external call.
+- Backend isolation run: **219 tests passed in 50.183 seconds** after excluding
+  all three tests that instantiate `TestClient`. The other two blocked tests are
+  `test_api_rejects_legacy_client_supplied_school_objects` and
+  `test_unknown_school_id_is_a_404_before_evaluation`; a verbose run reached
+  the first of these and stalled in the same way. This isolation result does
+  not count as a complete-suite pass.
+- Frontend production build: **passed** with Next.js 14.2.31; compilation,
+  lint/type checking, page-data collection, and four static pages completed.
+- OpenAPI schema generation: **passed** by importing `main.app` and reading
+  `app.openapi()` without a live service or TestClient.
+
+## Step 2 implementation — 2026-08-31
+
+The backend now parses `CONVERSATION_AGENT_MODE` as `deterministic`, `shadow`,
+or `agent`; missing, empty, and invalid values fail closed to deterministic.
+The conversation model entry point constructs no client in deterministic mode.
+Shadow and agent modes reuse the selected-school agent's lazy, bounded provider
+configuration and non-sensitive failure path.
+
+Framework-independent, extra-forbidden contracts now cover the authoritative
+conversation context, family snapshot, repository-resolved school facts,
+server-loaded evidence indexes, routing decision, capability result, generated
+wording and citation IDs, public citations, execution limits, and privacy-safe
+metadata. Text, identifiers, collections, recursive JSON context, calls,
+mutations, and iterations are bounded. Routing distinguishes application
+workflow, structured KinderCompass, general knowledge, combined, and
+clarification scopes.
+
+`PreferenceService` builds one backend-only context per turn. It resolves
+selected, eligible, excluded, and remembered active-school IDs through the
+repository/evaluation boundary, attaches server-calculated distances, copies
+validated family and profile state, records the catalogue version, and loads
+both evidence indexes server-side. Closest-school requests use the full
+authoritative catalogue when no eligible IDs are supplied. Existing
+deterministic handling consumes these resolved schools and indexes. The HTTP
+models remain unchanged.
+
+Verification evidence:
+
+- Step-scoped configuration, contract, model-factory, and context tests: **22
+  passed**.
+- Complete backend suite attempted: **stalled after 38 passes** at the known
+  first `TestClient.post` boundary; interrupted after 60 seconds.
+- Backend isolation run excluding the same three baseline `TestClient` tests:
+  **227 tests passed in 50.485 seconds**.
+- OpenAPI generation: **passed**. `/api/preferences` still references
+  `PreferenceRequest` and `PreferenceResponse`, with the same required fields.
+- `git diff --check`: **passed**.
+
+## Migration checklist
 
 | Step | Status | Owner | Completion date | Files changed | Tests run |
 |---|---|---|---|---|---|
-| 1. Record the full-conversation baseline | pending | Architecture and progress owner | — | — | — |
-| 2. Define supervisor configuration, contracts, and authoritative context | pending | Graph and configuration owner | — | — | — |
+| 1. Record the full-conversation baseline | complete | Architecture and progress owner | 2026-08-31 | `backend/doc/agents.md` | Full backend suite attempted: stalled after 33 passes in TestClient; 219 non-TestClient tests passed; frontend `npm run build` passed; OpenAPI snapshot generated. |
+| 2. Define supervisor configuration, contracts, and authoritative context | complete | Graph and configuration owner | 2026-08-31 | `backend/agents/config.py`, `backend/agents/contracts.py`, `backend/agents/model_factory.py`, `backend/services/preference_service.py`, four scoped test modules, `backend/doc/agents.md` | 22 scoped tests and 227 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 38 passes; OpenAPI compatibility and `git diff --check` passed. |
 | 3. Extract preference-state tools | pending | Conversation-state tool owner | — | — | — |
 | 4. Extract decision and calculation tools | pending | Decision-tool owner | — | — | — |
 | 5. Complete the evidence toolset | pending | Evidence-tool owner | — | — | — |
@@ -275,26 +302,33 @@ The migration is incomplete until the supervisor covers all current
 | 9. Add full-conversation evaluation and observability | pending | Evaluation and observability owner | — | — | — |
 | 10. Run compatibility gates and decide rollout | pending | Architecture and progress owner | — | — | — |
 
-### Step definitions
+## Step definitions
 
-#### Step 1 — Record the full-conversation baseline
+### Step 1 — Record the full-conversation baseline
 
 - Inventory every current intent and every pre-intent state transition in
   `PreferenceService` and the Stage 1 conversation controller. Record the
   authoritative inputs, output fields, missing-context response, side effects,
   and existing test coverage for each capability in the table above.
+- For every factual intent, record its actual runtime source separately:
+  generated school catalogue, live Neo4j query, policy repository,
+  selected-school webpage index, or curated general-knowledge index. Explicitly
+  identify structured fields that exist in Neo4j but are not yet reachable from
+  `/api/preferences`, including food and vacancy-related data.
 - Snapshot the `POST /api/preferences` OpenAPI request and response references
   and all currently required fields so later steps can prove compatibility.
 - Run the complete backend suite and frontend production build without changing
   executable code. Investigate and record the known TestClient startup stall;
   do not treat a partial run as a passing baseline.
 
-#### Step 2 — Define supervisor configuration, contracts, and context
+### Step 2 — Define supervisor configuration, contracts, and context
 
 - Add strict framework-independent contracts for a server-built conversation
-  request context, capability-tool result, generated answer, public citations,
-  execution limits, and privacy-safe metadata. Extra fields are forbidden and
-  all text and collections are bounded.
+  request context, routing decision, capability-tool result, generated answer,
+  public citations, execution limits, and privacy-safe metadata. The routing
+  decision distinguishes application-workflow, structured-KinderCompass,
+  general-knowledge, combined, and clarification scopes. Extra fields are
+  forbidden and all text and collections are bounded.
 - Add `CONVERSATION_AGENT_MODE=deterministic|shadow|agent`, defaulting safely to
   `deterministic`, and reuse the lazy shared model factory without constructing
   a client in deterministic mode.
@@ -303,7 +337,7 @@ The migration is incomplete until the supervisor covers all current
   distances, current profile, and server-loaded evidence indexes. No agent
   contract is added to the HTTP models.
 
-#### Step 3 — Extract preference-state tools
+### Step 3 — Extract preference-state tools
 
 - Register typed tools for updating preferences, resetting preferences, and
   continuing pending clarification, contradiction, and relaxation flows.
@@ -313,7 +347,7 @@ The migration is incomplete until the supervisor covers all current
 - Mark these tools as state-mutating so graph validation can enforce the
   one-mutation-per-turn rule and preserve existing mixed-message precedence.
 
-#### Step 4 — Extract decision and calculation tools
+### Step 4 — Extract decision and calculation tools
 
 - Register typed read-only tools for closest-school lookup, top-ranking
   explanation, selected-school comparison, trade-offs, provenance,
@@ -324,23 +358,34 @@ The migration is incomplete until the supervisor covers all current
 - Cover missing selections, family details, postal codes, eligible results, and
   excluded results with the current actionable responses rather than allowing
   the model to infer absent facts.
+- Add a typed structured-school-facts tool behind a repository interface. It
+  accepts an allowlisted operation and server-resolved stable school IDs, then
+  returns only authoritative fields and provenance from the catalogue or
+  Neo4j. It must cover food and vacancy questions when those fields are present,
+  report unavailable or stale data explicitly, and never accept model-authored
+  Cypher.
 
-#### Step 5 — Complete the evidence toolset
+### Step 5 — Complete the evidence toolset
 
-- Reuse `search_selected_school_evidence` and add a typed curated-general-
-  knowledge retrieval tool. Both accept the user's bounded question but use
-  server-owned indexes and authoritative school scope.
+- Reuse `search_selected_school_evidence` and add a typed general-knowledge
+  retrieval interface. Its first adapter may use the current curated index; a
+  later vector-store adapter must preserve the same bounded query, result,
+  provenance, and citation contracts. Both retrieval tools accept the user's
+  bounded question but use server-owned indexes and authoritative scope.
 - Support combined evidence by calling both read-only tools. Preserve school
   and general citation metadata, reject cross-school evidence, and distinguish
   unavailable information from negative evidence.
 - Retain deterministic answer candidates for selected, general, and combined
   evidence so validation or model failure always has a grounded fallback.
 
-#### Step 6 — Build the bounded conversation supervisor
+### Step 6 — Build the bounded conversation supervisor
 
-- Compile a supervisor graph that receives the authoritative context, requires
-  a registered capability tool, and lets the model choose the next applicable
-  tool based on the newest message and bounded profile context.
+- Compile a supervisor graph that receives the authoritative context, produces
+  a typed routing decision, requires a registered capability tool, and lets the
+  model choose the next applicable tool based on the newest message and bounded
+  profile context. General questions route to general retrieval; school facts
+  route to structured data or school-published evidence according to the field;
+  combined questions may call both.
 - Enforce three total tool calls, one state mutation, and a separately bounded
   model-iteration count. Ignore or reject model arguments that conflict with
   authoritative context.
@@ -348,7 +393,7 @@ The migration is incomplete until the supervisor covers all current
   answer wording and citation IDs. Assemble all other response fields from the
   accepted tool result.
 
-#### Step 7 — Add result validation and legacy fallback
+### Step 7 — Add result validation and legacy fallback
 
 - Validate tool identity, call counts, mutation counts, profile invariants,
   authoritative result consistency, answer bounds, and exact citation
@@ -360,7 +405,7 @@ The migration is incomplete until the supervisor covers all current
   mixed-scope citations, multiple mutations, tool/model exceptions, timeouts,
   and both execution limits.
 
-#### Step 8 — Integrate deterministic, shadow, and agent modes
+### Step 8 — Integrate deterministic, shadow, and agent modes
 
 - Make `PreferenceService.handle` the single mode dispatcher for every
   `/api/preferences` message. Deterministic mode retains the existing path;
@@ -372,11 +417,14 @@ The migration is incomplete until the supervisor covers all current
 - Validate results through the unchanged `PreferenceResponse` and add endpoint-
   level tests proving identical frontend-visible shapes in every mode.
 
-#### Step 9 — Add evaluation and observability
+### Step 9 — Add evaluation and observability
 
 - Create an ordered, curated evaluation set covering every intent, combined
   evidence, missing context, ambiguous requests, and multi-turn pending,
   contradiction, relaxation, and reset transitions.
+- Include explicit routing cases for Singapore subsidy guidance, selected-school
+  food, vacancy availability, missing structured fields, school-published
+  claims, and questions that combine a school fact with general guidance.
 - Compare deterministic and agent tool choice, profile/state output, grounding,
   citations, and response usefulness. Tests use injected models; a documented
   staged command is reserved for real grounded executions.
@@ -384,7 +432,7 @@ The migration is incomplete until the supervisor covers all current
   counts, latency, termination reason, validation outcome, and normalized
   fallback reason. Do not emit request or response content or private context.
 
-#### Step 10 — Run compatibility gates and decide rollout
+### Step 10 — Run compatibility gates and decide rollout
 
 - Require a complete backend suite, frontend production build, unchanged
   OpenAPI request/response schemas, and confirmation that no frontend files or
@@ -396,7 +444,7 @@ The migration is incomplete until the supervisor covers all current
   any failed or unevaluated gate; if every gate passes, make agent mode an
   explicit backend opt-in rather than the default.
 
-### Full-conversation decisions
+## Decision log
 
 - 2026-08-29 — Define “all conversation” as every natural-language turn sent
   to `POST /api/preferences`. Preserve the browser-controlled search,
@@ -410,8 +458,28 @@ The migration is incomplete until the supervisor covers all current
   shadow, and explicit opt-in agent modes.
 - 2026-08-29 — Split the migration into ten independently testable steps and
   retain the one-step-per-session gate.
+- 2026-08-31 — Separate the closed Implementation 1 record from this active
+  Implementation 2 plan so historical constraints cannot be mistaken for the
+  current supervisor scope.
+- 2026-08-31 — Define the supervisor around explicit intent and data-source
+  routing: application workflow, structured KinderCompass catalogue/knowledge-
+  graph facts, general retrieval, and combined turns. Keep general retrieval
+  replaceable so the curated index can later move to a vector store without
+  changing the supervisor or HTTP contracts.
+- 2026-08-31 — Record the Implementation 2 baseline without changing executable
+  code. `/api/preferences` currently reloads factual school context from the
+  generated catalogue and does not query Neo4j; structured school questions
+  lack a catalogue/graph fact route. Keep the full backend gate failing until
+  the Starlette/HTTPX TestClient stall is resolved, despite all 219 unaffected
+  tests and the frontend production build passing.
+- 2026-08-31 — Keep full-conversation rollout configuration independent from
+  the selected-school answer switch while reusing one lazy provider factory.
+  Build a strict authoritative context before deterministic handling so later
+  supervisors cannot obtain school, family, distance, or retrieval facts from
+  model-authored arguments. Preserve the HTTP models unchanged. The known
+  TestClient transport stall remains open; all 227 unaffected tests pass.
 
 ## Next step
 
-Step 1 — Record the full-conversation baseline. Do not begin Step 2 in the same
+Step 3 — Extract preference-state tools. Do not begin Step 4 in the same
 session.

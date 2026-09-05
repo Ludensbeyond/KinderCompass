@@ -6,7 +6,7 @@ dependency constraints, contributor guidance, and the following areas:
 
 | Folder | Purpose | Guide |
 |---|---|---|
-| `agents/` | Backend-only configuration and bounded selected-school evidence orchestration. | [LangGraph migration](agents.md) |
+| `agents/` | Backend-only configuration and bounded LangGraph orchestration. | [Active LangGraph migration](agents.md) · [Implementation 1 archive](impl1-agent-step1.md) |
 | `domain/` | Infrastructure-independent data contracts. | [Domain](domain.md) |
 | `repositories/` | Authoritative catalogue and policy access. | [Repositories](repositories.md) |
 | `services/` | Application use cases and orchestration. | [Services](services.md) |
@@ -17,8 +17,10 @@ dependency constraints, contributor guidance, and the following areas:
 | `output/` | Generated pipeline, audit, and review artifacts. | [Output](output.md) |
 | `doc/` | Durable backend design and directory documentation. | This index |
 
-The [LangGraph migration record](agents.md) is the persistent architecture,
-safety, decision, and progress source of truth for that incremental migration.
+The [active LangGraph migration record](agents.md) is the persistent
+architecture, safety, decision, and progress source of truth for Implementation
+2. The [Implementation 1 archive](impl1-agent-step1.md) preserves the completed
+selected-school evidence migration.
 
 The normal request path is `main.py` → `services/` → `repositories/` and
 `pipeline/`, with shared request and response shapes supplied by `domain/`.
