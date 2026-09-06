@@ -3,15 +3,26 @@ from __future__ import annotations
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from SystemCode.src.backend.agents.config import WebRagAnswerMode, get_web_rag_answer_mode
+from SystemCode.src.backend.agents.config import (
+    ConversationAgentMode,
+    WebRagAnswerMode,
+    disable_agent_entry_points,
+    get_conversation_agent_mode,
+    get_web_rag_answer_mode,
+)
 from SystemCode.src.backend.agents.contracts import (
     AuthoritativeSchoolContext,
     ConversationRequestContext,
+    ConversationExecutionMetadata,
     EvidenceCitation,
     EvidenceIndexContext,
     SelectedSchoolAgentRequest,
+)
+from SystemCode.src.backend.agents.observability import (
+    build_conversation_observation,
+    emit_conversation_observation,
 )
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
@@ -53,6 +64,57 @@ class PreferenceService:
             deterministic_answer=deterministic_answer,
             deterministic_citations=deterministic_citations,
         )
+
+    @staticmethod
+    def _run_conversation_agent(
+        context: ConversationRequestContext, tools: list[Any],
+        deterministic_fallback: Any,
+    ) -> Any:
+        """Load the full-conversation graph only in shadow or agent mode."""
+
+        from SystemCode.src.backend.agents.validation import run_conversation_supervisor
+
+        return run_conversation_supervisor(context, tools, deterministic_fallback)
+
+    def _conversation_tools(self, context: ConversationRequestContext) -> list[Any]:
+        """Build the complete context-bound capability registry lazily."""
+
+        from SystemCode.src.backend.agents.tools import (
+            create_decision_and_calculation_tools,
+            create_evidence_tools,
+            create_preference_state_tools,
+            create_structured_school_facts_tool,
+        )
+
+        return [
+            *create_preference_state_tools(
+                context, candidate_facets=self.schools.facet_summary(),
+            ),
+            *create_decision_and_calculation_tools(context, self.evaluation),
+            create_structured_school_facts_tool(context, self.schools),
+            *create_evidence_tools(context),
+        ]
+
+    @staticmethod
+    def _observe_conversation_agent(
+        metadata: ConversationExecutionMetadata,
+        *,
+        mode: Literal["shadow", "agent"],
+        deterministic_response: dict[str, Any] | None = None,
+        agent_response: dict[str, Any] | None = None,
+    ) -> None:
+        """Keep telemetry best-effort and isolated from the served response."""
+
+        try:
+            observation = build_conversation_observation(
+                metadata,
+                mode=mode,
+                deterministic_response=deterministic_response,
+                agent_response=agent_response,
+            )
+            emit_conversation_observation(observation)
+        except Exception:
+            pass
 
     def _apply_selected_school_answer_mode(
         self, result: dict[str, Any], *, message: str,
@@ -221,6 +283,57 @@ class PreferenceService:
             message, school_ids, profile, family, self.evaluation, evaluated,
         )
 
+    def _handle_deterministic(
+        self, *, message: str, current: dict[str, Any], before: dict[str, Any],
+        conversation_profile: dict[str, Any] | None,
+        intent: Any, context: ConversationRequestContext,
+        selected_school_ids: list[str], eligible_school_ids: list[str],
+        excluded_school_ids: list[str], family: FamilyDetails | None,
+    ) -> dict[str, Any]:
+        """Run the existing controller exactly once for one resolved context."""
+
+        if intent.intent == "run_what_if_scenario":
+            baseline = (
+                context.selected_schools if selected_school_ids
+                else context.eligible_schools
+            )
+            result = self._what_if(
+                message,
+                selected_school_ids or eligible_school_ids,
+                current,
+                family,
+                [item.facts for item in baseline],
+            )
+            return enrich_decision_state(before, result, intent=intent.intent)
+        if intent.intent == "explain_school_exclusion":
+            result = self._explain_exclusion(
+                message,
+                excluded_school_ids,
+                current,
+                family,
+                [item.facts for item in context.excluded_schools],
+            )
+            return enrich_decision_state(before, result, intent=intent.intent)
+
+        selected = [item.facts for item in context.selected_schools]
+        eligible = [item.facts for item in context.eligible_schools]
+        web_index = context.selected_school_evidence.index
+        result = update_conversation(
+            conversation_profile,
+            message,
+            selected,
+            eligible,
+            web_index,
+            context.general_knowledge_evidence.index,
+            intent,
+            self.schools.facet_summary(),
+        )
+        if intent.intent == "ask_selected_school_evidence":
+            result = self._apply_selected_school_answer_mode(
+                result, message=message, selected=selected, web_index=web_index,
+            )
+        return enrich_decision_state(before, result, intent=intent.intent)
+
     def handle(
         self, *, message: str, profile: dict[str, Any] | None,
         selected_school_ids: list[str], eligible_school_ids: list[str],
@@ -240,32 +353,71 @@ class PreferenceService:
             home_postal_code=home_postal_code,
             include_full_catalogue=intent.intent == "find_closest_preschool",
         )
-        if intent.intent == "run_what_if_scenario":
-            baseline = (
-                context.selected_schools if selected_school_ids
-                else context.eligible_schools
+        mode = get_conversation_agent_mode()
+
+        def deterministic_result() -> dict[str, Any]:
+            return self._handle_deterministic(
+                message=message, current=current, before=before,
+                conversation_profile=profile,
+                intent=intent, context=context,
+                selected_school_ids=selected_school_ids,
+                eligible_school_ids=eligible_school_ids,
+                excluded_school_ids=excluded_school_ids,
+                family=family,
             )
-            result = self._what_if(
-                message, selected_school_ids or eligible_school_ids, current, family,
-                [item.facts for item in baseline],
+
+        if mode is ConversationAgentMode.DETERMINISTIC:
+            return deterministic_result()
+
+        # A full-conversation run owns model orchestration in shadow and agent
+        # modes. Disable the older selected-school graph in every legacy result
+        # used by those modes so one request cannot enter two graphs.
+        if mode is ConversationAgentMode.SHADOW:
+            with disable_agent_entry_points():
+                served = deterministic_result()
+            try:
+                tools = self._conversation_tools(context)
+                run = self._run_conversation_agent(
+                    context, tools, lambda: deepcopy(served),
+                )
+                if isinstance(getattr(run, "metadata", None), ConversationExecutionMetadata):
+                    self._observe_conversation_agent(
+                        run.metadata,
+                        mode="shadow",
+                        deterministic_response=served,
+                        agent_response=run.response,
+                    )
+            except Exception:
+                # Shadow execution can never alter or fail the served response.
+                self._observe_conversation_agent(
+                    ConversationExecutionMetadata(
+                        mode="shadow", validation_succeeded=False,
+                        termination_reason="error", fallback_reason="validation_error",
+                    ),
+                    mode="shadow",
+                )
+            return served
+
+        try:
+            tools = self._conversation_tools(context)
+            run = self._run_conversation_agent(context, tools, deterministic_result)
+        except Exception:
+            with disable_agent_entry_points():
+                fallback = deterministic_result()
+            fallback["answer_method"] = "deterministic_fallback"
+            fallback["fallback_reason"] = "validation_error"
+            self._observe_conversation_agent(
+                ConversationExecutionMetadata(
+                    mode="agent", validation_succeeded=False,
+                    termination_reason="error", fallback_reason="validation_error",
+                ),
+                mode="agent",
             )
-            return enrich_decision_state(before, result, intent=intent.intent)
-        if intent.intent == "explain_school_exclusion":
-            result = self._explain_exclusion(
-                message, excluded_school_ids, current, family,
-                [item.facts for item in context.excluded_schools],
+            return fallback
+        if isinstance(getattr(run, "metadata", None), ConversationExecutionMetadata):
+            self._observe_conversation_agent(
+                run.metadata, mode="agent",
             )
-            return enrich_decision_state(before, result, intent=intent.intent)
-        selected = [item.facts for item in context.selected_schools]
-        eligible = [item.facts for item in context.eligible_schools]
-        web_index = context.selected_school_evidence.index
-        general_index = context.general_knowledge_evidence.index
-        result = update_conversation(
-            profile, message, selected, eligible, web_index, general_index, intent,
-            self.schools.facet_summary(),
-        )
-        if intent.intent == "ask_selected_school_evidence":
-            result = self._apply_selected_school_answer_mode(
-                result, message=message, selected=selected, web_index=web_index,
-            )
-        return enrich_decision_state(before, result, intent=intent.intent)
+        if run.metadata.validation_succeeded:
+            return enrich_decision_state(before, run.response, intent=intent.intent)
+        return run.response

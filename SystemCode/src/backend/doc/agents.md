@@ -393,6 +393,233 @@ Verification evidence:
   **unchanged**.
 - Python compilation and `git diff --check`: **passed**.
 
+## Step 6 implementation — 2026-09-06
+
+A backend-only full-conversation supervisor graph now performs a distinct typed
+routing model step before capability selection. It provides the model only the
+newest bounded message, a bounded profile representation, and context-presence
+signals; school records, family values, calculations, evidence, and provider
+configuration remain behind the registered tools. Application-workflow,
+structured-KinderCompass, general-knowledge, combined, and clarification routes
+have explicit applicable-tool sets. Clarification routing terminates without
+accepting an ungrounded agent answer.
+
+The graph is compiled for one authoritative `ConversationRequestContext` and
+its context-bound tool registry. It strips model-authored arguments from fixed
+workflow and decision tools, replaces evidence queries with the authoritative
+newest message, and leaves only the allowlisted structured-fact operation and
+context-approved school IDs for repository validation. Combined routes may
+execute multiple read-only tools while preserving their separate results and
+citations.
+
+Independent server-owned limits enforce at most three total tool calls, one
+profile mutation, and the configured model-iteration count. No answer is
+accepted before a tool runs. Final model output is restricted to bounded answer
+wording and citation IDs; profile, understood preferences, readiness, evidence
+category, and resolvable citation objects are assembled from capability-tool
+results into a strict backend candidate contract. Universal validation,
+failure normalization, and deterministic fallback remain Step 7 work.
+
+Verification evidence:
+
+- New supervisor graph suite: **7 tests passed**, covering structured facts,
+  general retrieval, combined school/general retrieval, route/tool matching,
+  authoritative argument replacement, mandatory tool use, clarification, and
+  all three execution bounds.
+- Focused existing and new agent contract, graph, tool, integration, and
+  validation suites: **47 tests passed**.
+- Complete backend suite attempted: **stalled after 39 passes** at the known
+  first `TestClient.post` boundary; stopped by the 70-second guard.
+- Backend isolation run excluding the same three known `TestClient` tests:
+  **252 tests passed in 52.675 seconds**.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- Python compilation and `git diff --check`: **passed**.
+
+## Step 7 implementation — 2026-09-06
+
+The full-conversation runner now validates every completed supervisor state
+before accepting its result. It verifies that the context and typed route are
+unchanged, routing confidence is sufficient, every recorded call names a
+registered route-applicable tool, tool-call and `ToolMessage` identities match,
+counts remain within their independent bounds, and no more than one declared
+profile mutation occurred. Non-combined routes reject multiple tool results;
+combined routes require at least two distinct capabilities. Multiple read-only
+results must agree on profile, understood preferences, and readiness, while a
+mutation cannot be mixed with another tool result.
+
+Profile validation rejects newly introduced school IDs outside the
+repository-resolved context and restricts mutating results to the three
+preference-state tools. The validator reconstructs the supervisor candidate
+from recorded typed tool results and requires exact equality for all
+server-owned fields. Generated wording is bounded and extractively checked
+against deterministic answer candidates, grounding facts, and citation
+metadata so unsupported factual terms cannot be introduced.
+
+Citation validation resolves every selected ID exactly against tool-returned
+citations, rejects conflicting duplicate IDs, requires citation coverage for
+each evidence-producing result, and enforces tool, route, and selected-school
+scope. Cross-school, general/school mixed-scope, and model-invented citations
+therefore fail closed.
+
+Graph, model, tool, timeout, routing, argument, output, consistency, citation,
+and execution-limit failures are reduced to the existing fixed non-sensitive
+reason vocabulary. Every failure invokes one caller-supplied legacy controller
+callback under a context-local guard that forces both conversation and
+selected-school agent mode lookups to deterministic. This avoids process-wide
+environment mutation and prevents recursive or duplicate graph entry. Service
+mode dispatch remains Step 8 work.
+
+Verification evidence:
+
+- New conversation validation/fallback suite: **9 tests passed**, covering
+  valid acceptance, malformed output, unknown tools, forged school IDs and
+  facts, cross-school and mixed-scope citations, conflicting results, multiple
+  mutations, invalid arguments, tool/model failures, timeouts, both execution
+  limits, fixed failure reasons, and exactly-once guarded fallback.
+- Focused supervisor, configuration, contract, tool, graph, integration, and
+  validation suites: **58 tests passed**.
+- Complete backend suite attempted: **stalled after 39 passes** at the known
+  first `TestClient.post` boundary; stopped by the 70-second guard.
+- Backend isolation run excluding the same three known `TestClient` tests:
+  **261 tests passed in 52.896 seconds**.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- Python compilation and `git diff --check`: **passed**.
+
+## Step 8 implementation — 2026-09-06
+
+`PreferenceService.handle` is now the single rollout-mode dispatcher after it
+has classified the legacy intent and built one authoritative turn context.
+Deterministic mode calls the extracted legacy handler directly and does not
+construct capability tools or import the full-conversation runner. The legacy
+handler preserves the existing what-if, exclusion, Stage 1 controller,
+selected-school evidence, and decision-state enrichment paths.
+
+Shadow mode computes and serves one deterministic result, then runs the full-
+conversation supervisor only for comparison. Its fallback callback returns a
+deep copy of that already-computed response, so a failed shadow execution does
+not invoke the legacy controller twice. Supervisor setup or execution errors
+cannot alter or fail the served response. All context-bound preference,
+decision, calculation, structured-fact, selected-school evidence, and general-
+knowledge tools are registered only in shadow or agent mode and perform no
+persistence.
+
+Agent mode serves the response only after `run_conversation_supervisor` has
+validated it. Successful agent profiles receive the same bounded decision-state
+enrichment as legacy responses. Validation failures use the runner's exactly-
+once deterministic fallback; failures while constructing the registry also
+return one deterministic result with fixed non-sensitive fallback metadata.
+The existing selected-school graph is context-locally disabled for every
+legacy response used by shadow or agent mode, preventing nested or duplicate
+graph execution. Conversation-memory and answer-feedback writes remain in the
+HTTP endpoint after `PreferenceService.handle` selects the served response and
+therefore still occur exactly once.
+
+Endpoint-level tests invoke the unchanged `/api/preferences` handler contract
+in all three modes and validate every result through the existing
+`PreferenceResponse`. They confirm identical public key shapes and verify that
+memory receives the selected profile and answer feedback records the selected
+response after dispatch.
+
+Verification evidence:
+
+- New conversation mode and endpoint integration suite: **5 tests passed**.
+- Backend isolation run excluding the same three known `TestClient` transport-
+  stall tests: **265 tests passed in 52.555 seconds**.
+- Complete backend suite attempted: **stalled after 39 passes** at the known
+  first `TestClient.post` boundary; stopped by the 70-second guard.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- Python compilation and `git diff --check`: **passed**.
+
+## Step 9 implementation — 2026-09-06
+
+A versioned, ordered evaluation set now covers all 15 legacy `IntentName`
+values plus pending importance, contradiction, relaxation, reset, missing-
+context, and ambiguity transitions. Its factual routing cases explicitly cover
+Singapore subsidy guidance, selected-school food, vacancy, an unavailable
+structured field, school-published evidence, and a combined school/general
+question. Inputs are synthetic and validated by a strict backend-only schema.
+
+The offline evaluator accepts an injected turn runner, compares legacy intent
+selection with agent route and tool choice, and checks exact profile/readiness/
+understood state parity, grounding acceptance, citation validity and scope, and
+bounded response usefulness. Reports contain only reviewed case IDs, booleans,
+aggregate rates, tool names, bounded execution counts, latency, termination,
+validation outcome, and normalized fallback reason. Messages, answers,
+profiles, family values, evidence text, URLs, provider errors, and prompts are
+never included.
+
+Runtime shadow and agent attempts now emit the same privacy-minimised execution
+surface through a strict observation contract. Shadow observations add only
+three comparison booleans for profile, citations, and readiness; agent setup
+failures emit a normalized `validation_error`. Telemetry construction can read
+the served and candidate results only to calculate equality and never
+serializes their content.
+
+The staged evaluator deliberately requires an explicit acknowledgement because
+it uses the configured provider and real authoritative repositories. From the
+repository root, its reserved command is:
+
+```bash
+PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  .venv/bin/python -m SystemCode.src.backend.scripts.evaluate_conversation_supervisor \
+  --staged --output SystemCode/src/backend/output/conversation_agent_evaluation.json
+```
+
+This live staged run was not executed in the automated session and is not a
+rollout decision; that gate belongs to Step 10.
+
+Verification evidence:
+
+- New evaluation and observability coverage: **4 tests passed**.
+- Focused conversation supervisor, validation, mode, evaluation, and
+  observability suites: **25 tests passed**.
+- All legacy `test_*agent*.py` regressions: **38 tests passed**.
+- Backend isolation run excluding the same three known `TestClient` transport-
+  stall tests: **270 tests passed in 53.281 seconds**.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- Python compilation, staged-command help/import validation, and
+  `git diff --check`: **passed**.
+
+## Step 10 compatibility decision — 2026-09-06
+
+The rollout decision is **no-go**. `CONVERSATION_AGENT_MODE` remains
+`deterministic`; agent mode remains an explicit backend opt-in and was not made
+the default.
+
+The compatibility gates produced the following evidence:
+
+- Complete backend suite: **not passing**. With the documented `PYTHONPATH`,
+  the run reached
+  `test_api_startup.ApiStartupTests.test_nearest_chat_uses_postal_code_and_full_grounded_catalogue`
+  and stalled at the known Starlette/HTTPX `TestClient.post` boundary. The
+  80-second guarded run timed out there.
+- Backend isolation run excluding the three previously identified
+  `TestClient.post` tests: **270 tests passed in 52.592 seconds**.
+- Frontend production build: **passed** with Next.js 14.2.31. There are no
+  tracked frontend changes and no frontend agent contract was added.
+- OpenAPI compatibility: **passed**. `/api/preferences` still references
+  `PreferenceRequest` and `PreferenceResponse`; their required fields remain
+  `message`, and `profile`/`understood`/`ready_to_search`/`question`,
+  respectively.
+- Staged evaluation: **incomplete**. The first attempt exposed malformed
+  synthetic pending-contradiction and pending-relaxation fixtures; those were
+  corrected to the controller's server-created profile shapes and the focused
+  evaluation tests passed. The rerun invoked the configured provider but
+  stopped at the grounded closest-school case because the environment lacks
+  `ONEMAP_EMAIL` and `ONEMAP_PASSWORD`. No staged report or aggregate metrics
+  were produced, so the structural, citation, discrepancy, tool-selection,
+  and fallback thresholds are unevaluated and therefore cannot authorize
+  rollout.
+
+No production default was changed. A future rollout review must first resolve
+the `TestClient` transport stall, provide the required staged OneMap
+configuration, rerun the full staged set to completion, and satisfy every
+threshold in the Step 10 definition.
+
 ## Migration checklist
 
 | Step | Status | Owner | Completion date | Files changed | Tests run |
@@ -402,11 +629,11 @@ Verification evidence:
 | 3. Extract preference-state tools | complete | Conversation-state tool owner | 2026-09-06 | `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/agents/__init__.py`, `backend/tests/test_preference_state_tools.py`, `backend/doc/agents.md` | 6 new scoped tests, 17 agent contract/tool tests, 91 dialogue/Stage 1 regressions, and 233 non-TestClient backend tests passed; OpenAPI compatibility and `git diff --check` passed. |
 | 4. Extract decision and calculation tools | complete | Decision-tool owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/repositories/school_repository.py`, `backend/services/conversation_calculations.py`, `backend/services/preference_service.py`, `backend/tests/test_decision_tools.py`, `backend/doc/agents.md` | 7 new scoped tests, 124 agent/decision/policy regressions, and 240 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility and `git diff --check` passed. |
 | 5. Complete the evidence toolset | complete | Evidence-tool owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/tests/test_evidence_tools.py`, `backend/doc/agents.md` | 5 new scoped tests, 31 evidence/agent regressions, and 245 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility, Python compilation, and `git diff --check` passed. |
-| 6. Build the bounded conversation supervisor | pending | Graph and configuration owner | — | — | — |
-| 7. Add result validation and legacy fallback | pending | Validation and safety-test owner | — | — | — |
-| 8. Integrate deterministic, shadow, and agent modes | pending | Service integration owner | — | — | — |
-| 9. Add full-conversation evaluation and observability | pending | Evaluation and observability owner | — | — | — |
-| 10. Run compatibility gates and decide rollout | pending | Architecture and progress owner | — | — | — |
+| 6. Build the bounded conversation supervisor | complete | Graph and configuration owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/contracts.py`, `backend/agents/supervisor.py`, `backend/tests/test_conversation_supervisor.py`, `backend/doc/agents.md` | 7 new supervisor tests, 47 focused agent regressions, and 252 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility, Python compilation, and `git diff --check` passed. |
+| 7. Add result validation and legacy fallback | complete | Validation and safety-test owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/config.py`, `backend/agents/supervisor.py`, `backend/agents/validation.py`, `backend/tests/test_conversation_validation.py`, `backend/doc/agents.md` | 9 new validation/fallback tests, 58 focused agent regressions, and 261 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility, Python compilation, and `git diff --check` passed. |
+| 8. Integrate deterministic, shadow, and agent modes | complete | Service integration owner | 2026-09-06 | `backend/services/preference_service.py`, `backend/tests/test_conversation_modes.py`, `backend/doc/agents.md` | 5 new mode/endpoint tests and 265 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility, Python compilation, and `git diff --check` passed. |
+| 9. Add full-conversation evaluation and observability | complete | Evaluation and observability owner | 2026-09-06 | `backend/agents/evaluation.py`, `backend/agents/observability.py`, `backend/agents/__init__.py`, `backend/services/preference_service.py`, `backend/resources/conversation_agent_evaluation.json`, `backend/scripts/evaluate_conversation_supervisor.py`, `backend/tests/test_conversation_evaluation.py`, `backend/tests/test_conversation_modes.py`, `backend/doc/agents.md`, resource/script guides | 4 new evaluation/observability tests, 25 focused supervisor/mode regressions, 38 legacy agent regressions, and 270 non-TestClient backend tests passed; OpenAPI compatibility, staged command import/help, Python compilation, and `git diff --check` passed. |
+| 10. Run compatibility gates and decide rollout | complete | Architecture and progress owner | 2026-09-06 | `backend/resources/conversation_agent_evaluation.json`, `backend/doc/agents.md` | No-go: frontend build and OpenAPI checks passed; 270 non-TestClient tests passed; complete backend suite timed out at the known TestClient stall; staged evaluation could not complete without OneMap credentials; deterministic remains the default. |
 
 ## Step definitions
 
@@ -603,8 +830,47 @@ Verification evidence:
   two bounded read-only calls rather than a third tool, so school and general
   citations remain independently scoped and unavailable evidence remains
   distinct from a negative fact.
+- 2026-09-06 — Compile the full-conversation supervisor for exactly one
+  authoritative turn context and an explicit context-bound tool registry.
+  Separate typed routing from tool selection, restrict each route to applicable
+  capabilities, replace model-authored context arguments with server-owned
+  values, and require at least one tool result before structured answer
+  composition. Enforce tool-call, mutation, and model-iteration limits in the
+  graph; defer universal result validation and deterministic fallback to Step
+  7 so rollout modes remain unintegrated.
+- 2026-09-06 — Accept a conversation-agent result only after reconstructing it
+  from the exact registered tool-call transcript and enforcing route, count,
+  mutation, profile, grounding, and citation invariants. Normalize every
+  failure to the fixed backend reason vocabulary and invoke one deterministic
+  fallback callback inside a context-local guard that disables both graph entry
+  points. Keep this runner independent of `PreferenceService` mode dispatch
+  until Step 8.
+- 2026-09-06 — Make `PreferenceService.handle` the single rollout dispatcher.
+  Keep deterministic mode lazy, serve one unchanged deterministic result in
+  shadow mode while discarding the agent candidate, and serve agent mode only
+  through the validated runner or its one legacy fallback. Reuse the computed
+  shadow response as the runner fallback and disable the selected-school graph
+  in shadow and agent fallback contexts so one request cannot duplicate graph
+  or controller execution. Keep memory and feedback persistence after served-
+  result selection in the unchanged HTTP endpoint.
+- 2026-09-06 — Evaluate the full-conversation supervisor from one ordered,
+  versioned set of synthetic turns that covers every legacy intent, required
+  state transition, source route, and missing-context condition. Keep raw turn
+  content entirely out of reports and runtime telemetry: expose only reviewed
+  case IDs, booleans, tool names, bounded counts and latency, termination and
+  validation status, and normalized fallback reasons. Require an explicit
+  `--staged` acknowledgement for configured-provider runs and defer all rollout
+  thresholds and the go/no-go decision to Step 10.
+- 2026-09-06 — Record a no-go rollout decision. The frontend build, unchanged
+  OpenAPI boundary, and 270-test backend isolation suite pass, but the complete
+  backend suite still stalls at the deprecated Starlette/HTTPX TestClient
+  boundary and the staged evaluation cannot complete without configured
+  OneMap credentials. Correct the reviewed pending-state fixtures discovered by
+  the staged run, keep `CONVERSATION_AGENT_MODE=deterministic`, and require a
+  new compatibility review after both blocking gates can run to completion.
 
 ## Next step
 
-Step 6 — Build the bounded conversation supervisor. Do not begin Step 7 in the same
-session.
+None — Implementation 2 is closed with a no-go rollout decision. Begin a new
+review only after the TestClient transport and staged OneMap configuration
+blockers are resolved.

@@ -378,6 +378,26 @@ class GeneratedConversationAnswer(AgentContract):
         return value
 
 
+class ConversationSupervisorResult(AgentContract):
+    """Server-assembled candidate produced from capability tool results."""
+
+    route: RoutingDecision
+    profile: dict[str, Any]
+    understood: list[ShortText] = Field(default_factory=list, max_length=30)
+    ready_to_search: bool
+    answer: AnswerText
+    citations: list[PublicCitation] = Field(default_factory=list, max_length=12)
+    evidence_category: Literal[
+        "authoritative_fact", "school_published_claim", "calculated_estimate",
+        "parent_sentiment", "unknown",
+    ] = "unknown"
+
+    @field_validator("profile")
+    @classmethod
+    def assembled_profile_is_bounded(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _validate_bounded_json(value, name="assembled profile")
+
+
 class ConversationExecutionLimits(AgentContract):
     """Server-owned independent bounds for one supervisor turn."""
 

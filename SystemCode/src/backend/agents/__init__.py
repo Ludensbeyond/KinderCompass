@@ -7,6 +7,7 @@ from .contracts import (
     EvidenceSearchToolRequest,
     GeneralKnowledgeEvidence,
     GeneratedEvidenceAnswer,
+    ConversationSupervisorResult,
     PreferenceStateToolRequest,
     RetrievedEvidence,
     SelectedSchoolAgentRequest,
@@ -24,6 +25,7 @@ __all__ = [
     "GeneralKnowledgeEvidence",
     "DecisionToolRequest",
     "GeneratedEvidenceAnswer",
+    "ConversationSupervisorResult",
     "ModelFactoryError",
     "ModelFactoryErrorCode",
     "RetrievedEvidence",
@@ -62,6 +64,18 @@ __all__ = [
     "create_structured_school_facts_tool",
     "get_web_rag_answer_mode",
     "run_selected_school_evidence_graph",
+    "ConversationSupervisorState",
+    "create_conversation_supervisor_graph",
+    "ConversationSupervisorRunResult",
+    "run_conversation_supervisor",
+    "validate_conversation_supervisor_state",
+    "ConversationEvaluationCase",
+    "ConversationEvaluationRun",
+    "ConversationEvaluationSet",
+    "evaluate_conversation_cases",
+    "ConversationObservation",
+    "build_conversation_observation",
+    "emit_conversation_observation",
 ]
 
 
@@ -69,10 +83,51 @@ def __getattr__(name: str):
     """Keep optional LangChain tool dependencies lazy at package import time."""
 
     if name in {
+        "ConversationEvaluationCase", "ConversationEvaluationRun",
+        "ConversationEvaluationSet", "evaluate_conversation_cases",
+    }:
+        from .evaluation import (
+            ConversationEvaluationCase,
+            ConversationEvaluationRun,
+            ConversationEvaluationSet,
+            evaluate_conversation_cases,
+        )
+
+        exports = {
+            "ConversationEvaluationCase": ConversationEvaluationCase,
+            "ConversationEvaluationRun": ConversationEvaluationRun,
+            "ConversationEvaluationSet": ConversationEvaluationSet,
+            "evaluate_conversation_cases": evaluate_conversation_cases,
+        }
+        return exports[name]
+
+    if name in {
+        "ConversationObservation", "build_conversation_observation",
+        "emit_conversation_observation",
+    }:
+        from .observability import (
+            ConversationObservation,
+            build_conversation_observation,
+            emit_conversation_observation,
+        )
+
+        exports = {
+            "ConversationObservation": ConversationObservation,
+            "build_conversation_observation": build_conversation_observation,
+            "emit_conversation_observation": emit_conversation_observation,
+        }
+        return exports[name]
+
+    if name in {
         "SelectedSchoolGraphLimits",
         "SelectedSchoolGraphResult",
         "create_selected_school_evidence_graph",
         "run_selected_school_evidence_graph",
+        "ConversationSupervisorState",
+        "create_conversation_supervisor_graph",
+        "ConversationSupervisorRunResult",
+        "run_conversation_supervisor",
+        "validate_conversation_supervisor_state",
     }:
         from .graph import (
             SelectedSchoolGraphLimits,
@@ -80,12 +135,26 @@ def __getattr__(name: str):
             create_selected_school_evidence_graph,
             run_selected_school_evidence_graph,
         )
+        from .supervisor import (
+            ConversationSupervisorState,
+            create_conversation_supervisor_graph,
+        )
+        from .validation import (
+            ConversationSupervisorRunResult,
+            run_conversation_supervisor,
+            validate_conversation_supervisor_state,
+        )
 
         exports = {
             "SelectedSchoolGraphLimits": SelectedSchoolGraphLimits,
             "SelectedSchoolGraphResult": SelectedSchoolGraphResult,
             "create_selected_school_evidence_graph": create_selected_school_evidence_graph,
             "run_selected_school_evidence_graph": run_selected_school_evidence_graph,
+            "ConversationSupervisorState": ConversationSupervisorState,
+            "create_conversation_supervisor_graph": create_conversation_supervisor_graph,
+            "ConversationSupervisorRunResult": ConversationSupervisorRunResult,
+            "run_conversation_supervisor": run_conversation_supervisor,
+            "validate_conversation_supervisor_state": validate_conversation_supervisor_state,
         }
         return exports[name]
 
