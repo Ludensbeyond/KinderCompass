@@ -287,15 +287,121 @@ Verification evidence:
   `PreferenceRequest` and `PreferenceResponse`, with the same required fields.
 - `git diff --check`: **passed**.
 
+## Step 3 implementation — 2026-09-06
+
+Three typed, explicitly named preference-state tools are now registered for
+updating preferences, resetting preferences, and continuing pending importance,
+contradiction, or constraint-relaxation flows. Their argument contract contains
+no message or profile fields: each tool is bound to the validated
+`ConversationRequestContext`, so model-authored calls cannot replace the newest
+message or authoritative profile state.
+
+Every invocation deep-copies the context profile and delegates to the existing
+deterministic `update_conversation` controller. This preserves extraction,
+canonical schema synchronization, clarification queues, contradiction repair,
+relaxation approval, next-question selection, and mixed-message precedence
+without creating a second set of preference rules. Results are translated to
+the shared `CapabilityToolResult`, include the complete proposed profile and
+deterministic answer candidate, carry no citations, are marked as profile
+mutations, and perform no memory or other persistence writes. The continuation
+tool fails closed when no pending state exists.
+
+Verification evidence:
+
+- New preference-state tool suite: **6 tests passed**.
+- Step-scoped agent contract/tool suites: **17 tests passed**.
+- Existing dialogue-manager and Stage 1 regression suites: **91 tests passed**.
+- Backend isolation run excluding the three known `TestClient` transport-stall
+  tests: **233 tests passed in 54.368 seconds**.
+- OpenAPI preference request/response references: **unchanged**.
+- `git diff --check`: **passed**.
+
+## Step 4 implementation — 2026-09-06
+
+Nine fixed-name, read-only decision and calculation tools now cover closest-
+school lookup, top-ranking explanation, selected-school comparison, trade-offs,
+provenance, recommendation, suitability, fee/eligibility what-if scenarios,
+and Stage 2 exclusion explanations. Each tool is bound to the validated
+`ConversationRequestContext`; its argument contract contains no school,
+family, distance, profile, or policy fields. The tools deep-copy authoritative
+context, reuse the existing conversation controller and extracted calculation
+helpers, return deterministic answer candidates and bounded grounding facts,
+and perform no persistence or preference mutation.
+
+What-if and exclusion calculations were moved into a shared service module so
+the existing deterministic HTTP path and agent tools use exactly the same
+family, evaluation, policy, and missing-context behavior. The saved family and
+request context remain unchanged during hypothetical evaluation.
+
+An allowlisted structured-school-facts operation is now exposed through
+`SchoolRepository`. It supports food, programmes, fees, vacancy, operating
+hours, transport, contact, and location projections for stable IDs already
+resolved into the server context. The tool rejects unknown IDs, arbitrary
+fields, and unsupported operations; no Cypher or query language crosses the
+tool boundary. Catalogue results include source/version provenance, explicit
+availability, and current/stale/unknown freshness. Vacancy responses include
+the available monthly fields only when the catalogue marks vacancy data as
+present.
+
+Verification evidence:
+
+- New decision, calculation, and structured-fact tool suite: **7 tests passed**.
+- Step-scoped agent, context, dialogue, Stage 1, and Stage 2 regressions:
+  **124 tests passed**.
+- Complete backend suite attempted: **stalled after 39 passes** at the known
+  first `TestClient.post` boundary; stopped by the 70-second guard.
+- Backend isolation run excluding the same three baseline `TestClient` tests:
+  **240 tests passed in 53.187 seconds**.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- `git diff --check`: **passed**.
+
+## Step 5 implementation — 2026-09-06
+
+Two context-bound, read-only evidence tools now expose selected-school webpage
+retrieval and general early-childhood retrieval to the future conversation
+supervisor. Both accept only a bounded question. Selected-school identity and
+both indexes remain server-owned in `ConversationRequestContext`; the school
+tool requires exactly one authoritative selection and reuses the existing
+school-isolated `search_selected_school_evidence` implementation.
+
+General retrieval now has a typed `GeneralKnowledgeRetriever` interface and a
+`CuratedGeneralKnowledgeRetriever` adapter for the existing reviewed JSON
+index. Its result contract bounds passage text and requires a matching,
+general-scoped public citation with authority metadata. A later vector adapter
+can implement the same interface without changing the tool or HTTP contracts.
+
+Both tools return `CapabilityToolResult` with deterministic answer candidates,
+grounding passages, and resolvable citations. Missing selection, missing index,
+and no-match cases produce explicit unavailable guidance with no citations and
+never turn missing evidence into a negative claim. Combined questions are
+supported by calling both tools: school citations retain the authoritative
+selected school ID, general citations forbid school IDs, and neither tool can
+mutate the profile or persist data. The original selected-school graph tool
+contract remains intact.
+
+Verification evidence:
+
+- New conversation evidence-tool suite: **5 tests passed**.
+- Focused evidence, contract, retrieval, graph, and validation suites:
+  **31 tests passed**.
+- Complete backend suite attempted: **stalled after 39 passes** at the known
+  first `TestClient.post` boundary; stopped by the 70-second guard.
+- Backend isolation run excluding the same three known `TestClient` transport-
+  stall tests: **245 tests passed**.
+- OpenAPI preference request/response references and required fields:
+  **unchanged**.
+- Python compilation and `git diff --check`: **passed**.
+
 ## Migration checklist
 
 | Step | Status | Owner | Completion date | Files changed | Tests run |
 |---|---|---|---|---|---|
 | 1. Record the full-conversation baseline | complete | Architecture and progress owner | 2026-08-31 | `backend/doc/agents.md` | Full backend suite attempted: stalled after 33 passes in TestClient; 219 non-TestClient tests passed; frontend `npm run build` passed; OpenAPI snapshot generated. |
 | 2. Define supervisor configuration, contracts, and authoritative context | complete | Graph and configuration owner | 2026-08-31 | `backend/agents/config.py`, `backend/agents/contracts.py`, `backend/agents/model_factory.py`, `backend/services/preference_service.py`, four scoped test modules, `backend/doc/agents.md` | 22 scoped tests and 227 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 38 passes; OpenAPI compatibility and `git diff --check` passed. |
-| 3. Extract preference-state tools | pending | Conversation-state tool owner | — | — | — |
-| 4. Extract decision and calculation tools | pending | Decision-tool owner | — | — | — |
-| 5. Complete the evidence toolset | pending | Evidence-tool owner | — | — | — |
+| 3. Extract preference-state tools | complete | Conversation-state tool owner | 2026-09-06 | `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/agents/__init__.py`, `backend/tests/test_preference_state_tools.py`, `backend/doc/agents.md` | 6 new scoped tests, 17 agent contract/tool tests, 91 dialogue/Stage 1 regressions, and 233 non-TestClient backend tests passed; OpenAPI compatibility and `git diff --check` passed. |
+| 4. Extract decision and calculation tools | complete | Decision-tool owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/repositories/school_repository.py`, `backend/services/conversation_calculations.py`, `backend/services/preference_service.py`, `backend/tests/test_decision_tools.py`, `backend/doc/agents.md` | 7 new scoped tests, 124 agent/decision/policy regressions, and 240 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility and `git diff --check` passed. |
+| 5. Complete the evidence toolset | complete | Evidence-tool owner | 2026-09-06 | `backend/agents/__init__.py`, `backend/agents/contracts.py`, `backend/agents/tools.py`, `backend/tests/test_evidence_tools.py`, `backend/doc/agents.md` | 5 new scoped tests, 31 evidence/agent regressions, and 245 non-TestClient backend tests passed; full suite reproduced the known TestClient stall after 39 passes; OpenAPI compatibility, Python compilation, and `git diff --check` passed. |
 | 6. Build the bounded conversation supervisor | pending | Graph and configuration owner | — | — | — |
 | 7. Add result validation and legacy fallback | pending | Validation and safety-test owner | — | — | — |
 | 8. Integrate deterministic, shadow, and agent modes | pending | Service integration owner | — | — | — |
@@ -478,8 +584,27 @@ Verification evidence:
   supervisors cannot obtain school, family, distance, or retrieval facts from
   model-authored arguments. Preserve the HTTP models unchanged. The known
   TestClient transport stall remains open; all 227 unaffected tests pass.
+- 2026-09-06 — Bind preference-state tools to the server-built turn context and
+  expose no model-authored message or profile arguments. Reuse the deterministic
+  conversation controller on a fresh profile copy for every invocation, mark
+  all three tools as mutations for the future one-mutation guard, and reject a
+  pending-flow call when the authoritative profile has no pending state.
+- 2026-09-06 — Bind all decision and calculation tools to authoritative turn
+  context and reuse the existing deterministic controller and shared scenario
+  helpers. Treat them as read-only capabilities even when their returned
+  response carries deterministic conversational metadata. Restrict structured
+  school queries to allowlisted repository projections and context-approved
+  stable IDs, with explicit catalogue provenance, availability, and freshness;
+  do not expose Cypher or arbitrary field selection.
+- 2026-09-06 — Keep the original selected-school retrieval contract for its
+  existing graph and wrap it with a context-bound conversation capability that
+  supplies the authoritative school scope. Define general retrieval behind a
+  typed interface, initially adapted to the curated index. Combined evidence is
+  two bounded read-only calls rather than a third tool, so school and general
+  citations remain independently scoped and unavailable evidence remains
+  distinct from a negative fact.
 
 ## Next step
 
-Step 3 — Extract preference-state tools. Do not begin Step 4 in the same
+Step 6 — Build the bounded conversation supervisor. Do not begin Step 7 in the same
 session.

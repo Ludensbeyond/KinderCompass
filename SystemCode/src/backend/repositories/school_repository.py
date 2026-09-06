@@ -1,11 +1,36 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Any, Literal
 
 from pydantic import ValidationError
 
 from SystemCode.src.backend.domain.catalogue import SchoolRecord
+
+
+StructuredSchoolFactOperation = Literal[
+    "food", "programmes", "fees", "vacancy", "operating_hours",
+    "transport", "contact", "location",
+]
+
+STRUCTURED_SCHOOL_FACT_FIELDS: dict[StructuredSchoolFactOperation, tuple[str, ...]] = {
+    "food": ("food_offered",),
+    "programmes": (
+        "care_levels", "services_menu", "pedagogy", "second_languages_offered",
+        "service_model",
+    ),
+    "fees": ("base_fee", "services_menu", "has_fee_data"),
+    "vacancy": ("has_vacancy_data",),
+    "operating_hours": ("weekday_full_day", "extended_operating_hours", "saturday"),
+    "transport": ("provision_of_transport",),
+    "contact": (
+        "centre_contact_no", "centre_email_address", "contactno_lifesg",
+        "emailaddress_lifesg", "centre_website", "website_lifesg",
+    ),
+    "location": ("centre_address", "postal_code", "town", "geometry"),
+}
 
 
 class SchoolNotFoundError(LookupError):
@@ -84,6 +109,60 @@ class SchoolRepository:
     def all(self) -> list[SchoolRecord]:
         self._refresh()
         return [item.model_copy(deep=True) for item in self._by_id.values()]
+
+    def get_structured_facts(
+        self, school_ids: list[str], operation: StructuredSchoolFactOperation,
+        *, as_of: date | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return one allowlisted fact projection for authoritative school IDs.
+
+        The operation, rather than caller-supplied field names or query text,
+        controls the projection. This keeps Cypher and unrestricted catalogue
+        access outside the conversation-tool boundary.
+        """
+
+        if operation not in STRUCTURED_SCHOOL_FACT_FIELDS:
+            raise ValueError(f"unsupported structured school fact operation: {operation}")
+        records = self.get_many(school_ids)
+        version = self.catalogue_version
+        today = as_of or date.today()
+        results: list[dict[str, Any]] = []
+        for record in records:
+            source = record.model_dump(mode="json")
+            fields = list(STRUCTURED_SCHOOL_FACT_FIELDS[operation])
+            if operation == "vacancy":
+                fields.extend(sorted(key for key in source if "_vacancy_" in key))
+            facts = {key: source.get(key) for key in fields if key in source}
+            last_updated = source.get("last_updated")
+            freshness = "unknown"
+            if last_updated:
+                try:
+                    updated = datetime.fromisoformat(str(last_updated)).date()
+                    freshness = "stale" if updated < today - timedelta(days=180) else "current"
+                except ValueError:
+                    freshness = "unknown"
+            meaningful = [
+                value for key, value in facts.items()
+                if key not in {"has_fee_data", "has_vacancy_data"}
+                and value not in (None, "", [], {})
+            ]
+            available = bool(meaningful)
+            if operation == "vacancy":
+                available = bool(source.get("has_vacancy_data") and meaningful)
+            elif operation == "fees" and source.get("has_fee_data") is False:
+                available = False
+            results.append({
+                "school_id": record.school_id,
+                "name": record.name,
+                "operation": operation,
+                "facts": facts,
+                "available": available,
+                "source": "generated_school_catalogue",
+                "catalogue_version": version,
+                "last_updated": last_updated,
+                "freshness": freshness,
+            })
+        return results
 
     @property
     def catalogue_version(self) -> str:

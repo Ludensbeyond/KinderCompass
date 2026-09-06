@@ -246,6 +246,46 @@ class ConversationRequestContext(AgentContract):
         return self
 
 
+class PreferenceStateToolRequest(AgentContract):
+    """Arguments for tools bound to one server-built conversation turn.
+
+    Preference state and the newest message are deliberately absent: the tool
+    factory closes over the validated request context so a model cannot replace
+    either value in a tool call.
+    """
+
+    use_authoritative_context: Literal[True] = True
+
+
+class DecisionToolRequest(AgentContract):
+    """Arguments for a fixed capability bound to authoritative turn context."""
+
+    use_authoritative_context: Literal[True] = True
+
+
+class StructuredSchoolFactsToolRequest(AgentContract):
+    """Allowlisted fact operation over IDs already resolved in server context."""
+
+    operation: Literal[
+        "food", "programmes", "fees", "vacancy", "operating_hours",
+        "transport", "contact", "location",
+    ]
+    school_ids: list[Identifier] = Field(default_factory=list, max_length=5)
+
+    @field_validator("school_ids")
+    @classmethod
+    def school_ids_are_unique(cls, value: list[str]) -> list[str]:
+        if len(set(value)) != len(value):
+            raise ValueError("school_ids must be unique")
+        return value
+
+
+class EvidenceSearchToolRequest(AgentContract):
+    """A bounded user question for a server-scoped evidence search."""
+
+    question: QuestionText
+
+
 class RoutingDecision(AgentContract):
     """Typed intent and factual-source routing selected before tool execution."""
 
@@ -283,6 +323,22 @@ class PublicCitation(AgentContract):
             raise ValueError("school-scoped citations require a school_id")
         if self.evidence_scope in {"general", "policy"} and self.school_id is not None:
             raise ValueError("general and policy citations cannot identify a school")
+        return self
+
+
+class GeneralKnowledgeEvidence(AgentContract):
+    """One typed passage returned by a replaceable general retrieval adapter."""
+
+    chunk_id: Identifier
+    text: BoundedText
+    citation: PublicCitation
+
+    @model_validator(mode="after")
+    def citation_matches_passage(self) -> "GeneralKnowledgeEvidence":
+        if self.citation.evidence_scope != "general":
+            raise ValueError("general evidence requires a general-scoped citation")
+        if self.citation.citation_id != self.chunk_id:
+            raise ValueError("citation_id must match the general evidence chunk_id")
         return self
 
 
