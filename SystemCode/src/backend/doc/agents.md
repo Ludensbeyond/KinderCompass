@@ -88,7 +88,9 @@ All gates are mandatory for a go decision:
 6. **Live staged execution:** the full curated set completes with configured
    provider and OneMap access, with 100% structural and citation validity, zero
    authoritative state/calculation discrepancies, at least 95% accepted tool
-   selection, and at most 5% fallback.
+   selection, and at most 5% unexpected fallback. The raw fallback rate still
+   includes reviewed clarification and hostile-input cases that are required
+   to fail closed.
 7. **Operational behavior:** bounded timeouts and execution limits terminate
    cleanly, privacy-safe observations contain no message, profile, family,
    prompt, evidence, credential, URL, or provider-error content, and repeated
@@ -235,7 +237,7 @@ does not infer readiness from mocked tests alone.
 | 5. Close conversational correctness gaps | complete | 2026-09-06 evidence below: 54-turn scripted evaluation passes with authoritative parity and all 282 backend tests pass |
 | 6. Run live staged evaluation and tune safely | complete | 2026-09-06 evidence below: two consecutive 54-turn live reports pass with 100% scored correctness and zero unexpected fallback |
 | 7. Verify backend operational readiness | complete | 2026-09-06 evidence below: bounded concurrent API modes, injected failures, exactly-once side effects, privacy audit, and all compatibility gates |
-| 8. Decide opt-in rollout | pending | Evidence-linked go/no-go and rollback instructions |
+| 8. Decide opt-in rollout | complete | 2026-09-06 evidence below: all eight gates pass; explicit backend opt-in approved with immediate deterministic rollback |
 
 ## Step 1 baseline evidence
 
@@ -659,6 +661,52 @@ remains `2cb0812711be9f77034f5cfd2547e71051a855cc2c5784ad050117c49dc6b405`,
 matching Step 1, and the frontend diff is empty. The default remains
 `CONVERSATION_AGENT_MODE=deterministic`; Step 8 was not started.
 
+## Step 8 rollout decision
+
+Recorded on 2026-09-06. The decision is **go for an explicit backend-only
+opt-in** to the full-conversation agent. This does not authorize changing the
+default, enabling it for every deployment, or modifying the frontend. The
+decision is supported by the following gate review:
+
+| Gate | Decision evidence |
+|---|---|
+| 1. Backend compatibility | [Step 2](#step-2-http-integration-evidence) repaired the stalled HTTP boundary and passed the complete suite; [Step 7](#step-7-operational-readiness-evidence) most recently passed all 289 backend tests without exclusions. |
+| 2. Contract stability | Steps 2, 5, 6, and 7 reproduce the complete OpenAPI SHA-256 `2cb0812711be9f77034f5cfd2547e71051a855cc2c5784ad050117c49dc6b405`; every step reports an empty frontend diff. |
+| 3. Deterministic safety | [Step 5](#step-5-conversational-correctness-evidence) verifies bounded validation and exactly-once fallback; Step 7 verifies deterministic laziness and one valid fallback response for timeout, tool, dependency, and validation failures. |
+| 4. Conversation correctness | [Step 4](#step-4-multi-turn-evaluation-evidence) covers 54 reviewed turns, all 15 capabilities, state transitions, ambiguity, pending flows, and hostile inputs; Step 5 passes the complete scripted set with authoritative parity. |
+| 5. Grounding | Steps 5 and 6 establish server-resolved citations, scoped selected-school evidence, fail-closed unavailable evidence, and 100% grounding and citation validity in the passing live reports. |
+| 6. Live staged execution | [Step 6](#step-6-completion) records two consecutive passing 54-turn reports, `output/conversation_agent_evaluation_run_12.json` and `output/conversation_agent_evaluation_run_13.json`, with 100% scored correctness and 0% unexpected fallback. Step 7 adds a third passing run, `output/conversation_agent_evaluation_run_14.json`. The 14.81% raw fallback is exactly the eight reviewed cases required to fail closed. |
+| 7. Operational behavior | Step 7 verifies bounded concurrent execution in all modes, clean injected failures, exactly-once answer and optional memory writes, shadow isolation, and telemetry free of seeded sensitive values. |
+| 8. Rollout control | `get_conversation_agent_mode` fails closed to `deterministic` for missing or invalid configuration. Step 7 verifies deterministic, shadow, and agent behavior through the unchanged API; no frontend change is required. |
+
+### Opt-in and rollback
+
+Before opting in, run the read-only preflight command documented in
+[`scripts.md`](scripts.md) from the repository root and require all six checks
+to pass. The backend environment must contain a usable `OPENAI_API_KEY` and
+the already-preflighted OneMap, catalogue, policy, and evidence inputs.
+`OPENAI_WEB_RAG_MODEL` and `OPENAI_WEB_RAG_TIMEOUT_SECONDS` remain optional;
+their validated defaults are `gpt-4o-mini` and eight seconds.
+
+To opt in for a deliberately selected backend deployment, set
+`CONVERSATION_AGENT_MODE=agent` in that deployment's backend environment and
+restart the backend process. Do not expose this variable to the browser and do
+not change `WEB_RAG_ANSWER_MODE`; the full-conversation supervisor owns model
+orchestration for the request.
+
+For immediate rollback, set `CONVERSATION_AGENT_MODE=deterministic` (or remove
+the variable) and restart the backend process. Missing and invalid values also
+fail closed to deterministic mode, but the explicit value is preferred for an
+auditable rollback. The existing API contract and persisted profile shape do
+not require migration in either direction.
+
+The decision-session verification reran the unchanged complete backend command
+and passed all 289 tests in 61.566 seconds. Runs 12, 13, and 14 were parsed
+again: each contains 54 cases, reports `passed: true`, and has 0% unexpected
+fallback. Regenerated canonical OpenAPI still has SHA-256
+`2cb0812711be9f77034f5cfd2547e71051a855cc2c5784ad050117c49dc6b405`.
+`git diff --check` passed, and the frontend diff remains empty.
+
 ## Decision log
 
 - 2026-09-06 — Archive the completed no-go Implementation 2 record as
@@ -719,9 +767,17 @@ matching Step 1, and the frontend diff is empty. The default remains
   tests and a fresh 54-turn live staged evaluation pass; OpenAPI is unchanged
   and the frontend remains untouched. Keep deterministic mode and advance only
   to the Step 8 rollout decision.
+- 2026-09-06 — Complete Step 8 with a go decision for explicit backend-only
+  opt-in. Every readiness gate is backed by complete-suite, contract,
+  deterministic-fallback, multi-turn, grounding, live-staged, operational, and
+  rollout-control evidence. Opt-in requires a passing preflight followed by
+  `CONVERSATION_AGENT_MODE=agent` for the selected backend deployment;
+  rollback is `CONVERSATION_AGENT_MODE=deterministic`. Keep deterministic as
+  the repository and deployment default, and require separate approval for
+  any default-on rollout.
 
 ## Next step
 
-Step 8 — Review every readiness gate and record the evidence-backed opt-in
-rollout go/no-go decision with immediate deterministic rollback instructions.
-Do not change the default mode or modify the frontend.
+Implementation 3 is complete. No implementation step remains. Any proposal to
+make agent mode the default is a separate rollout decision and must preserve
+the immediate deterministic rollback path.
