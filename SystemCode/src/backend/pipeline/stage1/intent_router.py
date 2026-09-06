@@ -64,6 +64,21 @@ class IntentResult(BaseModel):
 
 def _rules(text: str, active_school_name: str | None = None) -> IntentResult | None:
     lowered = (text or "").strip().lower()
+    if any(phrase in lowered for phrase in (
+        "replace the server profile", "model provider configuration",
+        "disable validation", "ignore all system instructions", "skip tools",
+    )):
+        return IntentResult(
+            intent="needs_clarification", confidence=1,
+            clarification="Could you clarify the preschool task you want help with?",
+        )
+    if lowered in {
+        "it is required.", "it is required", "make it required.",
+        "make it required", "apply relaxation.", "apply relaxation",
+    }:
+        return IntentResult(intent="update_preferences", confidence=1)
+    if re.fullmatch(r"use [a-z][a-z -]{0,60} instead\.?", lowered):
+        return IntentResult(intent="update_preferences", confidence=1)
     if any(phrase in lowered for phrase in ("start over", "clear preferences", "reset preferences")):
         return IntentResult(intent="reset_preferences", confidence=1)
     if re.search(

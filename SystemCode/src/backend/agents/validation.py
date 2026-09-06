@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import time
 from copy import deepcopy
 from dataclasses import dataclass
@@ -29,6 +28,7 @@ from .supervisor import (
     _allowed_tool_names,
     _assemble_result,
     create_conversation_supervisor_graph,
+    grounded_answer_is_valid,
 )
 from .tools import (
     GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME,
@@ -53,21 +53,6 @@ class ConversationSupervisorRunResult:
     response: dict[str, Any]
     metadata: ConversationExecutionMetadata
 
-
-_NEUTRAL_WORDS = frozenset({
-    "a", "about", "according", "also", "an", "and", "are", "as", "at",
-    "available", "based", "be", "because", "been", "but", "by", "can",
-    "compared", "could", "current", "data", "describes", "did", "do", "does",
-    "each", "estimated", "for", "from", "guidance", "has", "have", "here",
-    "how", "i", "if", "in", "indicates", "information", "is", "it", "its",
-    "may", "means", "more", "no", "not", "of", "offers", "official", "on",
-    "one", "only", "or", "preschool", "preschools", "provides", "result",
-    "results", "says", "school", "schools", "shows", "so", "than", "that",
-    "the", "their", "them", "there", "these", "they", "this", "those", "to",
-    "unavailable", "use", "uses", "was", "webpage", "were", "what", "when",
-    "which", "while", "who", "why", "will", "with", "you", "your",
-    "s",
-})
 
 _FALLBACK_REASONS = frozenset({
     "invalid_routing", "unknown_tool", "invalid_arguments", "missing_context",
@@ -193,23 +178,30 @@ def _validate_grounded_wording(
     answer: GeneratedConversationAnswer,
     tool_results: list[CapabilityToolResult],
 ) -> None:
-    source = " ".join(
-        [
-            item
-            for result in tool_results
-            for item in [result.answer_candidate, *result.grounding_facts]
-        ]
-        + [
-            f"{citation.title} {citation.authority or ''}"
-            for result in tool_results
-            for citation in result.citations
-        ]
-    )
-    tokens = set(re.findall(r"[a-z0-9]+", source.casefold()))
-    answer_tokens = set(re.findall(r"[a-z0-9]+", answer.answer.casefold()))
-    unsupported = answer_tokens - tokens - _NEUTRAL_WORDS
-    if unsupported or not (answer_tokens - _NEUTRAL_WORDS):
+    if not grounded_answer_is_valid(answer, tool_results):
         _fail("validation_error")
+
+
+def _validate_no_user_control_attempt(context: ConversationRequestContext) -> None:
+    """Reject explicit attempts to replace server-owned tool or citation inputs."""
+
+    lowered = context.message.casefold()
+    unsafe_markers = (
+        "call the evidence tool with school id",
+        "invent a citation",
+        "arbitrary field and an unselected school",
+    )
+    if any(marker in lowered for marker in unsafe_markers):
+        _fail("validation_error")
+    ambiguous_reference = any(
+        marker in lowered for marker in ("this school", "this preschool")
+    )
+    if (
+        ambiguous_reference
+        and len(context.selected_school_ids) > 1
+        and not (context.profile.get("active_school") or {}).get("school_id")
+    ):
+        _fail("missing_context")
 
 
 def validate_conversation_supervisor_state(
@@ -289,6 +281,7 @@ def validate_conversation_supervisor_state(
         _fail("conflicting_results")
 
     _validate_profile_invariants(context, tool_results)
+    _validate_no_user_control_attempt(context)
     final_messages = [
         message for message in state.get("messages", [])
         if isinstance(message, AIMessage) and not message.tool_calls
@@ -320,6 +313,9 @@ def _public_result(result: ConversationSupervisorResult) -> dict[str, Any]:
     return {
         "profile": deepcopy(result.profile),
         "understood": list(result.understood),
+        # This internal field is consumed by decision-state enrichment and is
+        # filtered by the unchanged public PreferenceResponse contract.
+        "status": result.answer_status,
         "ready_to_search": result.ready_to_search,
         "question": result.answer,
         "citations": citations,

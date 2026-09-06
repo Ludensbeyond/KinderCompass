@@ -146,6 +146,21 @@ class ConversationEvidenceToolTests(unittest.TestCase):
         self.assertTrue(all(item.school_id == SCHOOL_A for item in school.citations))
         self.assertTrue(all(item.school_id is None for item in general.citations))
 
+    def test_combined_conversational_wording_does_not_dilute_school_retrieval(self):
+        tools = by_name(create_evidence_tools(context()))
+        question = (
+            "What does this selected school say about play-based learning, "
+            "and what does that mean generally?"
+        )
+
+        school = tools[SELECTED_SCHOOL_EVIDENCE_TOOL_NAME].invoke({
+            "question": question,
+        })
+
+        self.assertEqual(len(school.citations), 1)
+        self.assertEqual(school.citations[0].school_id, SCHOOL_A)
+        self.assertIn("play-based", " ".join(school.grounding_facts).lower())
+
     def test_missing_context_and_no_match_are_unavailable_not_negative(self):
         tools = by_name(create_evidence_tools(context(
             selected=False, school_index=None, general_index=None,

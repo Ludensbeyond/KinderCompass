@@ -185,15 +185,16 @@ class ConversationValidationTests(unittest.TestCase):
         self.assertEqual(outcome.response["answer_method"], "agent_grounded")
         self.assertEqual(outcome.response["citations"][0]["chunk_id"], GENERAL_CHUNK)
 
-    def test_malformed_output_and_unknown_tool_fall_back_once(self):
+    def test_malformed_composition_uses_grounded_candidate_and_unknown_tool_falls_back(self):
         malformed = run_conversation_supervisor(
             self.context,
             self.tools,
             deterministic_result,
-            model=general_model(AIMessage(content="not json")),
+            model=general_model(AIMessage(content=[])),
         )
-        self.assertEqual(malformed.metadata.fallback_reason, "malformed_output")
-        self.assertEqual(malformed.response["question"], "Deterministic answer.")
+        self.assertTrue(malformed.metadata.validation_succeeded)
+        self.assertIsNone(malformed.metadata.fallback_reason)
+        self.assertIn("hands-on experiences", malformed.response["question"])
 
         unknown = deepcopy(self.valid_state())
         call_message = next(

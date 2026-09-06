@@ -18,6 +18,7 @@ from SystemCode.src.backend.agents.contracts import (
     ConversationRequestContext,
     ConversationSupervisorResult,
     EvidenceIndexContext,
+    GeneratedConversationAnswer,
 )
 
 
@@ -31,9 +32,13 @@ class SequencedModel:
         self.responses = list(responses)
         self.invocations = []
         self.bound_tools = []
+        self.tool_binding_options = {}
+        self.tool_bindings = []
 
-    def bind_tools(self, tools):
+    def bind_tools(self, tools, **options):
         self.bound_tools = list(tools)
+        self.tool_binding_options = options
+        self.tool_bindings.append((list(tools), options))
         return self
 
     def invoke(self, messages):
@@ -118,16 +123,53 @@ def context(message="What curriculum does this school use, and what does play-ba
 
 
 class ConversationSupervisorTests(unittest.TestCase):
+    def test_typed_answer_tool_output_is_normalized_before_validation(self):
+        turn = context("What does play-based learning mean?")
+        model = SequencedModel([
+            route("general_knowledge", "ask_general_knowledge"),
+            tool_calls((GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME, {})),
+            tool_calls((GeneratedConversationAnswer.__name__, {
+                "answer": "Play-based learning uses active, hands-on experiences.",
+                "citation_ids": [GENERAL_CHUNK],
+            })),
+        ])
+
+        result = create_conversation_supervisor_graph(
+            turn, create_evidence_tools(turn), model=model,
+        ).invoke({})
+
+        self.assertEqual(result["termination_reason"], "completed")
+        self.assertEqual(result["tool_calls"], 1)
+        self.assertEqual(result["answer"].citation_ids, [GENERAL_CHUNK])
+
+    def test_ungrounded_typed_wording_uses_the_authoritative_tool_candidate(self):
+        turn = context("What does play-based learning mean?")
+        model = SequencedModel([
+            route("general_knowledge", "ask_general_knowledge"),
+            tool_calls((GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME, {})),
+            tool_calls(("generated_conversation_answer", {
+                "answer": "It includes an Olympic swimming pool.",
+                "citation_ids": ["CENTRE:FORGED"],
+            })),
+        ])
+
+        result = create_conversation_supervisor_graph(
+            turn, create_evidence_tools(turn), model=model,
+        ).invoke({})
+
+        self.assertNotIn("Olympic", result["answer"].answer)
+        self.assertEqual(result["answer"].citation_ids, [GENERAL_CHUNK])
+
     def test_structured_school_route_executes_the_allowlisted_fact_operation(self):
         turn = context("What food does this preschool offer?")
         tool = create_structured_school_facts_tool(turn, StructuredRepository())
         model = SequencedModel([
             route("structured_kindercompass", "ask_school_food"),
             tool_calls((tool.name, {"operation": "food"})),
-            AIMessage(content=json.dumps({
+            AIMessage(content="```json\n" + json.dumps({
                 "answer": "Alpha Preschool offers Halal food.",
                 "citation_ids": [],
-            })),
+            }) + "\n```"),
         ])
 
         result = create_conversation_supervisor_graph(
@@ -137,6 +179,8 @@ class ConversationSupervisorTests(unittest.TestCase):
         self.assertEqual(result["termination_reason"], "completed")
         self.assertIn("Halal food", result["tool_results"][0].answer_candidate)
         self.assertEqual(result["result"].evidence_category, "authoritative_fact")
+        self.assertIn('"confidence":0.95', model.invocations[0][0].content)
+        self.assertEqual(model.tool_bindings[0][1], {"tool_choice": "required"})
 
     def test_combined_route_calls_two_tools_and_assembles_authoritative_result(self):
         turn = context()

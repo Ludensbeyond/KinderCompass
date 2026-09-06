@@ -217,6 +217,8 @@ class ConversationRequestContext(AgentContract):
 
     message: QuestionText
     profile: dict[str, Any] = Field(default_factory=dict)
+    deterministic_intent: Identifier | None = None
+    deterministic_intent_method: ShortText | None = None
     family: ConversationFamilyContext | None = None
     home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
     selected_school_ids: list[Identifier] = Field(default_factory=list, max_length=50)
@@ -357,6 +359,7 @@ class CapabilityToolResult(AgentContract):
     answer_candidate: AnswerText
     grounding_facts: list[BoundedText] = Field(default_factory=list, max_length=30)
     citations: list[PublicCitation] = Field(default_factory=list, max_length=12)
+    answer_status: ShortText = "unknown"
     evidence_category: Literal[
         "authoritative_fact", "school_published_claim", "calculated_estimate",
         "parent_sentiment", "unknown",
@@ -391,6 +394,7 @@ class ConversationSupervisorResult(AgentContract):
     ready_to_search: bool
     answer: AnswerText
     citations: list[PublicCitation] = Field(default_factory=list, max_length=12)
+    answer_status: ShortText = "unknown"
     evidence_category: Literal[
         "authoritative_fact", "school_published_claim", "calculated_estimate",
         "parent_sentiment", "unknown",

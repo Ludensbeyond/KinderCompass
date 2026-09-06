@@ -2,12 +2,34 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Callable, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .contracts import ConversationExecutionMetadata
+
+
+class ExpectedProfileDelta(BaseModel):
+    """Reviewed authoritative profile effects for one turn.
+
+    Paths are dot-separated object keys. ``set`` assertions are intentionally
+    partial so volatile explanatory metadata does not enter the fixture, while
+    ``removed`` makes reset and pending-flow cleanup explicit.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    set: dict[str, Any] = Field(default_factory=dict, max_length=20)
+    removed: list[str] = Field(default_factory=list, max_length=20)
+
+    @field_validator("removed")
+    @classmethod
+    def removed_paths_are_unique(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("removed profile paths must be unique")
+        return value
 
 
 class ConversationEvaluationCase(BaseModel):
@@ -17,6 +39,9 @@ class ConversationEvaluationCase(BaseModel):
 
     case_id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,79}$")
     sequence: int = Field(ge=1, le=500)
+    conversation_id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]{0,79}$")
+    turn: int = Field(ge=1, le=50)
+    carry_profile: bool = False
     message: str = Field(min_length=2, max_length=500)
     profile: dict[str, Any] = Field(default_factory=dict)
     selected_school_ids: list[str] = Field(default_factory=list, max_length=20)
@@ -36,6 +61,17 @@ class ConversationEvaluationCase(BaseModel):
     expected_answer_terms: list[str] = Field(default_factory=list, max_length=8)
     maximum_answer_words: int = Field(default=120, ge=1, le=300)
     expect_agent_acceptance: bool = True
+    acceptable_fallback: bool = False
+    expected_profile_mutations: int = Field(default=0, ge=0, le=1)
+    expected_profile_delta: ExpectedProfileDelta = Field(
+        default_factory=ExpectedProfileDelta
+    )
+    expected_ready_to_search: bool = False
+    expected_active_school_id: str | None = None
+    adversarial_kind: Literal[
+        "none", "school_id", "profile", "citation", "tool_arguments",
+        "instructions", "provider_configuration",
+    ] = "none"
 
     @field_validator("expected_tool_names", "expected_citation_scopes")
     @classmethod
@@ -48,7 +84,7 @@ class ConversationEvaluationCase(BaseModel):
 class ConversationEvaluationSet(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[2]
     cases: list[ConversationEvaluationCase] = Field(min_length=1, max_length=500)
 
     @field_validator("cases")
@@ -62,6 +98,29 @@ class ConversationEvaluationSet(BaseModel):
             raise ValueError("evaluation case IDs must be unique")
         return value
 
+    @model_validator(mode="after")
+    def conversations_are_contiguous(self) -> "ConversationEvaluationSet":
+        expected_sequence = list(range(1, len(self.cases) + 1))
+        if [case.sequence for case in self.cases] != expected_sequence:
+            raise ValueError("evaluation sequences must be contiguous from one")
+        seen_closed: set[str] = set()
+        active_id: str | None = None
+        active_turn = 0
+        for case in self.cases:
+            if case.conversation_id != active_id:
+                if case.conversation_id in seen_closed:
+                    raise ValueError("conversation turns must be contiguous")
+                if active_id is not None:
+                    seen_closed.add(active_id)
+                active_id = case.conversation_id
+                active_turn = 0
+            active_turn += 1
+            if case.turn != active_turn:
+                raise ValueError("conversation turns must be contiguous from one")
+            if case.carry_profile != (case.turn > 1):
+                raise ValueError("only continuation turns may carry a returned profile")
+        return self
+
 
 @dataclass(frozen=True)
 class ConversationEvaluationRun:
@@ -74,6 +133,22 @@ class ConversationEvaluationRun:
 
 
 EvaluationRunner = Callable[[ConversationEvaluationCase], ConversationEvaluationRun]
+
+
+_FAILURE_CHECKS = {
+    "routing": ("deterministic_intent_correct", "agent_route_correct"),
+    "tool_selection": ("agent_tool_choice_correct",),
+    "state_continuity": (
+        "profile_state_matches", "authoritative_state_delta_correct",
+        "readiness_correct", "active_school_identity_correct",
+        "profile_mutation_count_correct",
+    ),
+    "grounding": (
+        "citations_valid", "citation_scope_correct", "agent_response_useful",
+    ),
+    "validation": ("acceptance_expected",),
+    "fallback": ("fallback_acceptable",),
+}
 
 
 def _citation_scopes(response: dict[str, Any]) -> list[str]:
@@ -102,6 +177,33 @@ def _useful(response: dict[str, Any], case: ConversationEvaluationCase) -> bool:
     )
 
 
+_MISSING = object()
+
+
+def _profile_value(profile: dict[str, Any], path: str) -> Any:
+    current: Any = profile
+    for part in path.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return _MISSING
+        current = current[part]
+    return current
+
+
+def _expected_state_matches(
+    response: dict[str, Any], case: ConversationEvaluationCase,
+) -> bool:
+    profile = response.get("profile")
+    if not isinstance(profile, dict):
+        return False
+    return all(
+        _profile_value(profile, path) == expected
+        for path, expected in case.expected_profile_delta.set.items()
+    ) and all(
+        _profile_value(profile, path) is _MISSING
+        for path in case.expected_profile_delta.removed
+    )
+
+
 def evaluate_conversation_cases(
     evaluation_set: ConversationEvaluationSet,
     runner: EvaluationRunner,
@@ -109,10 +211,23 @@ def evaluate_conversation_cases(
     """Compare both paths while returning no messages, answers, profiles, or facts."""
 
     results: list[dict[str, Any]] = []
+    returned_profiles: dict[str, dict[str, Any]] = {}
     for case in evaluation_set.cases:
-        run = runner(case)
+        effective_case = case
+        if case.carry_profile:
+            effective_case = case.model_copy(update={
+                "profile": deepcopy(returned_profiles.get(case.conversation_id, case.profile)),
+            })
+        run = runner(effective_case)
+        returned_profile = run.agent_response.get("profile")
+        if isinstance(returned_profile, dict):
+            returned_profiles[case.conversation_id] = deepcopy(returned_profile)
         agent_accepted = run.metadata.validation_succeeded
         citations_valid = _citations_valid(run.agent_response)
+        deterministic_state_expected = _expected_state_matches(
+            run.deterministic_response, case,
+        )
+        agent_state_expected = _expected_state_matches(run.agent_response, case)
         result = {
             "case_id": case.case_id,
             "deterministic_intent_correct": run.deterministic_intent == case.expected_intent,
@@ -127,6 +242,28 @@ def evaluate_conversation_cases(
                 and run.agent_response.get("understood")
                 == run.deterministic_response.get("understood")
             ),
+            "authoritative_state_delta_correct": (
+                deterministic_state_expected and agent_state_expected
+            ),
+            "readiness_correct": (
+                run.deterministic_response.get("ready_to_search")
+                == case.expected_ready_to_search
+                and run.agent_response.get("ready_to_search")
+                == case.expected_ready_to_search
+            ),
+            "active_school_identity_correct": (
+                case.expected_active_school_id is None
+                or (
+                    _profile_value(
+                        run.deterministic_response.get("profile") or {},
+                        "active_school.school_id",
+                    ) == case.expected_active_school_id
+                    and _profile_value(
+                        run.agent_response.get("profile") or {},
+                        "active_school.school_id",
+                    ) == case.expected_active_school_id
+                )
+            ),
             "grounding_valid": (
                 agent_accepted == case.expect_agent_acceptance and citations_valid
             ),
@@ -139,6 +276,12 @@ def evaluate_conversation_cases(
             "agent_response_useful": _useful(run.agent_response, case),
             "agent_accepted": agent_accepted,
             "acceptance_expected": agent_accepted == case.expect_agent_acceptance,
+            "fallback_acceptable": (
+                run.metadata.fallback_reason is None or case.acceptable_fallback
+            ),
+            "profile_mutation_count_correct": (
+                run.metadata.profile_mutations == case.expected_profile_mutations
+            ),
             "tool_names": list(run.metadata.tool_names),
             "tool_calls": run.metadata.tool_calls,
             "profile_mutations": run.metadata.profile_mutations,
@@ -151,10 +294,17 @@ def evaluate_conversation_cases(
         checks = {
             "deterministic_intent_correct", "agent_route_correct",
             "agent_tool_choice_correct", "profile_state_matches",
+            "authoritative_state_delta_correct", "readiness_correct",
+            "active_school_identity_correct", "profile_mutation_count_correct",
             "citations_valid", "citation_scope_correct",
-            "agent_response_useful", "acceptance_expected",
+            "agent_response_useful", "acceptance_expected", "fallback_acceptable",
         }
         result["passed"] = all(result[key] for key in checks)
+        result["failure_categories"] = [
+            category
+            for category, category_checks in _FAILURE_CHECKS.items()
+            if any(not result[key] for key in category_checks)
+        ]
         results.append(result)
 
     total = len(results)
@@ -163,7 +313,7 @@ def evaluate_conversation_cases(
         return round(sum(bool(item[key]) for item in results) / total, 4)
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "case_count": total,
         "passed": all(item["passed"] for item in results),
         "metrics": {
@@ -172,6 +322,11 @@ def evaluate_conversation_cases(
             "agent_route_accuracy": rate("agent_route_correct"),
             "agent_tool_selection_accuracy": rate("agent_tool_choice_correct"),
             "profile_state_match_rate": rate("profile_state_matches"),
+            "authoritative_state_delta_accuracy": rate(
+                "authoritative_state_delta_correct"
+            ),
+            "readiness_accuracy": rate("readiness_correct"),
+            "profile_mutation_accuracy": rate("profile_mutation_count_correct"),
             "grounding_validity_rate": rate("grounding_valid"),
             "citation_validity_rate": rate("citations_valid"),
             "deterministic_response_usefulness_rate": rate(
@@ -181,6 +336,14 @@ def evaluate_conversation_cases(
             "agent_acceptance_rate": rate("agent_accepted"),
             "agent_fallback_rate": round(
                 sum(item["fallback_reason"] is not None for item in results) / total, 4,
+            ),
+            "unexpected_agent_fallback_rate": round(
+                sum(
+                    item["fallback_reason"] is not None
+                    and not item["fallback_acceptable"]
+                    for item in results
+                ) / total,
+                4,
             ),
         },
         "results": results,

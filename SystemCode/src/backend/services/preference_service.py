@@ -212,6 +212,7 @@ class PreferenceService:
         selected_school_ids: list[str], eligible_school_ids: list[str],
         excluded_school_ids: list[str], family: FamilyDetails | None,
         home_postal_code: str | None, include_full_catalogue: bool = False,
+        intent: Any | None = None,
     ) -> ConversationRequestContext:
         """Resolve all browser identifiers into one bounded server-owned context."""
 
@@ -228,8 +229,9 @@ class PreferenceService:
             )
             if resolved_active:
                 current["active_school"] = {
-                    "school_id": resolved_active["school_id"],
-                    "name": resolved_active["name"],
+                    key: resolved_active[key]
+                    for key in ("school_id", "centre_code", "name")
+                    if resolved_active.get(key) is not None
                 }
         eligible = self._rebuild(eligible_school_ids, current, family)
         effective_eligible_ids = list(eligible_school_ids)
@@ -250,6 +252,8 @@ class PreferenceService:
         return ConversationRequestContext(
             message=message,
             profile=current,
+            deterministic_intent=getattr(intent, "intent", None),
+            deterministic_intent_method=getattr(intent, "method", None),
             family=family.model_dump() if family else None,
             home_postal_code=home_postal_code,
             selected_school_ids=selected_ids,
@@ -291,6 +295,12 @@ class PreferenceService:
         excluded_school_ids: list[str], family: FamilyDetails | None,
     ) -> dict[str, Any]:
         """Run the existing controller exactly once for one resolved context."""
+
+        # The resolved context has already replaced any client-carried school
+        # label with repository-owned identity data. Both deterministic and
+        # agent paths must continue from that same authoritative profile.
+        current = deepcopy(context.profile)
+        conversation_profile = current
 
         if intent.intent == "run_what_if_scenario":
             baseline = (
@@ -352,6 +362,7 @@ class PreferenceService:
             family=family,
             home_postal_code=home_postal_code,
             include_full_catalogue=intent.intent == "find_closest_preschool",
+            intent=intent,
         )
         mode = get_conversation_agent_mode()
 

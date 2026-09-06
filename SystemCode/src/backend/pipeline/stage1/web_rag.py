@@ -32,6 +32,7 @@ STOP_WORDS = {
     "for", "from", "has", "have", "how", "i", "in", "is", "it", "me", "my", "of",
     "on", "or", "our", "s", "school", "that", "the", "their", "there", "this", "to", "we",
     "what", "when", "where", "which", "with", "would", "you", "your", "kind", "much", "preschool",
+    "generally", "mean", "say", "selected",
 }
 SYNONYM_GROUPS = (
     {"outdoor", "garden", "playground"},

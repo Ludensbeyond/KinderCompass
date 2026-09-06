@@ -218,6 +218,11 @@ class StructuredSchoolFactsToolTests(unittest.TestCase):
         self.assertIn("may be stale", available.answer_candidate)
         self.assertIn("unavailable", unavailable.answer_candidate)
         self.assertEqual(available.evidence_category, "authoritative_fact")
+        self.assertEqual(
+            {citation.evidence_scope for citation in available.citations},
+            {"structured"},
+        )
+        self.assertEqual(available.citations[0].school_id, "CENTRE:A")
         with self.assertRaisesRegex(ValueError, "server-resolved"):
             tool.invoke({"operation": "food", "school_ids": ["CENTRE:FORGED"]})
         with self.assertRaises(ValidationError):

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date, datetime, time, timezone
+import hashlib
 import json
 from typing import Any, Protocol
 
@@ -31,6 +33,7 @@ from ..services.conversation_calculations import (
     run_what_if_scenario,
 )
 from ..pipeline.stage1.nlp_mapper import summarize_profile
+from ..pipeline.stage1.preference_schema import sync_preference_schema
 
 
 SELECTED_SCHOOL_EVIDENCE_TOOL_NAME = "search_selected_school_evidence"
@@ -130,6 +133,7 @@ def _preference_result(tool_name: str, result: dict[str, Any]) -> CapabilityTool
         answer_candidate=result["question"],
         grounding_facts=result.get("understood", []),
         citations=[],
+        answer_status=str(result.get("status") or "unknown"),
         evidence_category=result.get("evidence_category", "unknown"),
     )
 
@@ -153,6 +157,19 @@ def _grounding_records(records: list[Any]) -> list[str]:
     return grounded
 
 
+def _authoritative_read_profile(context: ConversationRequestContext) -> dict[str, Any]:
+    """Match the deterministic controller's canonical read-only profile shape."""
+
+    profile = sync_preference_schema(deepcopy(
+        context.profile
+        or {"hard_constraints": {}, "preferences": {}, "recognized": []}
+    ))
+    if context.deterministic_intent:
+        profile["intent"] = context.deterministic_intent
+        profile["intent_method"] = context.deterministic_intent_method or "rules"
+    return profile
+
+
 def _read_only_result(
     tool_name: str, result: dict[str, Any], records: list[Any],
 ) -> CapabilityToolResult:
@@ -168,6 +185,7 @@ def _read_only_result(
         answer_candidate=answer,
         grounding_facts=_grounding_records(records),
         citations=[],
+        answer_status=str(result.get("status") or "unknown"),
         evidence_category=result.get("evidence_category", "unknown"),
     )
 
@@ -259,6 +277,10 @@ def create_decision_and_calculation_tools(
             deepcopy(eligible),
             classified_intent=IntentResult(intent=intent_name, confidence=1),
         )
+        if intent_name == "find_closest_preschool":
+            deterministic["profile"]["intent_method"] = (
+                context.deterministic_intent_method or "rules"
+            )
         records = eligible if intent_name in {
             "find_closest_preschool", "explain_top_ranked_preschool",
         } else selected
@@ -392,21 +414,48 @@ def create_structured_school_facts_tool(
         if any(school_id not in allowed_ids for school_id in requested):
             raise ValueError("structured school facts require server-resolved school IDs")
         records = repository.get_structured_facts(list(requested), operation)
+        profile = _authoritative_read_profile(context)
         grounding = [
             json.dumps(record, sort_keys=True, default=str)[:5_000]
             for record in records[:5]
         ]
+        citations = []
+        for record in records[:5]:
+            updated = record.get("last_updated")
+            try:
+                retrieved_at = datetime.combine(
+                    date.fromisoformat(str(updated)), time.min, timezone.utc,
+                )
+            except (TypeError, ValueError):
+                retrieved_at = datetime.now(timezone.utc)
+            citation_key = ":".join((
+                str(record["school_id"]), operation,
+                str(record.get("catalogue_version") or "current"),
+            ))
+            citations.append(PublicCitation(
+                citation_id=(
+                    "CATALOGUE:"
+                    + hashlib.sha256(citation_key.encode("utf-8")).hexdigest()[:20]
+                ),
+                evidence_scope="structured",
+                school_id=str(record["school_id"]),
+                url="https://www.ecda.gov.sg/parents/choosing-a-preschool/preschool-search",
+                title="ECDA preschool catalogue",
+                retrieved_at=retrieved_at,
+                authority="Early Childhood Development Agency",
+            ))
         return CapabilityToolResult(
             tool_name=QUERY_STRUCTURED_SCHOOL_FACTS_TOOL_NAME,
             mutates_profile=False,
-            profile=deepcopy(context.profile),
-            understood=summarize_profile(context.profile),
+            profile=profile,
+            understood=summarize_profile(profile),
             ready_to_search=bool(
-                context.profile.get("hard_constraints") or context.profile.get("preferences")
+                profile.get("hard_constraints") or profile.get("preferences")
             ),
             answer_candidate=_structured_fact_answer(records, operation),
             grounding_facts=grounding,
-            citations=[],
+            citations=citations,
+            answer_status="web_evidence",
             evidence_category="authoritative_fact" if any(
                 record.get("available") for record in records
             ) else "unknown",
@@ -483,18 +532,21 @@ def _evidence_result(
     grounding_facts: list[str],
     citations: list[PublicCitation],
     evidence_category: str,
+    answer_status: str,
 ) -> CapabilityToolResult:
+    profile = _authoritative_read_profile(context)
     return CapabilityToolResult(
         tool_name=tool_name,
         mutates_profile=False,
-        profile=deepcopy(context.profile),
-        understood=summarize_profile(context.profile),
+        profile=profile,
+        understood=summarize_profile(profile),
         ready_to_search=bool(
-            context.profile.get("hard_constraints") or context.profile.get("preferences")
+            profile.get("hard_constraints") or profile.get("preferences")
         ),
         answer_candidate=_bounded_answer(answer),
         grounding_facts=grounding_facts[:3],
         citations=citations[:3],
+        answer_status=answer_status,
         evidence_category=evidence_category,
     )
 
@@ -531,6 +583,7 @@ def create_evidence_tools(
                 tool_name=SELECTED_SCHOOL_EVIDENCE_TOOL_NAME,
                 answer="Select one preschool in the Results panel so I can search its official webpage.",
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="web_evidence",
             )
         if len(context.selected_schools) != 1:
             return _evidence_result(
@@ -538,6 +591,7 @@ def create_evidence_tools(
                 tool_name=SELECTED_SCHOOL_EVIDENCE_TOOL_NAME,
                 answer="Select only one preschool so webpage evidence cannot be mixed between schools.",
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="web_evidence",
             )
         school = context.selected_schools[0]
         school_name = str(school.facts.get("name") or "this preschool")
@@ -547,6 +601,7 @@ def create_evidence_tools(
                 tool_name=SELECTED_SCHOOL_EVIDENCE_TOOL_NAME,
                 answer="Webpage evidence is unavailable for this preschool.",
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="web_evidence",
             )
         passages = selected_retrieval.invoke({
             "question": question,
@@ -563,6 +618,7 @@ def create_evidence_tools(
                     "That means the information is unavailable, not that the answer is no."
                 ),
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="web_evidence",
             )
         citations = [
             PublicCitation(
@@ -575,8 +631,15 @@ def create_evidence_tools(
             )
             for item in passages
         ]
+        lowered_question = question.casefold()
+        topic_prefix = ""
+        if "curriculum" in lowered_question:
+            topic_prefix = "For your curriculum question, "
+        elif "play-based" in lowered_question or "play based" in lowered_question:
+            topic_prefix = "For your play-based learning question, "
         answer = (
-            f"According to {school_name}'s official webpage, "
+            topic_prefix
+            + f"according to {school_name}'s official webpage, "
             + " ".join(item.text for item in passages[:2])
         )
         return _evidence_result(
@@ -586,6 +649,7 @@ def create_evidence_tools(
             grounding_facts=[item.text for item in passages],
             citations=citations,
             evidence_category="school_published_claim",
+            answer_status="web_evidence",
         )
 
     def search_general(question: str) -> CapabilityToolResult:
@@ -595,6 +659,7 @@ def create_evidence_tools(
                 tool_name=GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME,
                 answer="General early-childhood guidance is unavailable.",
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="general_knowledge",
             )
         passages = [
             GeneralKnowledgeEvidence.model_validate(item)
@@ -606,6 +671,7 @@ def create_evidence_tools(
                 tool_name=GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME,
                 answer="I could not find relevant guidance in the curated early-childhood knowledge base.",
                 grounding_facts=[], citations=[], evidence_category="unknown",
+                answer_status="general_knowledge",
             )
         return _evidence_result(
             context,
@@ -614,6 +680,7 @@ def create_evidence_tools(
             grounding_facts=[item.text for item in passages],
             citations=[item.citation for item in passages],
             evidence_category="authoritative_fact",
+            answer_status="general_knowledge",
         )
 
     return [

@@ -4,9 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 from SystemCode.src.backend import main
+from SystemCode.src.backend.tests.asgi_test_client import ASGITestClient
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.domain.catalogue import SchoolRecord
 from SystemCode.src.backend.repositories.policy_repository import (
@@ -20,7 +19,7 @@ from SystemCode.src.backend.services.evaluation_service import (
 )
 
 
-class RepositoryBoundaryTests(unittest.TestCase):
+class RepositoryBoundaryTests(unittest.IsolatedAsyncioTestCase):
     @staticmethod
     def _programme_service(path: Path) -> EvaluationService:
         level = "Pre-Nursery (3 yrs old)"
@@ -86,12 +85,13 @@ class RepositoryBoundaryTests(unittest.TestCase):
             )[0]
             self.assertEqual(result["fee_before_subsidy"], 610)
 
-    def test_api_rejects_legacy_client_supplied_school_objects(self):
-        response = TestClient(main.app).post("/api/evaluate", json={
-            "shortlist": [{"school_id": "CENTRE:A", "base_fee": 1}],
-            "family": {"dob": "2023-06-10", "admission_date": "2026-06-10",
-                       "gross_household_income": 4500},
-        })
+    async def test_api_rejects_legacy_client_supplied_school_objects(self):
+        async with ASGITestClient(main.app) as client:
+            response = await client.post("/api/evaluate", json={
+                "shortlist": [{"school_id": "CENTRE:A", "base_fee": 1}],
+                "family": {"dob": "2023-06-10", "admission_date": "2026-06-10",
+                           "gross_household_income": 4500},
+            })
         self.assertEqual(response.status_code, 422)
 
     def test_evaluation_exposes_exact_programmes_and_falls_back_when_preferred_missing(self):
@@ -122,12 +122,13 @@ class RepositoryBoundaryTests(unittest.TestCase):
             with self.assertRaises(ProgrammeUnavailableError):
                 service.estimate_programme("CENTRE:A", "flexi_care_3", family)
 
-    def test_unknown_school_id_is_a_404_before_evaluation(self):
-        response = TestClient(main.app).post("/api/evaluate", json={
-            "school_ids": ["CENTRE:DOES_NOT_EXIST"], "profile": {},
-            "family": {"dob": "2023-06-10", "admission_date": "2026-06-10",
-                       "gross_household_income": 4500},
-        })
+    async def test_unknown_school_id_is_a_404_before_evaluation(self):
+        async with ASGITestClient(main.app) as client:
+            response = await client.post("/api/evaluate", json={
+                "school_ids": ["CENTRE:DOES_NOT_EXIST"], "profile": {},
+                "family": {"dob": "2023-06-10", "admission_date": "2026-06-10",
+                           "gross_household_income": 4500},
+            })
         self.assertEqual(response.status_code, 404)
 
 
