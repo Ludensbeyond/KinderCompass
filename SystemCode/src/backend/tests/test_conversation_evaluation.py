@@ -1,7 +1,9 @@
 import json
+import os
 import unittest
 from pathlib import Path
 from typing import get_args
+from unittest.mock import patch
 
 from SystemCode.src.backend.agents.contracts import ConversationExecutionMetadata
 from SystemCode.src.backend.agents.evaluation import (
@@ -10,6 +12,7 @@ from SystemCode.src.backend.agents.evaluation import (
     evaluate_conversation_cases,
 )
 from SystemCode.src.backend.agents.observability import build_conversation_observation
+from SystemCode.src.backend.scripts import evaluate_conversation_supervisor
 from stage1.intent_router import IntentName
 
 
@@ -17,6 +20,22 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 
 
 class ConversationEvaluationTests(unittest.TestCase):
+    def test_staged_model_factory_opts_in_without_mutating_rollout_mode(self):
+        sentinel = object()
+        with patch.dict(os.environ, {"CONVERSATION_AGENT_MODE": "deterministic"}), patch.object(
+            evaluate_conversation_supervisor,
+            "create_conversation_agent_model",
+            return_value=sentinel,
+        ) as create_model:
+            result = evaluate_conversation_supervisor.staged_model_factory()
+
+            self.assertEqual(os.environ["CONVERSATION_AGENT_MODE"], "deterministic")
+
+        self.assertIs(result, sentinel)
+        self.assertEqual(
+            create_model.call_args.args[0]["CONVERSATION_AGENT_MODE"], "agent",
+        )
+
     def test_curated_set_is_ordered_and_covers_intents_transitions_and_sources(self):
         raw = json.loads(
             (BACKEND_ROOT / "resources" / "conversation_agent_evaluation.json").read_text()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
 
@@ -241,7 +242,10 @@ class ConversationRequestContext(AgentContract):
             (self.excluded_school_ids, self.excluded_schools, "excluded"),
         )
         for identifiers, schools, label in pairs:
-            if identifiers != [school.school_id for school in schools]:
+            # Ranking and evaluation may reorder authoritative records. Require
+            # the exact same identifiers (including multiplicity), but do not
+            # mistake a legitimate ranked order for forged or missing context.
+            if Counter(identifiers) != Counter(school.school_id for school in schools):
                 raise ValueError(f"{label} school records must match authoritative IDs")
         return self
 

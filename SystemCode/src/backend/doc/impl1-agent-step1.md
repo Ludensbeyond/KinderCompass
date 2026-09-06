@@ -1,8 +1,9 @@
 # Implementation 1 archive — selected-school evidence agent
 
 This is the closed historical record for the first LangGraph implementation:
-the selected-school webpage-answer vertical slice. The active migration is
-[Implementation 2 — full-conversation supervisor](agents.md).
+the selected-school webpage-answer vertical slice. The next completed phase is
+preserved in [Implementation 2 — full-conversation supervisor](impl2-agent-step2.md),
+and active work continues in the [conversational-readiness plan](agents.md).
 
 ## Architecture and safety rules
 

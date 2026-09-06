@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Callable
@@ -17,6 +18,7 @@ from SystemCode.src.backend.agents.evaluation import (
     ConversationEvaluationSet,
     evaluate_conversation_cases,
 )
+from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
 from SystemCode.src.backend.agents.validation import run_conversation_supervisor
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.services.decision_state_service import enrich_decision_state
@@ -27,6 +29,15 @@ from stage1.web_rag import load_json, save_json
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_ROOT.parents[2]
+
+
+def staged_model_factory() -> Any:
+    """Construct the staged model without changing the production rollout mode."""
+
+    return create_conversation_agent_model({
+        **os.environ,
+        "CONVERSATION_AGENT_MODE": "agent",
+    })
 
 
 def staged_runner(
@@ -105,7 +116,10 @@ def main() -> int:
     from SystemCode.src.backend.main import PREFERENCE_SERVICE
 
     cases = ConversationEvaluationSet.model_validate(load_json(args.cases))
-    report = evaluate_conversation_cases(cases, staged_runner(PREFERENCE_SERVICE))
+    report = evaluate_conversation_cases(
+        cases,
+        staged_runner(PREFERENCE_SERVICE, model_factory=staged_model_factory),
+    )
     if args.output:
         save_json(args.output, report)
     print(json.dumps({key: value for key, value in report.items() if key != "results"}, indent=2))

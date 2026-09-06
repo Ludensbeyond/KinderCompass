@@ -119,6 +119,37 @@ class AgentContractTests(unittest.TestCase):
                 catalogue_version="1", **indexes,
             )
 
+    def test_context_accepts_authoritative_records_in_ranked_order(self):
+        first_id = "CENTRE:PT9148"
+        second_id = "CENTRE:PT9116"
+        context = ConversationRequestContext(
+            message="Compare my selected preschools.",
+            profile={},
+            selected_school_ids=[first_id, second_id],
+            selected_schools=[
+                AuthoritativeSchoolContext(
+                    school_id=second_id,
+                    facts={"school_id": second_id, "name": "Ranked first"},
+                ),
+                AuthoritativeSchoolContext(
+                    school_id=first_id,
+                    facts={"school_id": first_id, "name": "Ranked second"},
+                ),
+            ],
+            selected_school_evidence=EvidenceIndexContext(
+                scope="school", available=False,
+            ),
+            general_knowledge_evidence=EvidenceIndexContext(
+                scope="general", available=False,
+            ),
+            catalogue_version="1",
+        )
+
+        self.assertEqual(
+            [school.school_id for school in context.selected_schools],
+            [second_id, first_id],
+        )
+
     def test_valid_contracts(self):
         request = SelectedSchoolAgentRequest(
             question="What curriculum does it use?",
