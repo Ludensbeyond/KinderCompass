@@ -26,7 +26,7 @@ class RepositoryBoundaryTests(unittest.TestCase):
         level = "Pre-Nursery (3 yrs old)"
         path.write_text(json.dumps([{
             "school_id": "CENTRE:A", "centre_code": "A", "centre_name_x": "Trusted",
-            "care_levels": [level], "base_fee": 9999,
+            "postal_code": 540231, "care_levels": [level], "base_fee": 9999,
             "services_menu": [
                 {"class_of_licence": "Class B (Child Care)",
                  "levels_offered": level, "type_of_service": service_type,
@@ -108,6 +108,9 @@ class RepositoryBoundaryTests(unittest.TestCase):
                 {item["programme_id"] for item in result["programme_options"]},
                 {"full_day", "half_day_am", "half_day_pm"},
             )
+            self.assertEqual(result["mention_links"]["query"], "Trusted 540231 Singapore")
+            self.assertIn("google.com/maps/search", result["mention_links"]["google_maps"])
+            self.assertIn("reddit.com/search", result["mention_links"]["reddit"])
 
     def test_exact_programme_estimate_uses_selected_variant(self):
         with tempfile.TemporaryDirectory() as directory:

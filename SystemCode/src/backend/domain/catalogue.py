@@ -39,11 +39,35 @@ class SchoolRecord(MappingModel):
     name: str = Field(min_length=1)
     centre_code: str | None = None
     tp_code: str | None = None
+    postal_code: int | str | None = None
     base_fee: float | None = Field(default=None, ge=0)
     care_levels: list[str] = Field(default_factory=list)
     services_menu: list[SchoolService] = Field(default_factory=list)
     pedagogy: str | None = None
     operator_scheme: str | None = None
+
+
+class MentionLinks(MappingModel):
+    query: str
+    google_maps: str
+    google_search: str
+    reddit: str
+
+
+class SchoolReview(MappingModel):
+    overall: int = Field(ge=1, le=5)
+    relationship: str
+    review_text: str
+    created_at: str
+
+
+class ParentRatingSummary(MappingModel):
+    school_id: str
+    average: float | None = None
+    count: int = 0
+    evidence_category: Literal["parent_sentiment"] = "parent_sentiment"
+    source: Literal["KinderCompass parent ratings"] = "KinderCompass parent ratings"
+    reviews: list[SchoolReview] = Field(default_factory=list)
 
 
 class PolicyReference(MappingModel):
@@ -85,3 +109,5 @@ class EvaluatedSchool(SchoolRecord):
     programme_options: list[ProgrammeOption] = Field(default_factory=list)
     policy_source: PolicyReference | None = None
     warnings: list[str] = Field(default_factory=list)
+    mention_links: MentionLinks | None = None
+    parent_rating: ParentRatingSummary | None = None

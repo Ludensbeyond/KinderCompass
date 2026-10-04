@@ -54,9 +54,14 @@ if ($InstallDependencies) {
     }
 
     Write-Host "Installing frontend dependencies..." -ForegroundColor Cyan
-    & npm.cmd install --prefix $frontendDirectory
-    if ($LASTEXITCODE -ne 0) {
-        Stop-WithMessage "Frontend dependency installation failed."
+    Push-Location -LiteralPath $frontendDirectory
+    try {
+        & npm.cmd install
+        if ($LASTEXITCODE -ne 0) {
+            Stop-WithMessage "Frontend dependency installation failed."
+        }
+    } finally {
+        Pop-Location
     }
 }
 
@@ -69,7 +74,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $frontendDirectory "node_modules")))
     Stop-WithMessage "Frontend packages are missing. Run this script once with -InstallDependencies."
 }
 
-$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.main:app --reload"
+$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.main:app --reload --host 127.0.0.1 --port 8082"
 $frontendCommand = "Set-Location -LiteralPath '$($frontendDirectory.Replace("'", "''"))'; & npm.cmd run dev"
 
 Write-Host "Starting FastAPI backend in a new PowerShell window..." -ForegroundColor Cyan
@@ -90,7 +95,7 @@ Start-Process powershell.exe -WorkingDirectory $frontendDirectory -ArgumentList 
 
 Write-Host "`nPoC 1 is starting:" -ForegroundColor Green
 Write-Host "  Frontend:    http://localhost:3000"
-Write-Host "  Backend API: http://127.0.0.1:8000"
-Write-Host "  API docs:    http://127.0.0.1:8000/docs"
+Write-Host "  Backend API: http://127.0.0.1:8082"
+Write-Host "  API docs:    http://127.0.0.1:8082/docs"
 Write-Host "`nWait until both windows report that their servers are ready, then open the frontend URL."
 Write-Host "Press Ctrl+C in each server window to stop PoC 1."
