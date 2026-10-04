@@ -21,7 +21,7 @@ if str(POC_SRC) not in sys.path:
 
 # Load the repository-level configuration independently of the terminal's
 # current directory.
-load_dotenv(POC_ENV)
+load_dotenv(POC_ENV, override=True)
 
 from stage1.runner import run_from_profile  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
@@ -31,10 +31,11 @@ from SystemCode.src.backend.domain.models import (  # noqa: E402
     ChatFeedbackRequest, ChatFeedbackResponse, ChatFeedbackSummaryResponse,
     ConversationMemoryRequest, ConversationMemoryResponse, DistanceRequest, DistanceResponse,
     EvaluateRequest, EvaluationResponse, ForgetConversationMemoryResponse,
-    FeedbackRequest, FeedbackResponse,
+    FeedbackRequest, FeedbackResponse, ParentRatingSummary,
     GeocodeRequest, GeocodeResponse, HealthResponse, PreferenceRequest,
     PreferenceResponse, ProgrammeEstimateRequest, ProgrammeEstimateResponse,
     RouteRequest, RouteResponse, SaveConversationMemoryRequest, SearchRequest, SearchResponse,
+    SchoolRatingRequest, SchoolRatingResponse,
 )
 from SystemCode.src.backend.repositories.school_repository import (  # noqa: E402
     SchoolNotFoundError, SchoolRepository,
@@ -50,6 +51,7 @@ from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
 )
 from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
 from SystemCode.src.backend.services.chat_feedback_service import ChatAnswerNotFoundError, ChatFeedbackService  # noqa: E402
+from SystemCode.src.backend.services.school_rating_service import SchoolRatingService  # noqa: E402
 
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
@@ -78,6 +80,9 @@ CONVERSATION_MEMORY_SERVICE = ConversationMemoryService(
 )
 CHAT_FEEDBACK_SERVICE = ChatFeedbackService(
     REPO_ROOT / "SystemCode/src/backend/output/chat_answer_feedback.sqlite3"
+)
+SCHOOL_RATING_SERVICE = SchoolRatingService(
+    REPO_ROOT / "SystemCode/src/backend/output/school_ratings.sqlite3"
 )
 
 
@@ -202,6 +207,16 @@ def evaluate(request: EvaluateRequest) -> EvaluationResponse:
         raise HTTPException(
             status_code=503, detail=f"Recommendation snapshot could not be recorded: {exc}"
         ) from exc
+    try:
+        rating_summaries = SCHOOL_RATING_SERVICE.summaries(
+            [item.school_id for item in results]
+        )
+        results = [
+            item.model_copy(update={"parent_rating": rating_summaries.get(item.school_id)})
+            for item in results
+        ]
+    except (OSError, sqlite3.Error):
+        pass
     return EvaluationResponse(**{
         "eligible_count": eligible_count,
         "centres": results,
@@ -227,6 +242,30 @@ def feedback(request: FeedbackRequest) -> FeedbackResponse:
     except (OSError, sqlite3.Error) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return FeedbackResponse(event_id=event_id, status="recorded")
+
+
+@app.post("/api/schools/{school_id}/ratings", response_model=SchoolRatingResponse)
+def record_school_rating(school_id: str, request: SchoolRatingRequest) -> SchoolRatingResponse:
+    """Record a consented, anonymous first-party parent rating for one school."""
+    try:
+        SCHOOL_REPOSITORY.get(school_id)
+        rating_id, summary = SCHOOL_RATING_SERVICE.record(school_id, request)
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return SchoolRatingResponse(rating_id=rating_id, status="recorded", summary=summary)
+
+
+@app.get("/api/schools/{school_id}/ratings", response_model=ParentRatingSummary)
+def school_rating_summary(school_id: str) -> ParentRatingSummary:
+    try:
+        SCHOOL_REPOSITORY.get(school_id)
+        return SCHOOL_RATING_SERVICE.summary(school_id)
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @app.post(

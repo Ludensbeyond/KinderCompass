@@ -14,7 +14,10 @@ def build_stage1_query(filters=None, include_base_fee=True):
     filters: dict may contain `town`, `level`, `philosophy` keys.
     Returns (query, params)
     """
-    base_fields = "p.school_id AS school_id, p.centre_code AS centre_code, p.tp_code AS tp_code, p.name AS name"
+    base_fields = (
+        "p.school_id AS school_id, p.centre_code AS centre_code, p.tp_code AS tp_code, "
+        "p.name AS name, p.postal_code AS postal_code"
+    )
     if include_base_fee:
         base_fields += (
             ", p.base_fee AS base_fee, p.operator_scheme AS operator_scheme,"

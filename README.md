@@ -269,12 +269,25 @@ After clicking **Show recommendations**:
 5. Expand **How this score was calculated**. Verify that each ranked preference
    shows its importance, contribution, source, evidence state, and last-updated
    date.
-6. Change the **Distance from home** selector between `None`, `1`, `2`, and `5`
+6. On the same card, **Parent mentions online** should offer Google Maps, Google
+   reviews, and Reddit search links for that school name and postal code. They
+   open a web search; they are not a verified listing and do not change ranking.
+   Directly below, **Parent ratings on KinderCompass** should let you submit a
+   1–5 rating and your experience (`Researching`, `Applied`, `Visited`, or
+   `Enrolled`). Leave consent unchecked and **Submit school rating** stays
+   disabled. After consent and submit, the card should show the updated average
+   and count. These ratings are first-party parent sentiment and do not change
+   ranking. Local development ratings are written to the ignored file:
+
+   ```text
+   SystemCode/src/backend/output/school_ratings.sqlite3
+   ```
+7. Change the **Distance from home** selector between `None`, `1`, `2`, and `5`
    km. The visible result count should change while the original ranking order
    is preserved.
-7. Select two or more schools. Their pins should appear on the map with the home
+8. Select two or more schools. Their pins should appear on the map with the home
    pin and independently calculated straight-line distances.
-8. Ask Compass chat:
+9. Ask Compass chat:
 
    ```text
    Compare the selected schools.
