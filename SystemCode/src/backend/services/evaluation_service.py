@@ -7,6 +7,7 @@ from SystemCode.src.backend.domain.catalogue import (
 )
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository
+from stage1.mention_links import parent_mention_links
 from stage1.scorer import rank_schools
 from stage2.engine import (
     age_in_months,
@@ -110,6 +111,7 @@ class EvaluationService:
             "preferred_programme": family.programme_type,
             "preferred_programme_available": bool(preferred),
             "programme_options": options,
+            "mention_links": parent_mention_links(school.get("name"), school.get("postal_code")),
         })
 
     def evaluate(

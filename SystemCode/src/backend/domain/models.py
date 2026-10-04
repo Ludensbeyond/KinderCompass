@@ -6,7 +6,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from SystemCode.src.backend.domain.catalogue import EvaluatedSchool, ProgrammeOption
+from SystemCode.src.backend.domain.catalogue import (
+    EvaluatedSchool, ParentRatingSummary, ProgrammeOption,
+)
 
 
 SchoolId = str
@@ -103,6 +105,28 @@ class FeedbackRequest(BaseModel):
 class FeedbackResponse(BaseModel):
     event_id: uuid.UUID
     status: Literal["recorded"]
+
+
+class SchoolRatingRequest(BaseModel):
+    anonymous_session_id: uuid.UUID
+    overall: int = Field(ge=1, le=5)
+    teachers: int | None = Field(default=None, ge=1, le=5)
+    communication: int | None = Field(default=None, ge=1, le=5)
+    facilities: int | None = Field(default=None, ge=1, le=5)
+    food: int | None = Field(default=None, ge=1, le=5)
+    value: int | None = Field(default=None, ge=1, le=5)
+    relationship: Literal["enrolled", "visited", "applied", "researching"]
+    review_text: str | None = Field(default=None, max_length=1000)
+    tags: list[Literal[
+        "good_teachers", "high_fees", "long_waitlist", "good_facilities", "good_food",
+    ]] = Field(default_factory=list)
+    consent: Literal[True]
+
+
+class SchoolRatingResponse(BaseModel):
+    rating_id: uuid.UUID
+    status: Literal["recorded"]
+    summary: ParentRatingSummary
 
 
 class ChatFeedbackRequest(BaseModel):

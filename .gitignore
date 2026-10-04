@@ -7,6 +7,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+onemap_access-token.txt
 
 # Local consented feedback store
 SystemCode/src/backend/output/*.sqlite*
