@@ -32,6 +32,7 @@ STOP_WORDS = {
     "for", "from", "has", "have", "how", "i", "in", "is", "it", "me", "my", "of",
     "on", "or", "our", "s", "school", "that", "the", "their", "there", "this", "to", "we",
     "what", "when", "where", "which", "with", "would", "you", "your", "kind", "much", "preschool",
+    "generally", "mean", "say", "selected",
 }
 SYNONYM_GROUPS = (
     {"outdoor", "garden", "playground"},
@@ -905,7 +906,11 @@ def retrieve(
     for page in index.get("pages", []):
         if page.get("school_id") != school_id:
             continue
-        chunks.extend(page.get("chunks", []))
+        chunks.extend(
+            chunk
+            for chunk in page.get("chunks", [])
+            if chunk.get("school_id") == school_id
+        )
     matches = _rank_chunks(chunks, query, limit=max(0, limit), min_relevance=min_relevance)
     for item in matches:
         item["citation"] = {

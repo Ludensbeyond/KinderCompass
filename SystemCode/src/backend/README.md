@@ -62,24 +62,38 @@ OPENAI_API_KEY=
 OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
 OPENAI_PREFERENCE_MODEL=gpt-4o-mini
 OPENAI_PREFERENCE_TIMEOUT_SECONDS=8
-OPENAI_INTENT_CLASSIFICATION_ENABLED=false
+OPENAI_INTENT_CLASSIFICATION_ENABLED=true
 OPENAI_INTENT_MODEL=gpt-4o-mini
 OPENAI_INTENT_TIMEOUT_SECONDS=8
 OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
 OPENAI_EXPLANATION_MODEL=gpt-4o-mini
 OPENAI_EXPLANATION_TIMEOUT_SECONDS=8
-OPENAI_WEB_RAG_ANSWERS_ENABLED=false
+OPENAI_WEB_RAG_ANSWERS_ENABLED=true
 OPENAI_WEB_RAG_MODEL=gpt-4o-mini
 OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
+
+# Selected-school webpage answer implementation (deterministic or agent)
+WEB_RAG_ANSWER_MODE=deterministic
 
 # Optional override for the generated school-webpage index
 WEB_RAG_INDEX_PATH=
 ```
 
-The LLM features are independently disabled by default. Deterministic
-preference extraction, intent routing, recommendation explanations, and RAG
-answer formatting remain available when their LLM feature is disabled or its
-request fails.
+Intent classification and legacy selected-school webpage synthesis default to
+enabled when their environment variables are absent. Preference extraction and
+grounded recommendation explanations remain disabled by default. Deterministic
+fallbacks remain available when an LLM feature is explicitly disabled or its
+request fails. The enabled features require `OPENAI_API_KEY` to call OpenAI.
+
+`WEB_RAG_ANSWER_MODE` accepts `deterministic` or `agent`. Missing, empty, and
+invalid values resolve to `deterministic`. Agent mode runs the bounded
+selected-school evidence graph behind the existing preferences endpoint and
+falls back to its deterministic answer on any failure. It supersedes the
+legacy `OPENAI_WEB_RAG_ANSWERS_ENABLED` synthesis path for this intent.
+Deterministic mode does not construct an agent model client or require
+`OPENAI_API_KEY`. Agent-mode model construction uses
+`OPENAI_WEB_RAG_MODEL` and requires `OPENAI_WEB_RAG_TIMEOUT_SECONDS` to be
+between 1 and 30 seconds.
 
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
 takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.
@@ -148,13 +162,17 @@ The development CORS policy accepts the frontend origins
 
 ## Folder contents
 
+See the [`doc/` directory guide](doc/README.md) for ownership boundaries and
+more detail about each backend folder.
+
 | Path | Description |
 |---|---|
 | `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |
+| `agents/` | Backend-only configuration and, in later migration steps, bounded selected-school evidence orchestration. |
 | `domain/` | Typed Pydantic request, response, and family contracts used by FastAPI and services. |
 | `repositories/` | Authoritative school lookup and admission-date-aware subsidy policy selection. |
 | `services/` | Preference, evaluation, and location orchestration separated from HTTP endpoints. |
-| `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, and OpenAI. |
+| `requirements.txt` | Backend runtime dependency constraints for FastAPI, Uvicorn, Pydantic, dotenv, Neo4j, OpenAI, LangGraph, and LangChain OpenAI. |
 | `.gitignore` | Excludes Python bytecode and cache directories. |
 | `pipeline/pipeline.py` | Reusable in-memory Stage 1-to-Stage 2 integration function. |
 | `pipeline/stage1/` | Preference extraction, schema validation, intent routing, Neo4j queries, scoring, evidence metadata, proximity filtering, explanations, and webpage retrieval. |
@@ -205,11 +223,25 @@ while the older Stage 1 scoring functions are migrated incrementally.
 | `query_web_rag_pilot.py` | Query one school's indexed evidence from the command line. |
 | `evaluate_web_rag_pilot.py` | Check school isolation and citation behavior against offline golden cases. |
 | `evaluate_web_rag_answers.py` | Evaluate deterministic or optional LLM-synthesized chat answers. |
+| `evaluate_selected_school_agent.py` | Compare deterministic and LangGraph selected-school answers over the same curated cases without recording prompts, answers, or evidence text. |
 | `audit_web_rag_readiness.py` | Measure labelled identity, fetch, retrieval, and citation readiness gates. |
 | `review_web_rag_audit.py` | Export human-review CSV packets and import validated labels. |
 
 The Phase 9 commands, review workflow, and quality gates are documented in
 [PHASE9_WEBPAGE_RAG.md](../../../docs/poc1/PHASE9_WEBPAGE_RAG.md).
+
+Run the selected-school agent comparison deliberately with agent mode enabled:
+
+```bash
+WEB_RAG_ANSWER_MODE=agent PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  .venv/bin/python SystemCode/src/backend/scripts/evaluate_selected_school_agent.py \
+  --output /tmp/selected-school-agent-evaluation.json
+```
+
+It evaluates both implementations against the same ordered curated cases. The
+report contains quality booleans, aggregate rates, bounded execution counts,
+and normalized fallback categories; it does not record questions, generated
+answers, prompts, school or family context, credentials, or evidence text.
 
 Run the Neo4j diagnostic from the repository root with:
 
