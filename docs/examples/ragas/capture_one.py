@@ -42,7 +42,11 @@ class RecordingModel:
     def invoke(self, messages):
         entry = {"messages": [message.model_dump(mode="json") for message in messages]}
         self.invocations.append(entry)
-        response = self.delegate.invoke(messages)
+        try:
+            response = self.delegate.invoke(messages)
+        except Exception as error:
+            entry["error_type"] = type(error).__name__
+            raise
         entry["response"] = response.model_dump(mode="json")
         return response
 

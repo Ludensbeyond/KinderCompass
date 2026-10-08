@@ -38,27 +38,46 @@ an answer uses evidence from the wrong preschool.
    the agent; retain `case_id` outside its prompt for capture correlation.
    `cases.jsonl` holds evaluation-only labels: never send references, reference
    contexts, source labels, expected behaviour or checks to the answering agent.
-2. Copy `runs.template.jsonl` to `/tmp/kindercompass-ragas-runs.jsonl`.
-3. Submit each `user_input` through the normal agent path. Apply every case's
-   explicit `setup`: fresh empty profile, no selected schools and no conversation
-   history. Never carry state between these independent cases.
-4. Fill in `response` with the actual final answer and `retrieved_contexts` with
-   an ordered list of the passage texts the answering agent received. Record
-   all supplied evidence, including irrelevant passages, rather than only cited
-   chunks. If structured tools supply facts, include their actual payloads as
-   text too. Do not dump the whole index into this field.
+2. Run all 12 independent cases from the repository root with the configured
+   agent provider (incurs agent charges; no judge calls):
 
-KinderCompass's conversation evaluation reads the final prose from
-`agent_response["question"]`; map that value to RAGAS's `response`. Public
-citations alone do not contain the full evidence trace, so capture texts at the
-retrieval/tool boundary when automating runs. The existing runner in
-`SystemCode/src/backend/scripts/evaluate_conversation_supervisor.py` is a useful
-integration point for offline capture.
+   ```bash
+   PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
+     .venv/bin/python docs/examples/ragas/capture_dataset.py --staged \
+     --output /tmp/kindercompass-ragas-runs.jsonl
+   ```
 
-Step 3 now supplies [capture_one.py](capture_one.py), an offline wrapper that
-invokes that runner for `nel_age` only. See [capture verification](capture-verification.md)
-for its command, observed passage order, composer payload, fallback handling
-and answer/profile transparency checks. Full-dataset automation is still pending.
+3. Validate a complete capture without model calls:
+
+   ```bash
+   .venv/bin/python docs/examples/ragas/score.py \
+     --runs /tmp/kindercompass-ragas-runs.jsonl --validate-only
+   ```
+
+The runner uses fresh profile, service and model state for each case, preserves
+all ordered model-facing passage texts, and records original provenance and
+complete tool payloads separately. It uses the existing staged service and
+supervisor path without changing production contracts. References are loaded
+only after execution for format validation. The sibling `.manifest.json`
+records dataset and evidence hashes, supporting snapshots, source revision and
+collector hashes, model settings, dependency versions, timestamps and counts.
+Raw outputs must be outside the repository; optional LangSmith export is disabled.
+
+Execution errors retain a JSONL row, partial answer/evidence when available and
+an explicit error type. Provider/tool failures with a returned controller answer
+remain labelled `fallback` and also count as failed execution. A completed run
+with any execution failures exits 2 with `status: incomplete`; interrupted runs
+retain flushed rows and a manifest with `status: running`. Inspect that manifest
+before scoring. Successful subsets are format-validated automatically, while the
+standalone scorer rejects missing rows and null answers. It currently checks
+format only: a nonempty provider-failure fallback can pass that check, so the
+manifest's failure count must also be zero before scoring a complete run.
+Do not remove failed cases to claim full-dataset results. Scoring and failure-aware score reports belong to
+Step 5.
+
+[Dataset capture verification](dataset-capture-verification.md) records Step 4's
+execution and focused tests. [capture_one.py](capture_one.py) retains the original
+Step 3 `nel_age` wrapper and its [boundary verification](capture-verification.md).
 
 Example capture shape (the response below illustrates the format and is not a
 measured agent result):
