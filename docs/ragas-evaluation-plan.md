@@ -21,8 +21,9 @@ The [starter guide](examples/ragas/README.md) and these files already exist:
 
 Dataset structure, capture validation, isolated dependency installation and
 OpenAI judge compatibility have been verified. One synthetic fixture completed
-live RAGAS scoring and CSV export; actual agent captures and their scoring still
-need verification. Step 1's Codex review is against the repository
+live RAGAS scoring and CSV export. One real `nel_age` capture now verifies the
+agent and evidence boundary; full-dataset capture and actual scoring remain
+pending. Step 1's Codex review is against the repository
 snapshot; human review and fresh external website verification have not been
 performed.
 
@@ -35,7 +36,7 @@ existing checks and privacy-safe reporting.
 
 - [x] Step 1: Review and freeze the starter cases.
 - [x] Step 2: Verify the isolated scoring environment.
-- [ ] Step 3: Capture one real agent turn and its evidence.
+- [x] Step 3: Capture one real agent turn and its evidence.
 - [ ] Step 4: Automate capture for the starter dataset.
 - [ ] Step 5: Score the starter set and review behaviour.
 - [ ] Step 6: Establish and interpret the first baseline.
@@ -217,7 +218,7 @@ next action without marking the step complete.
 |---|---|---|---|
 | 1 | Complete (2026-10-07) | Version 1.0.0: Codex reviewed all 12 labels against the repository snapshot; unique IDs, explicit setup/category/scope/behaviour, provenance and hashes verified. [Review decisions](examples/ragas/review.md); [manifest](examples/ragas/manifest.json); label-free inputs added. No fresh external or human review claimed. | Proceed to isolated scoring environment verification in step 2. |
 | 2 | Complete (2026-10-07) | Isolated Python 3.12.12 / RAGAS 0.2.15 environment: imports and `pip check` pass; one synthetic fixture validated and scored with OpenAI `gpt-4o-mini`, temperature 0; three finite scores and CSV export verified. Initial sandbox network failures resolved with approved access. [Versions and results](examples/ragas/environment-verification.md); dependency lock and smoke command added. No agent capture or baseline claimed. | Proceed to one real `nel_age` capture in step 3. |
-| 3 | Pending | No actual agent capture yet. | Inspect the evidence/composition boundary. |
+| 3 | Complete (2026-10-08) | Real `nel_age` accepted by configured supervisor; three ordered original passages and complete composer tool input captured outside Git. Initial model-error fallback retained with empty evidence; approved live retry succeeded. Replay with/without instrumentation preserves full answer and profile state; one-case format validation passes. [Boundary, provenance and verification](examples/ragas/capture-verification.md); single-turn offline collector added. No scoring or baseline claimed. | Proceed to dataset capture automation in step 4. |
 | 4 | Pending | Empty capture template exists. | Build runner after one capture is verified. |
 | 5 | Pending | Scoring CLI exists; behaviour review is manual. | Score actual captures and report missing results. |
 | 6 | Pending | No measured baseline. | Save and review the first complete run. |

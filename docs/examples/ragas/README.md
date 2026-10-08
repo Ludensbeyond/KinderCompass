@@ -53,7 +53,12 @@ KinderCompass's conversation evaluation reads the final prose from
 citations alone do not contain the full evidence trace, so capture texts at the
 retrieval/tool boundary when automating runs. The existing runner in
 `SystemCode/src/backend/scripts/evaluate_conversation_supervisor.py` is a useful
-integration point, but this starter does not modify or invoke it.
+integration point for offline capture.
+
+Step 3 now supplies [capture_one.py](capture_one.py), an offline wrapper that
+invokes that runner for `nel_age` only. See [capture verification](capture-verification.md)
+for its command, observed passage order, composer payload, fallback handling
+and answer/profile transparency checks. Full-dataset automation is still pending.
 
 Example capture shape (the response below illustrates the format and is not a
 measured agent result):
@@ -137,7 +142,8 @@ is separate from the agent's model configuration.
 The CSV contains individual RAGAS scores. The sibling `.behaviour.json` file
 contains the two behaviour cases and checks awaiting human review; it does not
 claim that those checks passed. Step 2 verified paid fixture scoring only;
-no live agent captures have been scored.
+no live agent captures have been scored. Step 3 validated one actual capture's
+format and evidence boundary without invoking the judge.
 
 ## Make the small set effective
 
