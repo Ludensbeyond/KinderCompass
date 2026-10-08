@@ -19,9 +19,10 @@ The [starter guide](examples/ragas/README.md) and these files already exist:
 - [requirements.txt](examples/ragas/requirements.txt): isolated evaluation
   dependencies using the RAGAS 0.2 API.
 
-Dataset structure and capture validation have been checked locally. Dependency
-installation, actual agent captures, provider compatibility and live RAGAS
-scoring still need verification. Step 1's Codex review is against the repository
+Dataset structure, capture validation, isolated dependency installation and
+OpenAI judge compatibility have been verified. One synthetic fixture completed
+live RAGAS scoring and CSV export; actual agent captures and their scoring still
+need verification. Step 1's Codex review is against the repository
 snapshot; human review and fresh external website verification have not been
 performed.
 
@@ -33,7 +34,7 @@ existing checks and privacy-safe reporting.
 ## Implementation checklist
 
 - [x] Step 1: Review and freeze the starter cases.
-- [ ] Step 2: Verify the isolated scoring environment.
+- [x] Step 2: Verify the isolated scoring environment.
 - [ ] Step 3: Capture one real agent turn and its evidence.
 - [ ] Step 4: Automate capture for the starter dataset.
 - [ ] Step 5: Score the starter set and review behaviour.
@@ -215,7 +216,7 @@ next action without marking the step complete.
 | Step | Status | Evidence / result | Next action |
 |---|---|---|---|
 | 1 | Complete (2026-10-07) | Version 1.0.0: Codex reviewed all 12 labels against the repository snapshot; unique IDs, explicit setup/category/scope/behaviour, provenance and hashes verified. [Review decisions](examples/ragas/review.md); [manifest](examples/ragas/manifest.json); label-free inputs added. No fresh external or human review claimed. | Proceed to isolated scoring environment verification in step 2. |
-| 2 | Pending | Capture validation checked; live scoring unverified. | Install isolated dependencies and verify one judge call. |
+| 2 | Complete (2026-10-07) | Isolated Python 3.12.12 / RAGAS 0.2.15 environment: imports and `pip check` pass; one synthetic fixture validated and scored with OpenAI `gpt-4o-mini`, temperature 0; three finite scores and CSV export verified. Initial sandbox network failures resolved with approved access. [Versions and results](examples/ragas/environment-verification.md); dependency lock and smoke command added. No agent capture or baseline claimed. | Proceed to one real `nel_age` capture in step 3. |
 | 3 | Pending | No actual agent capture yet. | Inspect the evidence/composition boundary. |
 | 4 | Pending | Empty capture template exists. | Build runner after one capture is verified. |
 | 5 | Pending | Scoring CLI exists; behaviour review is manual. | Score actual captures and report missing results. |

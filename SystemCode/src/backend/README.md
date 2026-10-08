@@ -72,6 +72,10 @@ OPENAI_WEB_RAG_ANSWERS_ENABLED=true
 OPENAI_WEB_RAG_MODEL=gpt-4o-mini
 OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
 
+# Full-conversation supervisor: agent is the default; deterministic restores
+# the existing controller. Shadow serves the controller and evaluates the agent.
+CONVERSATION_AGENT_MODE=agent
+
 # Selected-school webpage answer implementation (deterministic or agent)
 WEB_RAG_ANSWER_MODE=deterministic
 
@@ -90,10 +94,21 @@ invalid values resolve to `deterministic`. Agent mode runs the bounded
 selected-school evidence graph behind the existing preferences endpoint and
 falls back to its deterministic answer on any failure. It supersedes the
 legacy `OPENAI_WEB_RAG_ANSWERS_ENABLED` synthesis path for this intent.
-Deterministic mode does not construct an agent model client or require
-`OPENAI_API_KEY`. Agent-mode model construction uses
+With `CONVERSATION_AGENT_MODE=deterministic`, the selected-school deterministic
+mode does not construct an agent model client or require `OPENAI_API_KEY`.
+Agent-mode model construction uses
 `OPENAI_WEB_RAG_MODEL` and requires `OPENAI_WEB_RAG_TIMEOUT_SECONDS` to be
 between 1 and 30 seconds.
+
+The full-conversation supervisor defaults to `agent` when
+`CONVERSATION_AGENT_MODE` is missing, blank, or invalid. Set it explicitly to
+`deterministic` to restore the existing conversation controller, or `shadow` to
+serve the controller response while evaluating an agent candidate inline.
+Restart the backend after changing deployment configuration. Agent mode requires
+`OPENAI_API_KEY` for model calls and preserves the existing controller fallback
+when the model is unavailable, execution fails, or validation rejects its result.
+Full-conversation agent and shadow modes disable the separate selected-school
+graph for that request. No frontend configuration or API contract change is needed.
 
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
 takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.

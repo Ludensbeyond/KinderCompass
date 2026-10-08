@@ -1,5 +1,28 @@
 # Implementation 3 — conversational-readiness plan
 
+## Current rollout configuration — 2026-10-07
+
+Following the completed readiness review and the user's confirmation that the
+code works, the user authorized making the full-conversation supervisor the
+default. `CONVERSATION_AGENT_MODE` now resolves missing, blank, and invalid
+values to `agent`. An explicit `deterministic` value restores the existing
+controller; `shadow` retains its existing behavior. Restart the backend after
+changing deployment configuration. Removing the variable now enables agent
+mode and is no longer a rollback operation.
+
+The context-local fallback override still forces both graph entry points to
+deterministic mode, so rejected or unavailable agent execution retains the
+existing controller fallback without recursive graph entry. No frontend or
+public-contract change is part of this rollout. The Implementation 3 steps and
+decision records below describe the earlier opt-in rollout and remain historical.
+
+Rollout verification: 24 configuration, model-factory, selected-school endpoint,
+and conversation-mode tests pass, including unset-mode dispatch and exactly-once
+fallback with both graph entries disabled. Another 21 supervisor, validation,
+and operational tests pass. `git diff --check` passes. Full-suite attempts did
+not complete in this environment; the bounded run exited after 120 seconds.
+This change does not claim a fresh complete-suite or live-provider evaluation.
+
 This document is the active source of truth for taking the backend-only
 full-conversation supervisor from implemented-but-no-go to a tested, grounded,
 operationally ready agent. It follows the completed
@@ -694,11 +717,11 @@ restart the backend process. Do not expose this variable to the browser and do
 not change `WEB_RAG_ANSWER_MODE`; the full-conversation supervisor owns model
 orchestration for the request.
 
-For immediate rollback, set `CONVERSATION_AGENT_MODE=deterministic` (or remove
-the variable) and restart the backend process. Missing and invalid values also
-fail closed to deterministic mode, but the explicit value is preferred for an
-auditable rollback. The existing API contract and persisted profile shape do
-not require migration in either direction.
+For immediate rollback, set `CONVERSATION_AGENT_MODE=deterministic` and restart
+the backend process. Under the subsequent 2026-10-07 rollout, removing the
+variable, leaving it blank, or supplying an invalid value enables agent mode.
+The existing API contract and persisted profile shape do not require migration
+in either direction.
 
 The decision-session verification reran the unchanged complete backend command
 and passed all 289 tests in 61.566 seconds. Runs 12, 13, and 14 were parsed
@@ -778,6 +801,6 @@ fallback. Regenerated canonical OpenAPI still has SHA-256
 
 ## Next step
 
-Implementation 3 is complete. No implementation step remains. Any proposal to
-make agent mode the default is a separate rollout decision and must preserve
-the immediate deterministic rollback path.
+Implementation 3 is complete. The separately authorized 2026-10-07 rollout
+makes agent mode the default while preserving the explicit deterministic
+rollback path. No implementation step remains.

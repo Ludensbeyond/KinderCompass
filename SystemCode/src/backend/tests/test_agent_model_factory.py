@@ -13,7 +13,9 @@ class AgentModelFactoryTests(unittest.TestCase):
     def test_conversation_deterministic_mode_is_lazy(self):
         client_factory = Mock()
 
-        self.assertIsNone(create_conversation_agent_model({}, client_factory=client_factory))
+        self.assertIsNone(create_conversation_agent_model(
+            {"CONVERSATION_AGENT_MODE": "deterministic"}, client_factory=client_factory,
+        ))
         client_factory.assert_not_called()
 
     def test_conversation_shadow_and_agent_modes_use_shared_factory(self):

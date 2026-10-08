@@ -56,7 +56,7 @@ def get_web_rag_answer_mode(
 def get_conversation_agent_mode(
     environ: Optional[Mapping[str, str]] = None,
 ) -> ConversationAgentMode:
-    """Read the supervisor mode, failing closed for missing or invalid input."""
+    """Default to the supervisor unless a supported mode explicitly overrides it."""
 
     if _AGENT_ENTRY_POINTS_DISABLED.get():
         return ConversationAgentMode.DETERMINISTIC
@@ -65,4 +65,4 @@ def get_conversation_agent_mode(
     try:
         return ConversationAgentMode(configured)
     except ValueError:
-        return ConversationAgentMode.DETERMINISTIC
+        return ConversationAgentMode.AGENT

@@ -96,11 +96,23 @@ OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
 OPENAI_INTENT_CLASSIFICATION_ENABLED=false
 OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
 OPENAI_WEB_RAG_ANSWERS_ENABLED=false
+
+OPENAI_WEB_RAG_MODEL=gpt-4o-mini
+OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
+ONEMAP_TOKEN=
+WEB_RAG_ANSWER_MODE=agent
+CONVERSATION_AGENT_MODE=agent
 ```
 
 Replace the blank values with your credentials. Keep any unused OpenAI features
 set to `false`, and do not commit `.env` or place backend credentials in the
 frontend `.env.local` file.
+
+The conversation supervisor runs in agent mode by default. Set
+`CONVERSATION_AGENT_MODE=deterministic` and restart the backend to use the existing
+conversation controller. Missing, blank, or invalid mode values use agent mode;
+execution failures still fall back to the controller. `shadow` remains available
+to serve the controller response while evaluating the agent inline.
 
 ### [ 2 ] Python dependencies
 

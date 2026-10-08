@@ -90,8 +90,9 @@ RAGAS, check its migration documentation before changing the imports.
 From the repository root:
 
 ```bash
-python -m venv /tmp/kindercompass-ragas-venv
-/tmp/kindercompass-ragas-venv/bin/python -m pip install -r docs/examples/ragas/requirements.txt
+python3.12 -m venv /tmp/kindercompass-ragas-venv
+/tmp/kindercompass-ragas-venv/bin/python -m pip install -r docs/examples/ragas/requirements.lock.txt
+/tmp/kindercompass-ragas-venv/bin/python -m pip check
 
 # Check capture format without dependencies, credentials or model calls.
 python docs/examples/ragas/score.py --runs /tmp/kindercompass-ragas-runs.jsonl --validate-only
@@ -105,14 +106,38 @@ python docs/examples/ragas/score.py --runs /tmp/kindercompass-ragas-runs.jsonl -
   --output /tmp/kindercompass-ragas.csv
 ```
 
+The lock file records the verified Python 3.12 environment; `requirements.txt`
+retains the intended dependency ranges for future upgrades. See the
+[environment verification](environment-verification.md) for tested versions.
+
+Before scoring real captures, verify the scorer with a single synthetic case:
+
+```bash
+# Dependency-free format check; writes a clearly labelled temporary fixture.
+python docs/examples/ragas/smoke.py --validate-only
+
+# Paid provider check using an explicit judge model and local credentials.
+# --env-file is optional when OPENAI_API_KEY is already exported.
+/tmp/kindercompass-ragas-venv/bin/python docs/examples/ragas/smoke.py \
+  --judge-model gpt-4o-mini --env-file .env
+```
+
+The smoke runner reads only `OPENAI_API_KEY` from the optional secret file;
+an exported key takes precedence. It creates its own one-case dataset and capture,
+validates them, invokes the three scoring metrics and checks that the CSV contains
+one fixture row with finite scores between zero and one. Generated files remain
+under `/tmp/kindercompass-ragas-fixture/` by default. The fixture uses fictional
+content and never calls the KinderCompass agent. Its scores are not a baseline.
+Optional LangSmith tracing and RAGAS usage telemetry are disabled for this check.
+
 The scoring example uses an OpenAI judge; configure the wrapper appropriately
 if your evaluation account uses Azure or another provider. Judge configuration
 is separate from the agent's model configuration.
 
 The CSV contains individual RAGAS scores. The sibling `.behaviour.json` file
 contains the two behaviour cases and checks awaiting human review; it does not
-claim that those checks passed. No live agent runs or paid scoring are included
-in this starter.
+claim that those checks passed. Step 2 verified paid fixture scoring only;
+no live agent captures have been scored.
 
 ## Make the small set effective
 
