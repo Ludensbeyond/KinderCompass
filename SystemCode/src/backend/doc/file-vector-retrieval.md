@@ -3,8 +3,8 @@
 `pipeline/parent_guide_retrieval.py` implements the typed
 `GeneralKnowledgeRetriever.search(question, limit=3)` boundary. Construct one
 `ParentGuideRetriever` per worker: it loads the validated active index once.
-Nothing yet constructs it in the preference service or changes tool routing;
-that is step 5. The backend continues using its existing curated corpus.
+The [backend integration guide](file-vector-service.md) documents service
+construction and routing added in step 5. Curated remains the default mode.
 
 Run a read-only query from the repository root without a server:
 
@@ -72,4 +72,4 @@ labelled positives passed in both modes; four unrelated and two corpus-excluded
 questions returned no evidence. See `tests/test_parent_guide_retrieval.py` for
 labels and the implementation plan for full-suite results. Build and rollback
 commands remain in [index construction](file-vector-index.md); changing CURRENT
-requires constructing a new retriever or restarting the future worker.
+requires constructing a new retriever or restarting the worker.

@@ -1,4 +1,4 @@
-"""Standalone typed guide retrieval; service wiring belongs to plan step 5."""
+"""Typed guide retrieval shared by standalone queries and backend guidance."""
 
 from dataclasses import dataclass
 import re

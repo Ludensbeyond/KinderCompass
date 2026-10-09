@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from copy import deepcopy
 from pathlib import Path
+from threading import Lock
 from typing import Any, Literal
 
 from SystemCode.src.backend.agents.config import (
@@ -48,6 +49,31 @@ class PreferenceService:
         self.evaluation = evaluation
         self.locations = locations
         self.repo_root = repo_root
+        self._general_retriever = None
+        self._general_retriever_lock = Lock()
+
+    def _knowledge_retriever(self, index: dict | None):
+        """Resolve configuration and load one index per service/worker lifetime."""
+        from SystemCode.src.backend.agents.tools import CuratedGeneralKnowledgeRetriever
+        from SystemCode.src.backend.pipeline.general_knowledge_config import (
+            GeneralKnowledgeRetrievalMode, get_general_knowledge_config,
+        )
+
+        with self._general_retriever_lock:
+            if self._general_retriever is None:
+                curated = CuratedGeneralKnowledgeRetriever(index or {"chunks": []})
+                try:
+                    config = get_general_knowledge_config()
+                except ValueError:
+                    self._general_retriever = curated
+                else:
+                    if config.mode is GeneralKnowledgeRetrievalMode.CURATED:
+                        self._general_retriever = curated
+                    else:
+                        from SystemCode.src.backend.pipeline.parent_guide_retrieval import ParentGuideRetriever
+
+                        self._general_retriever = ParentGuideRetriever(config, curated=curated)
+        return self._general_retriever
 
     @staticmethod
     def _run_selected_school_agent(
@@ -92,7 +118,10 @@ class PreferenceService:
             ),
             *create_decision_and_calculation_tools(context, self.evaluation),
             create_structured_school_facts_tool(context, self.schools),
-            *create_evidence_tools(context),
+            *create_evidence_tools(
+                context,
+                general_retriever=self._knowledge_retriever(context.general_knowledge_evidence.index),
+            ),
         ]
 
     @staticmethod
@@ -337,6 +366,11 @@ class PreferenceService:
             context.general_knowledge_evidence.index,
             intent,
             self.schools.facet_summary(),
+            general_retriever=(
+                self._knowledge_retriever(context.general_knowledge_evidence.index)
+                if intent.intent in {"ask_general_knowledge", "ask_combined_evidence"}
+                else None
+            ),
         )
         if intent.intent == "ask_selected_school_evidence":
             result = self._apply_selected_school_answer_mode(

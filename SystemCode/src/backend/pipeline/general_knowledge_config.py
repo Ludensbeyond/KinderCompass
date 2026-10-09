@@ -1,7 +1,7 @@
-"""Configuration reserved for the opt-in parent-guide retrieval extension.
+"""Configuration for the opt-in parent-guide retrieval extension.
 
-Reading configuration performs no provider calls or index loading. Runtime
-construction and wiring are intentionally deferred to the later plan steps.
+Reading configuration performs no provider calls or index loading.
+PreferenceService caches the configured retrieval boundary per worker.
 """
 
 import math
@@ -39,7 +39,7 @@ def get_general_knowledge_config(
     """Parse server configuration without reading or storing credentials.
 
     Missing, blank or unknown modes remain curated. Invalid provider/model or
-    execution bounds raise a value-free error for the future fallback boundary.
+    execution bounds raise a value-free error for the service fallback boundary.
     Relative paths resolve against the repository, independent of worker cwd.
     """
     source = os.environ if environ is None else environ

@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Steps 1–4 complete; standalone retrieval and fallback exist. Backend service wiring is deferred.
+Status: Steps 1–5 complete; backend agent and deterministic retrieval are wired. Step 6 evaluation remains pending.
 
 ## Objective and first-version scope
 
@@ -339,3 +339,35 @@ the documented demo with local artifacts and no vector database provisioning.
   passed, with the same failure. No new deterministic regression was observed.
 - Next implementation step: Step 5, connect the existing agent and deterministic
   paths. Stop here for this implementation request.
+
+- Step 5 completed on 9 October 2026: `PreferenceService` constructs and caches
+  the configured general retriever under a construction lock, then injects it
+  into the registered evidence tool and deterministic general/combined answers.
+  Vector/lexical modes retain guide-to-curated fallbacks; invalid configuration
+  falls back to curated. Default retrieval mode remains curated.
+- Broader question routing covers enrolment, registration, waitlists, CCTV, CDA,
+  EIPIC, fee caps and dated policy changes. Centre/center references preserve
+  school scope. Existing deterministic tool restrictions keep preferences,
+  structured school facts and family calculations away from vector search.
+- Deterministic answers validate typed passages/citations and retain full text,
+  policy labels and evidence classification. Agent setup failure retrieves the
+  same guide corpus through the deterministic service boundary. Combined answers
+  keep school and general citations separate; family preferences remain intact.
+- Added nine integration tests using deterministic embedding/model doubles for
+  service load-once behavior, supervisor vector calls, grounded agent fallback,
+  timeout/lexical recovery, corpus exclusions, combined scope, safe configuration
+  fallback, evidence classification, routing and zero non-guidance vector calls.
+  No provider calls, source changes or generated build changes were required.
+- Runtime configuration and restart requirements are documented in the
+  [backend integration guide](../SystemCode/src/backend/doc/file-vector-service.md).
+  No new operational question/family logging or HTTP shapes were introduced.
+- Verification: all 75 focused retrieval, persistence, chunking, configuration,
+  evidence, routing and supervisor tests passed. Required full backend discovery
+  outside the sandbox, with dotenv and four optional LLM flags disabled, ran
+  358 tests in 16.927 seconds: 357 passed and the existing incremental ingestion
+  checkpoint test failed. An untouched `a9090cf` archive under identical settings
+  ran 349 tests with the same sole failure. No new deterministic regression was
+  observed. Sandboxed API tests stalled; completed verification used the runs
+  outside the sandbox. The nine integration tests also passed after final cleanup.
+- Next implementation step: Step 6, evaluate and document the demo.
+  Stop here for this implementation request.
