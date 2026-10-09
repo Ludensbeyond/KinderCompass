@@ -38,3 +38,6 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
   .venv/bin/python -m SystemCode.src.backend.scripts.evaluate_conversation_supervisor \
   --staged --output SystemCode/src/backend/output/conversation_agent_evaluation.json
 ```
+
+`query_parent_guide.py` runs read-only lexical, vector or curated queries without
+a server. See [standalone retrieval](file-vector-retrieval.md).

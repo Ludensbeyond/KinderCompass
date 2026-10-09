@@ -377,3 +377,7 @@ from being silently used.
 
 See the [PoC 1 guide](../../../docs/poc1/Readme.md) for the full application
 workflow, frontend launch, demonstration inputs, and system limitations.
+
+The [standalone parent-guide retrieval guide](doc/file-vector-retrieval.md) documents
+step 4 query commands, relevance calibration, dated constraints and fallback.
+Backend service injection remains deferred to step 5.

@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Steps 1–3 complete; persistent document embeddings exist. Runtime retrieval is deferred.
+Status: Steps 1–4 complete; standalone retrieval and fallback exist. Backend service wiring is deferred.
 
 ## Objective and first-version scope
 
@@ -307,3 +307,35 @@ the documented demo with local artifacts and no vector database provisioning.
   verification uses the outside-sandbox runs above.
 - Next implementation step: Step 4, implement retrieval and fallback.
   Stop here for this implementation request.
+
+- Step 4 completed on 9 October 2026: added a standalone typed parent-guide
+  retriever and read-only query CLI. A constructed instance validates/loads the
+  active build once and embeds bounded questions only, with one timed provider
+  attempt, matching model/dimensions and exhaustive cosine ranking (maximum three).
+- Reviewed topic/year constraints apply before vector and lexical ranking;
+  dated passages retain explicit policy-period labels and original qualifications.
+  Undated background remains eligible. Explicit constraints cannot be undone by
+  curated fallback whose metadata cannot enforce them.
+- Missing/corrupt/incompatible builds recover through freshly hash-validated
+  reviewed Markdown. Provider/model/invalid-vector/timeout failures and low
+  similarity try guide lexical search, then the injected curated retriever.
+  Empty evidence retains the existing unavailable-response boundary.
+- Calibrated provisional cosine cutoff 0.40 and lexical coverage cutoff 0.45
+  on eight labelled positives and six unsupported questions. Real OpenAI query
+  embeddings retrieved expected top-three passages for all eight positives;
+  all six unsupported cases returned empty evidence. Independent lexical search
+  also passed all fourteen cases; no hybrid ranking was added. Four negatives
+  are unrelated and two (CCTV/waitlist) are excluded by existing source review.
+  This small standalone set does not replace the comprehensive Step 6 evaluation.
+- Added deterministic tests for load-once behavior, query bounds, typed citations,
+  period/topic constraints, cosine rejection and every fallback category/order.
+  No source, provenance, build artifacts, service injection or routing changed.
+  Commands and limitations: [standalone retrieval guide](../SystemCode/src/backend/doc/file-vector-retrieval.md).
+- Verification: all 50 focused retrieval/persistence/chunking/configuration/tool
+  tests passed. Full backend discovery outside the sandbox with dotenv loading
+  and four optional LLM flags disabled ran 349 tests in 16.105 seconds: 348 passed
+  and the existing incremental ingestion checkpoint test failed. An untouched
+  HEAD archive under identical settings ran 338 tests in 16.299 seconds: 337
+  passed, with the same failure. No new deterministic regression was observed.
+- Next implementation step: Step 5, connect the existing agent and deterministic
+  paths. Stop here for this implementation request.
