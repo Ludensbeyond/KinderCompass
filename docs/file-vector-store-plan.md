@@ -246,3 +246,8 @@ the documented demo with local artifacts and no vector database provisioning.
   in-process API tests required execution outside the filesystem sandbox.
 - Next implementation step: Step 2, parse and chunk the Markdown. Stop here for
   this implementation request.
+- Step 1 reverified on 9 October 2026 against implementation commit `16f8ef2`:
+  all 11 focused tests passed again. Full backend discovery outside the sandbox
+  ran 310 tests in 69.762 seconds: 307 passed, with the same two failures and
+  one error listed above. Optional live LLM features were disabled. No further
+  implementation was needed, and Step 2 remains unstarted.
