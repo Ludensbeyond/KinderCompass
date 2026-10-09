@@ -68,12 +68,10 @@ an explicit error type. Provider/tool failures with a returned controller answer
 remain labelled `fallback` and also count as failed execution. A completed run
 with any execution failures exits 2 with `status: incomplete`; interrupted runs
 retain flushed rows and a manifest with `status: running`. Inspect that manifest
-before scoring. Successful subsets are format-validated automatically, while the
-standalone scorer rejects missing rows and null answers. It currently checks
-format only: a nonempty provider-failure fallback can pass that check, so the
-manifest's failure count must also be zero before scoring a complete run.
-Do not remove failed cases to claim full-dataset results. Scoring and failure-aware score reports belong to
-Step 5.
+before scoring. Successful subsets are format-validated automatically. Standalone `--validate-only`
+rejects missing rows, null answers and execution-failure fallbacks. Scoring retains
+missing, invalid and failed cases as explicit report rows without calling the judge
+for them. Do not remove failed cases to claim full-dataset results.
 
 [Dataset capture verification](dataset-capture-verification.md) records Step 4's
 execution and focused tests. [capture_one.py](capture_one.py) retains the original
@@ -158,11 +156,54 @@ The scoring example uses an OpenAI judge; configure the wrapper appropriately
 if your evaluation account uses Azure or another provider. Judge configuration
 is separate from the agent's model configuration.
 
-The CSV contains individual RAGAS scores. The sibling `.behaviour.json` file
-contains the two behaviour cases and checks awaiting human review; it does not
-claim that those checks passed. Step 2 verified paid fixture scoring only;
-no live agent captures have been scored. Step 3 validated one actual capture's
-format and evidence boundary without invoking the judge.
+The CSV includes every dataset case, its outcome/reason and any finite scores.
+The sibling `.report.json` retains individual metric failures, undefined outcomes,
+counts, judge settings, package versions and input hashes. `.behaviour.json`
+contains the explicit behaviour checks and their review status. Empty evidence
+is reported as `empty_evidence` without judge calls; empty or invalid answers,
+missing captures and execution failures never receive successful scores.
+A controller fallback without an execution error can be scored and retains its
+`agent_status`; provider/tool failures are excluded even if a fallback answer exists.
+Metric exceptions are `scoring_failed`, separately from `execution_failed`.
+Non-finite scores become JSON null with `undefined` status, never zero or a pass.
+Other metrics for that case still run and their results are retained. Exit 2
+means failed/unscorable or undefined cases were reported; it does not discard exports.
+
+Counts mean: `attempted` is captured IDs (including failed executions), `executed`
+is nonempty returned answers without execution errors, `scored` is evidence cases
+with all three finite scores, `failed` includes missing/invalid captures, execution
+errors, empty evidence and judge errors, and `undefined` counts cases with at least
+one non-finite metric. A case can be both failed and undefined if different metrics
+have different outcomes. Behaviour cases are counted separately as reviewed;
+review failure is a recorded verdict and is not a judge execution error.
+
+Supply `--env-file .env` to read only the judge's `OPENAI_API_KEY` when it is not
+already exported. Optional LangSmith tracing and RAGAS telemetry are disabled.
+Supply `--reviews /tmp/reviews.json` to join explicit reviews by case ID:
+
+```json
+{
+  "nel_age": {"pass": true, "reason": "States four to six."},
+  "no_selected_school": {
+    "checks": [
+      {"check": "Requests a school selection or clarification.", "pass": true,
+       "reason": "Requests one school in the Results panel."},
+      {"check": "Does not claim that an unidentified preschool offers Montessori.",
+       "pass": true, "reason": "Makes no school offering claim."},
+      {"check": "Does not turn general Montessori evidence into a school-specific citation.",
+       "pass": true, "reason": "No citations are returned."}
+    ]
+  }
+}
+```
+
+Evidence-case reviews evaluate coverage of all necessary reference facts;
+behaviour reviews must cover each frozen check in order with a boolean verdict
+and a nonempty reason. Omitted reviews remain pending. Reviewer/date metadata
+may also be recorded. These are Codex or human reviews, not metric-generated
+verdicts. [Step 5 verification](scoring-verification.md) records actual scores,
+answer completeness and both completed behaviour reviews. Baseline interpretation
+remains Step 6.
 
 ## Make the small set effective
 

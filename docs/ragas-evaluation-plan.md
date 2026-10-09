@@ -22,8 +22,9 @@ The [starter guide](examples/ragas/README.md) and these files already exist:
 Dataset structure, capture validation, isolated dependency installation and
 OpenAI judge compatibility have been verified. One synthetic fixture completed
 live RAGAS scoring and CSV export. One real `nel_age` capture now verifies the
-agent and evidence boundary; full-dataset capture is now automated and verified; actual scoring remains
-pending. Step 1's Codex review is against the repository
+agent and evidence boundary; full-dataset capture and actual scoring are now
+verified, with explicit empty-evidence outcomes and completed Codex behaviour
+and answer-completeness reviews. Baseline interpretation remains pending. Step 1's Codex review is against the repository
 snapshot; human review and fresh external website verification have not been
 performed.
 
@@ -38,7 +39,7 @@ existing checks and privacy-safe reporting.
 - [x] Step 2: Verify the isolated scoring environment.
 - [x] Step 3: Capture one real agent turn and its evidence.
 - [x] Step 4: Automate capture for the starter dataset.
-- [ ] Step 5: Score the starter set and review behaviour.
+- [x] Step 5: Score the starter set and review behaviour.
 - [ ] Step 6: Establish and interpret the first baseline.
 - [ ] Step 7: Extend coverage to selected schools and conversations.
 - [ ] Step 8: Add a repeatable regression workflow.
@@ -220,7 +221,7 @@ next action without marking the step complete.
 | 2 | Complete (2026-10-07) | Isolated Python 3.12.12 / RAGAS 0.2.15 environment: imports and `pip check` pass; one synthetic fixture validated and scored with OpenAI `gpt-4o-mini`, temperature 0; three finite scores and CSV export verified. Initial sandbox network failures resolved with approved access. [Versions and results](examples/ragas/environment-verification.md); dependency lock and smoke command added. No agent capture or baseline claimed. | Proceed to one real `nel_age` capture in step 3. |
 | 3 | Complete (2026-10-08) | Real `nel_age` accepted by configured supervisor; three ordered original passages and complete composer tool input captured outside Git. Initial model-error fallback retained with empty evidence; approved live retry succeeded. Replay with/without instrumentation preserves full answer and profile state; one-case format validation passes. [Boundary, provenance and verification](examples/ragas/capture-verification.md); single-turn offline collector added. No scoring or baseline claimed. | Proceed to dataset capture automation in step 4. |
 | 4 | Complete (2026-10-08) | Offline runner captures all 12 label-free cases with fresh state, ordered original evidence, fallback provenance, checkpointed manifest and explicit failures. Sandbox connection failures retained as 12 incomplete rows; approved live run accepted all 12, with zero fallbacks/errors. Actual capture validates as 10 RAGAS + two behaviour cases; seven focused tests pass. [Verification and limitations](examples/ragas/dataset-capture-verification.md). Raw artifacts remain outside Git; no scoring or baseline claimed. | Proceed to actual scoring and behaviour review in step 5; inspect empty evidence and comparison routing. |
-| 5 | Pending | Scoring CLI exists; behaviour review is manual. | Score actual captures and report missing results. |
+| 5 | Complete (2026-10-09) | Actual version 1.0.0 capture scored with OpenAI `gpt-4o-mini`, temperature 0: attempted/executed 12, scored 8, empty-evidence unscorable 2, execution/scoring errors 0, undefined 0. All ten evidence answers reviewed (eight complete); both behaviour cases reviewed (five of six checks pass). Failure-aware per-case exports and 13 offline tests pass. [Scores, reviews and verification](examples/ragas/scoring-verification.md). Initial sandbox provider access failed; approved retry succeeded. Raw artifacts remain outside Git; no baseline claimed. | Proceed to baseline bundle and interpretation in step 6; review comparison failures, unsupported-claim explanation and judge/manual discrepancies. |
 | 6 | Pending | No measured baseline. | Save and review the first complete run. |
 | 7 | Pending | Starter covers general guidance and two behaviours. | Add school and multi-turn cases after baseline. |
 | 8 | Pending | No automated regression comparison. | Document workflow and compare compatible runs. |
