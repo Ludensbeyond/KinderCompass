@@ -1,0 +1,1078 @@
+{
+  "acceptance_passed": false,
+  "build_id": "f7ef031d99fe4a12a4f08b9556ef1ed7",
+  "cases": [
+    {
+      "case_id": "landscape",
+      "intent": "update_preferences",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.732,
+        "hit": true,
+        "mapping_ids": [
+          "sector-overview"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 919.724,
+        "hit": true,
+        "mapping_ids": [
+          "eydf-framework",
+          "sector-overview",
+          "spark-quality"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "operators",
+      "intent": "update_preferences",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 4.606,
+        "hit": true,
+        "mapping_ids": [
+          "anchor-operators"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 324.321,
+        "hit": false,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "eyc",
+      "intent": "update_preferences",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 5.073,
+        "hit": true,
+        "mapping_ids": [
+          "mk-eyc-partnership"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 272.537,
+        "hit": true,
+        "mapping_ids": [
+          "mk-eyc-partnership",
+          "mk-registration-dates",
+          "mk-kcare-2026-fees"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "eydf",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.729,
+        "hit": true,
+        "mapping_ids": [
+          "eydf-framework",
+          "sector-overview",
+          "ds-ls-role"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 345.173,
+        "hit": true,
+        "mapping_ids": [
+          "eydf-framework",
+          "eipic-role",
+          "sector-overview"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "montessori",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.578,
+        "hit": true,
+        "mapping_ids": [
+          "montessori-emphasis"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 200.732,
+        "hit": true,
+        "mapping_ids": [
+          "montessori-emphasis"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "aop",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.324,
+        "hit": true,
+        "mapping_ids": [
+          "aop-2026-fees",
+          "pop-2026-fees",
+          "kifas-2026-scope"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 205.652,
+        "hit": true,
+        "mapping_ids": [
+          "aop-2026-fees",
+          "pop-2026-fees"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "pop",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 1.87,
+        "hit": true,
+        "mapping_ids": [
+          "pop-2026-fees",
+          "aop-2026-fees"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 450.599,
+        "hit": true,
+        "mapping_ids": [
+          "pop-2026-fees",
+          "aop-2026-fees"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "holidays",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.671,
+        "hit": true,
+        "mapping_ids": [
+          "mk-kcare-2026-fees",
+          "kcare-subsidies"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 229.379,
+        "hit": true,
+        "mapping_ids": [
+          "mk-kcare-2026-fees",
+          "kcare-subsidies",
+          "kifas-2026-scope"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "citizenship",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.2,
+        "hit": true,
+        "mapping_ids": [
+          "subsidy-scope",
+          "basic-subsidy-and-exception"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 191.608,
+        "hit": true,
+        "mapping_ids": [
+          "basic-subsidy-and-exception",
+          "subsidy-scope",
+          "additional-subsidy-2026-table"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "work-exception",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.851,
+        "hit": true,
+        "mapping_ids": [
+          "basic-subsidy-and-exception",
+          "sector-overview",
+          "subsidy-scope"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 216.782,
+        "hit": true,
+        "mapping_ids": [
+          "basic-subsidy-and-exception",
+          "subsidy-scope"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "income",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 1.599,
+        "hit": true,
+        "mapping_ids": [
+          "subsidy-income-ceiling",
+          "basic-subsidy-and-exception",
+          "additional-subsidy-2026-table"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 199.781,
+        "hit": true,
+        "mapping_ids": [
+          "subsidy-income-ceiling",
+          "basic-subsidy-and-exception",
+          "additional-subsidy-2026-table"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "as-2026",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 0.7,
+        "hit": true,
+        "mapping_ids": [
+          "basic-subsidy-and-exception",
+          "subsidy-scope",
+          "additional-subsidy-2026-table"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 219.205,
+        "hit": true,
+        "mapping_ids": [
+          "additional-subsidy-2026-table",
+          "basic-subsidy-and-exception",
+          "subsidy-income-ceiling"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": false,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": false,
+      "answer_safe": false,
+      "case_id": "kifas",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.887,
+        "hit": false,
+        "mapping_ids": [
+          "kcare-subsidies"
+        ],
+        "qualifications_ok": false
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 276.062,
+        "hit": true,
+        "mapping_ids": [
+          "kifas-2026-scope",
+          "kcare-subsidies"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "kcare",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 3.976,
+        "hit": true,
+        "mapping_ids": [
+          "kcare-subsidies",
+          "mk-kcare-2026-fees",
+          "subsidy-scope"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 186.094,
+        "hit": true,
+        "mapping_ids": [
+          "kcare-subsidies",
+          "basic-subsidy-and-exception",
+          "additional-subsidy-2026-table"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "cda",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 0.89,
+        "hit": true,
+        "mapping_ids": [
+          "sg-child-support-2027",
+          "cda-current-benefits"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 241.014,
+        "hit": true,
+        "mapping_ids": [
+          "cda-current-benefits"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "as-2027",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 1.025,
+        "hit": true,
+        "mapping_ids": [
+          "additional-subsidy-2027-table"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 367.591,
+        "hit": true,
+        "mapping_ids": [
+          "additional-subsidy-2027-table",
+          "basic-subsidy-and-exception"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "package",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 0.64,
+        "hit": true,
+        "mapping_ids": [
+          "sg-child-support-2027",
+          "cda-current-benefits"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 283.213,
+        "hit": true,
+        "mapping_ids": [
+          "sg-child-support-2027",
+          "cda-current-benefits"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "form1",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.607,
+        "hit": true,
+        "mapping_ids": [
+          "form-1-application"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 207.846,
+        "hit": true,
+        "mapping_ids": [
+          "form-1-application",
+          "ds-ls-role",
+          "mk-registration-dates"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "registration",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 1.935,
+        "hit": true,
+        "mapping_ids": [
+          "mk-registration-dates"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 268.996,
+        "hit": true,
+        "mapping_ids": [
+          "mk-registration-dates"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "priority",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.774,
+        "hit": true,
+        "mapping_ids": [
+          "mk-priority"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 196.147,
+        "hit": false,
+        "mapping_ids": [
+          "mk-registration-dates"
+        ],
+        "qualifications_ok": false
+      }
+    },
+    {
+      "case_id": "spark",
+      "intent": "update_preferences",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.212,
+        "hit": true,
+        "mapping_ids": [
+          "spark-quality"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 303.817,
+        "hit": true,
+        "mapping_ids": [
+          "spark-quality"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "dsls",
+      "intent": "update_preferences",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.948,
+        "hit": true,
+        "mapping_ids": [
+          "ds-ls-role"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 217.332,
+        "hit": true,
+        "mapping_ids": [
+          "ds-ls-role",
+          "kcare-subsidies"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": true,
+      "answer_has_citations": true,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "eipic",
+      "intent": "ask_general_knowledge",
+      "kind": "answerable",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.963,
+        "hit": true,
+        "mapping_ids": [
+          "eipic-role",
+          "ds-ls-role",
+          "subsidy-scope"
+        ],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 278.423,
+        "hit": true,
+        "mapping_ids": [
+          "eipic-role"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": false,
+      "answer_has_citations": false,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "waitlist",
+      "intent": "ask_general_knowledge",
+      "kind": "excluded",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.422,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 229.436,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "answer_expected_passage": false,
+      "answer_has_citations": false,
+      "answer_qualifications_ok": true,
+      "answer_safe": true,
+      "case_id": "cctv",
+      "intent": "ask_general_knowledge",
+      "kind": "excluded",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.457,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "state_preserved": true,
+      "tools": [
+        "search_general_knowledge"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 327.467,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "p1",
+      "intent": "update_preferences",
+      "kind": "excluded",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.717,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 211.547,
+        "hit": false,
+        "mapping_ids": [
+          "mk-registration-dates",
+          "mk-eyc-partnership",
+          "mk-priority"
+        ],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "weather",
+      "intent": "update_preferences",
+      "kind": "unrelated",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.434,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 371.974,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "bicycle",
+      "intent": "update_preferences",
+      "kind": "unrelated",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.347,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 203.291,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "cake",
+      "intent": "update_preferences",
+      "kind": "unrelated",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.425,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 211.322,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "football",
+      "intent": "update_preferences",
+      "kind": "unrelated",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 2.457,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": false,
+      "tools": [
+        "update_preferences"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 196.541,
+        "hit": true,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      }
+    },
+    {
+      "case_id": "fee",
+      "intent": "ask_selected_school_evidence",
+      "kind": "structured",
+      "routing_ok": true,
+      "tools": [
+        "query_structured_school_facts"
+      ]
+    },
+    {
+      "case_id": "budget",
+      "intent": "update_preferences",
+      "kind": "preference",
+      "routing_ok": true,
+      "tools": [
+        "update_preferences"
+      ]
+    },
+    {
+      "case_id": "school-montessori",
+      "intent": "ask_selected_school_evidence",
+      "kind": "school",
+      "routing_ok": true,
+      "tools": [
+        "search_selected_school_evidence"
+      ]
+    },
+    {
+      "case_id": "combined",
+      "intent": "ask_combined_evidence",
+      "kind": "combined",
+      "lexical": {
+        "citations_ok": true,
+        "elapsed_ms": 3.695,
+        "hit": false,
+        "mapping_ids": [],
+        "qualifications_ok": true
+      },
+      "routing_ok": true,
+      "tools": [
+        "search_general_knowledge",
+        "search_selected_school_evidence"
+      ],
+      "vector": {
+        "citations_ok": true,
+        "elapsed_ms": 258.624,
+        "hit": true,
+        "mapping_ids": [
+          "montessori-emphasis"
+        ],
+        "qualifications_ok": true
+      }
+    }
+  ],
+  "corpus_exclusions": [
+    {
+      "notes": "Age/cohort table and entry-boundary advice omitted: AskGov age/ratio source returned 403. Three-decisions guidance is editorial.",
+      "section": 1
+    },
+    {
+      "notes": "Service table mixes official claims and visit advice; split before use. MK citizenship/hours need separate citations. Childminding AskGov blocked. Private/family-care guidance and branch/philosophy judgements omitted.",
+      "section": 2
+    },
+    {
+      "notes": "Mixed-source framework paragraph requires sentence split. Reggio description partly supported but project emphasis not established by fetched overview; omit pending deeper review. IB PDF blocked. Waldorf linked school blog is an example, not primary general authority. Visit questions/language/judgement advice omitted.",
+      "section": 3
+    },
+    {
+      "notes": "Mixed fee table must split by operator/source and retain conditions. GST 9% source verified, but fee examples are derived calculations and must remain deterministic. Budget checklists/advice omitted.",
+      "section": 4
+    },
+    {
+      "notes": "Income-assessment AskGov blocked; bonuses/earnings assertion omitted. All 2026 AS table rows independently verified in PDF. Numeric net-bill illustration is derived, not a source quote.",
+      "section": 5
+    },
+    {
+      "notes": "KiFAS Start-Up $240 and $1,900/$650 thresholds remain unverified: SupportGoWhere is a JavaScript shell and KiFAS overview does not establish them. Hardship/KidSTART sources accessible but combined paragraph requires splitting and eligibility review; not approved in first corpus.",
+      "section": 6
+    },
+    {
+      "notes": "AS 2027 bands verified. Claim that KiFAS rises to $15,000/$3,400 remains unverified: linked SupportGoWhere shell and current KiFAS overview do not establish those exact future values. Do not generalise childcare PDF to KiFAS. Parent-action advice omitted.",
+      "section": 7
+    },
+    {
+      "notes": "Registration dates independently verified on MOE despite blocked Horizon link. Documents and visit/search checklists are editorial and vary by centre. Form 1 reassessment sentence needs separate ECDA mapping. K2 admissions and KCare requirements require separate source mapping.",
+      "section": 8
+    },
+    {
+      "notes": "Staffing ratios table and CCTV incident-access claims remain unverified: AskGov 403. Visit questions and classroom judgements are editorial. SPARK approved separately.",
+      "section": 9
+    },
+    {
+      "notes": "Vaccination legal claim omitted: CDA page returned 403. DS-Plus/InSP row combines distinct programmes and requires split review. Health/referral/settling advice is editorial; approved DS-LS/EIPIC descriptions must split and retain headers.",
+      "section": 10
+    },
+    {
+      "notes": "No passage approved initially. MK/P1 Phase 2A claim points to an MK online-registration PDF that does not establish P1 priority. P1 overview does not establish announced 2027/2028 changes. Readiness/shortlist/FAQ advice is editorial; verify admission claims against direct P1 phase sources before use.",
+      "section": 11
+    }
+  ],
+  "deterministic_answers_ok": false,
+  "embedding": {
+    "dimensions": 1536,
+    "model": "text-embedding-3-small",
+    "model_version": null,
+    "provider": "openai"
+  },
+  "label_basis": "Manually specified expected mappings and acceptable answers from the supplied guide and reviewed sources.json; no independent human adjudication of generated answers. Labels are fixed before this evaluation; eight question formulations reuse step 4 calibration cases.",
+  "measurement": {
+    "index_load_ms": 8.63,
+    "load_peak_traced_bytes": 1057707,
+    "matrix_bytes": 141312,
+    "note": "Warm Python process; traced allocations include index validation. Latency includes query API time for vectors."
+  },
+  "routing_ok": false,
+  "schema_version": 1,
+  "summary": {
+    "lexical": {
+      "answerable_count": 24,
+      "citations_ok": true,
+      "gates_passed": false,
+      "latency_p50_ms": 2.457,
+      "latency_p95_ms": 4.291,
+      "negative_count": 7,
+      "negative_rejections": 7,
+      "provider_failures": 0,
+      "qualifications_ok": false,
+      "recall_at_three": 0.9167,
+      "top_three_hits": 22
+    },
+    "vector": {
+      "answerable_count": 24,
+      "citations_ok": true,
+      "gates_passed": false,
+      "latency_p50_ms": 229.436,
+      "latency_p95_ms": 411.286,
+      "negative_count": 7,
+      "negative_rejections": 6,
+      "provider_failures": 0,
+      "qualifications_ok": false,
+      "recall_at_three": 0.9167,
+      "top_three_hits": 22
+    }
+  },
+  "vector_evaluated": true
+}

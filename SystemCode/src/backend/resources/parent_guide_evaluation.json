@@ -1,0 +1,546 @@
+{
+  "schema_version": 1,
+  "label_basis": "Manually specified expected mappings and acceptable answers from the supplied guide and reviewed sources.json; no independent human adjudication of generated answers. Labels are fixed before this evaluation; eight question formulations reuse step 4 calibration cases.",
+  "cases": [
+    {
+      "case_id": "landscape",
+      "section": 1,
+      "question": "What preschool services does ECDA oversee?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "sector-overview"
+      ],
+      "acceptable_answer": "Infant care, childcare and kindergarten; ECDA oversees the sector.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "operators",
+      "section": 2,
+      "question": "Who are the Anchor Operators?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "anchor-operators"
+      ],
+      "acceptable_answer": "PCF Sparkletots, My First Skool, M.Y World, Skool4Kidz and E-Bridge.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "eyc",
+      "section": 2,
+      "question": "Does the MK Early Years Centre partnership guarantee an MK place at every branch?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "mk-eyc-partnership"
+      ],
+      "acceptable_answer": "Only eligible children at participating EYCs; MK and KCare places differ.",
+      "required_terms": [
+        "does not apply automatically to every branch",
+        "distinct from a KCare place"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "eydf",
+      "section": 3,
+      "question": "What is the Early Years Development Framework?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "eydf-framework"
+      ],
+      "acceptable_answer": "ECDA framework for birth to age 3.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "montessori",
+      "section": 3,
+      "question": "What is Montessori?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "montessori-emphasis"
+      ],
+      "acceptable_answer": "Prepared materials, practical life, independence and self-directed work.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "aop",
+      "section": 4,
+      "question": "What are AOP fee caps in 2026?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "aop-2026-fees"
+      ],
+      "acceptable_answer": "Citizen-child caps before GST and subsidies.",
+      "required_terms": [
+        "Policy period: 2026",
+        "Before GST",
+        "Singapore Citizen"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "pop",
+      "section": 4,
+      "question": "What are POP fee caps in 2026?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "pop-2026-fees"
+      ],
+      "acceptable_answer": "Citizen-child childcare $650 and infant care $1,290 before GST/subsidies.",
+      "required_terms": [
+        "Policy period: 2026",
+        "Before GST",
+        "Singapore Citizen"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "holidays",
+      "section": 4,
+      "question": "Are MK and KCare fees payable during holidays in 2026?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "mk-kcare-2026-fees"
+      ],
+      "acceptable_answer": "Fees remain payable during June and December holidays.",
+      "required_terms": [
+        "Policy period: 2026",
+        "June and December holidays"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "citizenship",
+      "section": 5,
+      "question": "Can a non-citizen child receive childcare subsidies?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "subsidy-scope"
+      ],
+      "acceptable_answer": "The child must be a citizen; a citizen parent alone is insufficient.",
+      "required_terms": [
+        "if the child is not a citizen"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "work-exception",
+      "section": 5,
+      "question": "Does the childcare work exception also apply to infant care?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "basic-subsidy-and-exception"
+      ],
+      "acceptable_answer": "The low-income childcare employment exception is not a blanket infant-care exemption.",
+      "required_terms": [
+        "not a blanket infant-care exemption",
+        "56 hours",
+        "Special Approval"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "income",
+      "section": 5,
+      "question": "What is the childcare subsidy income ceiling?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "subsidy-income-ceiling"
+      ],
+      "acceptable_answer": "Usual HHI $12,000 or PCI $3,000 for eligible households of at least five.",
+      "required_terms": [
+        "at least five family members"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "as-2026",
+      "section": 5,
+      "question": "What are childcare subsidy amounts in 2026?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "additional-subsidy-2026-table"
+      ],
+      "acceptable_answer": "2026 AS maximums require eligible Basic Subsidy, fees and minimum co-payment.",
+      "required_terms": [
+        "Policy period: 2026",
+        "minimum co-payment",
+        "Half-day and flexible"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "kifas",
+      "section": 6,
+      "question": "Who qualifies for KiFAS in 2026?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "kifas-2026-scope"
+      ],
+      "acceptable_answer": "Eligible citizen children in MOE/AOP kindergartens; means-tested, not private kindergartens.",
+      "required_terms": [
+        "Policy period: 2026",
+        "does not apply to private kindergartens",
+        "minimum co-payment"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "kcare",
+      "section": 6,
+      "question": "What Basic Subsidy is available for KCare?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "kcare-subsidies"
+      ],
+      "acceptable_answer": "KCare Basic Subsidy is $150; ordinary $300 childcare subsidy does not apply.",
+      "required_terms": [
+        "$150",
+        "do not apply the ordinary $300"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "cda",
+      "section": 6,
+      "question": "What is CDA used for?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "cda-current-benefits"
+      ],
+      "acceptable_answer": "Restricted approved education/healthcare expenses; cohort-specific grants and capped co-matching.",
+      "required_terms": [
+        "18 February 2025",
+        "Older birth cohorts",
+        "Co-matching requires deposits and is capped"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "as-2027",
+      "section": 7,
+      "question": "How do subsidy thresholds change in 2027?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "additional-subsidy-2027-table"
+      ],
+      "acceptable_answer": "2027 HHI bands widen; maximums depend on eligibility, fees and co-payments.",
+      "required_terms": [
+        "Policy period: 2027",
+        "minimum co-payments",
+        "not total subsidies or guaranteed payouts"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "package",
+      "section": 7,
+      "question": "How does the SG Child Support Package change CDA co-matching in 2027?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "sg-child-support-2027"
+      ],
+      "acceptable_answer": "Transition dates depend on birth cohort; CDA is separate from PayNow payout account.",
+      "required_terms": [
+        "30 September 2027",
+        "1 October 2027",
+        "CDA is not that PayNow payout account"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "form1",
+      "section": 8,
+      "question": "What is LifeSG Form 1 used for in preschool enrolment?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "form-1-application"
+      ],
+      "acceptable_answer": "Enrolment details and subsidy applications after the place is confirmed.",
+      "required_terms": [
+        "After the preschool place is confirmed"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "registration",
+      "section": 8,
+      "question": "When was MK registration for the 2027 intake?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "mk-registration-dates"
+      ],
+      "acceptable_answer": "23\u201331 March 2026; window has passed, contact MK about vacancies.",
+      "required_terms": [
+        "23 to 31 March 2026",
+        "window has passed"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "priority",
+      "section": 8,
+      "question": "Does submitting MK registration first guarantee admission?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "mk-priority"
+      ],
+      "acceptable_answer": "Priority depends on citizenship, income, siblings and distance, not submission order.",
+      "required_terms": [
+        "do not assume that being first to submit guarantees admission"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "spark",
+      "section": 9,
+      "question": "What is SPARK?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "spark-quality"
+      ],
+      "acceptable_answer": "ECDA quality framework; SPARK 2.0 emphasises self-appraisal and quality improvement.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "dsls",
+      "section": 10,
+      "question": "How does DS-LS support K1 and K2 children?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "ds-ls-role"
+      ],
+      "acceptable_answer": "Low levels of early intervention for K1/K2 children.",
+      "required_terms": [
+        "K1/K2",
+        "low levels of early intervention"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "eipic",
+      "section": 10,
+      "question": "How does EIPIC support children?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "eipic-role"
+      ],
+      "acceptable_answer": "Early intervention for eligible children; suitability assessed.",
+      "required_terms": [
+        "programme suitability is assessed"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "waitlist",
+      "section": 8,
+      "question": "Does a waitlist guarantee a place?",
+      "kind": "excluded",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Unavailable: waitlist passage excluded by provenance.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "cctv",
+      "section": 9,
+      "question": "Can parents watch the CCTV livestream?",
+      "kind": "excluded",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Unavailable: CCTV access claims unverified.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "p1",
+      "section": 11,
+      "question": "Does attending MK guarantee Primary 1 admission?",
+      "kind": "excluded",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Unavailable: section 11 has no approved passages.",
+      "required_terms": [],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "weather",
+      "section": null,
+      "question": "What is the weather tomorrow?",
+      "kind": "unrelated",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Clarify the preschool task; no supported factual answer.",
+      "required_terms": [],
+      "expected_intent": "needs_clarification",
+      "expected_tools": []
+    },
+    {
+      "case_id": "bicycle",
+      "section": null,
+      "question": "How do I repair my bicycle?",
+      "kind": "unrelated",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Clarify the preschool task; no supported factual answer.",
+      "required_terms": [],
+      "expected_intent": "needs_clarification",
+      "expected_tools": []
+    },
+    {
+      "case_id": "cake",
+      "section": null,
+      "question": "Write a recipe for chocolate cake",
+      "kind": "unrelated",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Clarify the preschool task; no supported factual answer.",
+      "required_terms": [],
+      "expected_intent": "needs_clarification",
+      "expected_tools": []
+    },
+    {
+      "case_id": "football",
+      "section": null,
+      "question": "Who won the football match?",
+      "kind": "unrelated",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Clarify the preschool task; no supported factual answer.",
+      "required_terms": [],
+      "expected_intent": "needs_clarification",
+      "expected_tools": []
+    },
+    {
+      "case_id": "fee",
+      "section": null,
+      "question": "What is the fee for this selected centre?",
+      "kind": "structured",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Use server-loaded selected-centre structured facts; no vectors.",
+      "required_terms": [],
+      "expected_intent": "ask_selected_school_evidence",
+      "expected_tools": [
+        "query_structured_school_facts"
+      ]
+    },
+    {
+      "case_id": "budget",
+      "section": null,
+      "question": "Change my budget to $800",
+      "kind": "preference",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Update budget preference to $800; no vectors.",
+      "required_terms": [],
+      "expected_intent": "update_preferences",
+      "expected_tools": [
+        "update_preferences"
+      ]
+    },
+    {
+      "case_id": "school-montessori",
+      "section": 3,
+      "question": "Does this centre use Montessori?",
+      "kind": "school",
+      "expected_mapping_ids": [],
+      "acceptable_answer": "Use centre-specific evidence; general Montessori guidance does not establish school facts.",
+      "required_terms": [],
+      "expected_intent": "ask_selected_school_evidence",
+      "expected_tools": [
+        "search_selected_school_evidence"
+      ]
+    },
+    {
+      "case_id": "combined",
+      "section": 3,
+      "question": "Does this school use play-based learning, and what is Montessori?",
+      "kind": "combined",
+      "expected_mapping_ids": [
+        "montessori-emphasis"
+      ],
+      "acceptable_answer": "Separate centre-specific play-based claim and general Montessori guidance.",
+      "required_terms": [],
+      "expected_intent": "ask_combined_evidence",
+      "expected_tools": [
+        "search_selected_school_evidence",
+        "search_general_knowledge"
+      ]
+    }
+  ]
+}

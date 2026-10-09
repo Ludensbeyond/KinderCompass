@@ -16,3 +16,7 @@ generated run.
 Treat edits as source-data changes: review provenance, schema compatibility,
 and the downstream tests or audits affected. Secrets and user-specific data do
 not belong here.
+
+`parent_guide_evaluation.json` contains fixed synthetic, manually specified
+all-section retrieval, qualification and routing labels. See
+[evaluation and demo](file-vector-demo.md) for review limitations.

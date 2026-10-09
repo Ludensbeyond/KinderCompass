@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Steps 1–5 complete; backend agent and deterministic retrieval are wired. Step 6 evaluation remains pending.
+Status: Steps 1–5 complete. Step 6 evaluation and demo documentation implemented; acceptance fails on recorded retrieval/routing cases and remains open.
 
 ## Objective and first-version scope
 
@@ -371,3 +371,41 @@ the documented demo with local artifacts and no vector database provisioning.
   outside the sandbox. The nine integration tests also passed after final cleanup.
 - Next implementation step: Step 6, evaluate and document the demo.
   Stop here for this implementation request.
+
+- Step 6 evaluation implemented on 9 October 2026: added 34 fixed, manually
+  specified synthetic cases covering all 11 sections, all 23 approved mappings,
+  acceptable answers, required qualifications and expected capabilities. Labels
+  are reviewable implementation-authored inputs; independent human answer
+  adjudication remains outstanding. Eight formulations reuse step 4 calibration.
+- Added an offline evaluator and separate real-provider retrieval smoke over the
+  same labels. Vector scores never credit lexical fallback. Reports include
+  individual failures, all section exclusions, citation checks, actual routing,
+  deterministic answer/state checks, index allocations and retrieval latency.
+  No runtime routing/retrieval, provenance or generated builds were changed.
+- Real OpenAI query embeddings on the included active build and independent guide
+  BM25 each retrieved expected passages for 22/24 answerable cases (91.7%). All
+  returned citations matched approved metadata. Lexical rejected 7/7 unsupported
+  or excluded cases; vectors rejected 6/7, returning MK passages for an excluded
+  Primary 1 admission question. Both modes failed qualification cases. Actual
+  intent/tool expectations passed 24/34 cases. Step 6 acceptance is not achieved.
+- Lexical missed KiFAS eligibility and the full combined query; vectors missed
+  Anchor Operators and MK submission-order priority. Five answerable topics,
+  Primary 1 and four unrelated questions routed to preferences. These failures
+  remain visible rather than being fixed by expanding this evaluation-only step.
+- Documented build/query, backend opt-in/restarts, validated atomic rollback,
+  source update/rebuild, network requirements and measured allocation/latency
+  in the [evaluation and demo guide](../SystemCode/src/backend/doc/file-vector-demo.md).
+  The generated real-provider report contains only fixed synthetic case IDs,
+  public chunk mapping IDs and metrics; no credentials or actual family/chat data.
+- Verification: 84 focused tests passed (73 retrieval/evaluation/integration and
+  11 evidence/tool tests), and the five new evaluator tests passed after final
+  answer-check refinement. Full backend discovery outside the sandbox with
+  dotenv and four optional LLM flags disabled ran 363 tests in 15.918 seconds:
+  362 passed, with the existing incremental ingestion checkpoint failure.
+  An untouched `51271e3` archive under identical settings ran 358 tests in
+  16.123 seconds: 357 passed with the same sole failure. No new regression was
+  observed. Fresh-process artifact validation also passed without provider calls.
+- Next work remains within Step 6 acceptance: separately scope fixes for the
+  reported routing/retrieval/qualification failures, obtain independent human
+  answer review, and rerun the fixed gates. Stop here for this implementation
+  request; do not declare demo acceptance complete.

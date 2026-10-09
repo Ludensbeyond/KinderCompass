@@ -44,8 +44,9 @@ retrieval remain unchanged. No new request or family-data logging is introduced.
 
 CCTV and waitlist passages remain excluded by reviewed provenance. Routing these
 questions makes the unavailable-evidence response explicit; it does not expand
-the corpus. Comprehensive all-section human labels, real-provider end-to-end
-smoke evaluation, and demo memory/latency measurements remain step 6.
+the corpus. The [evaluation and demo guide](file-vector-demo.md) records step 6 labels,
+real-provider retrieval smoke results, memory/latency measurements and failed
+acceptance gates. Independent human answer adjudication remains outstanding.
 
 See [standalone retrieval](file-vector-retrieval.md) for query commands and
 fallback rules, [index construction](file-vector-index.md) for build/rollback,

@@ -41,3 +41,7 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
 
 `query_parent_guide.py` runs read-only lexical, vector or curated queries without
 a server. See [standalone retrieval](file-vector-retrieval.md).
+
+`evaluate_parent_guide.py` compares fixed manual labels against independent BM25
+and optional real-provider vectors, checks routing/qualifications/citations, and
+reports failed gates. See [evaluation and demo](file-vector-demo.md).

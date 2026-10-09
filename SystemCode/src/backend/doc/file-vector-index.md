@@ -3,8 +3,9 @@
 The explicit offline builder uses `pipeline/parent_guide_chunking.py` for reviewed
 selections, `pipeline/parent_guide_embeddings.py` for injectable batched embeddings,
 and `repositories/parent_guide_index.py` for validated artifact loading. It does
-not run at backend startup. Retrieval, fallback and service wiring belong to
-later plan steps; the backend still uses its existing curated retriever.
+not run at backend startup. Retrieval, fallback and service wiring are implemented in steps 4–5;
+curated remains the default runtime mode. See [evaluation and demo](file-vector-demo.md)
+for step 6 results and executable rollback commands.
 
 Install the backend requirements, including NumPy, then build from the repository
 root with the existing server-side `OPENAI_API_KEY` in `.env`:

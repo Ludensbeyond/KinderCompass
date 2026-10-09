@@ -183,10 +183,10 @@ more detail about each backend folder.
 See the [file-based vector store plan](../../../docs/file-vector-store-plan.md) for the
 planned embedding index of the Singapore preschool parent guide and its
 integration with the existing general-knowledge retrieval tool.
-Steps 1–5 are complete; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
+Steps 1–5 are complete; step 6 evaluation is implemented with failing acceptance gates; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
 and [Markdown chunking](doc/file-vector-chunking.md) for verified mappings,
 corpus exclusions and offline parsing. See [backend integration](doc/file-vector-service.md)
-for opt-in retrieval in the agent and deterministic paths. Step 6 evaluation remains pending.
+for opt-in retrieval in the agent and deterministic paths. See the [evaluation and demo guide](doc/file-vector-demo.md) for results, failures and reproducible commands.
 
 | Path | Description |
 |---|---|
