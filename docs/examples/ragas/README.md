@@ -202,8 +202,11 @@ behaviour reviews must cover each frozen check in order with a boolean verdict
 and a nonempty reason. Omitted reviews remain pending. Reviewer/date metadata
 may also be recorded. These are Codex or human reviews, not metric-generated
 verdicts. [Step 5 verification](scoring-verification.md) records actual scores,
-answer completeness and both completed behaviour reviews. Baseline interpretation
-remains Step 6.
+answer completeness and both completed behaviour reviews. The [first baseline report](baseline-report.md) preserves the local bundle,
+category results, provisional flags, failure interpretation and repeated judge
+observations. The bundle CLI checks input integrity and separates controller
+fallback metrics from accepted-agent metrics; private bundles remain ignored by Git.
+Human calibration is pending; these 12 cases remain a smoke check.
 
 ## Make the small set effective
 
