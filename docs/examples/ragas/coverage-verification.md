@@ -56,5 +56,5 @@ The capture manifest records the selected split, adapter and collector hashes,
 exact checks, model configuration and turn failures. Raw captures stay outside
 Git. Use `--split held_out` for post-tuning reporting. To score a selected split,
 select the matching labelled case subset by the manifest’s frozen case IDs;
-`score.py` expects every case in its supplied dataset. No regression comparison
-or release gate has been added; Step 8 remains pending.
+`score.py` expects every case in its supplied dataset. Step 8 now provides [split export and regression comparison](regression-workflow.md).
+No release gate has been adopted.

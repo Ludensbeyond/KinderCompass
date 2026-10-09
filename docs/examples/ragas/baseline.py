@@ -36,7 +36,7 @@ def summarize(entries):
             'scored': sum(e['status'] == 'scored' for e in entries),
             'answer_completeness_pass': sum(e['evaluation'] == 'ragas' and
                                            e['review'].get('pass') is True for e in entries),
-            'behaviour_pass': sum(e['evaluation'] == 'behaviour' and
+            'behaviour_pass': sum(e['evaluation'] == 'behaviour' and e['review']['status'] == 'complete' and
                                  all(c['pass'] for c in e['review']['checks']) for e in entries),
             'metrics_by_origin': metrics}
 
@@ -52,7 +52,14 @@ def build_bundle(cases_path, dataset_path, runs_path, run_manifest_path, scores_
     run_manifest = json.loads(data['run.manifest.json'])
     report = json.loads(data['scores.report.json'])
     if sha256(data['cases.jsonl']) != dataset['files']['cases.jsonl']['sha256']:
-        raise ValueError('Frozen dataset cases hash mismatch')
+        split = run_manifest.get('split')
+        frozen_path = dataset_path.with_name('cases.jsonl')
+        if split not in dataset.get('splits', {}) or sha256(frozen_path.read_bytes()) != dataset['files']['cases.jsonl']['sha256']:
+            raise ValueError('Frozen dataset cases hash mismatch')
+        selected = set(dataset['splits'][split])
+        expected = [case for case in read_jsonl(frozen_path) if case['case_id'] in selected]
+        if read_jsonl(cases_path) != expected:
+            raise ValueError('Selected cases differ from the frozen split')
     if dataset['dataset_version'] != run_manifest['dataset_version'] or dataset['evidence_snapshot'] != run_manifest['evidence_snapshot']:
         raise ValueError('Capture dataset or evidence snapshot mismatch')
     for name, expected in [('cases.jsonl', report['sha256']['cases']),
@@ -81,7 +88,7 @@ def build_bundle(cases_path, dataset_path, runs_path, run_manifest_path, scores_
                 raise ValueError(f'Score report disagrees with capture/review: {entry["case_id"]} / {key}')
         if expected['status'] != 'ready' and expected['status'] != entry['status']:
             raise ValueError('Score report changed an unscorable execution status')
-        if entry['review']['status'] != 'complete':
+        if entry['review']['status'] != 'complete' and expected['status'] not in ('execution_failed', 'invalid_capture', 'missing_capture'):
             raise ValueError('Baseline requires completed behaviour and completeness reviews')
     if report_counts(entries, len(runs)) != report['counts']:
         raise ValueError('Score report counts mismatch')
@@ -143,8 +150,9 @@ def build_bundle(cases_path, dataset_path, runs_path, run_manifest_path, scores_
                  if entry['metrics'].get(metric, {}).get('status') == 'scored' and
                  entry['metrics'][metric]['value'] < threshold]
         undefined = [m for m, v in entry['metrics'].items() if v['status'] == 'undefined']
-        review_pass = (entry['review'].get('pass') is True if entry['evaluation'] == 'ragas'
-                       else all(c['pass'] for c in entry['review']['checks']))
+        review_pass = (entry['review']['status'] == 'complete' and
+                       (entry['review'].get('pass') is True if entry['evaluation'] == 'ragas'
+                        else all(c['pass'] for c in entry['review']['checks'])))
         per_case.append({'case_id': entry['case_id'], 'category': entry['category'],
                          'agent_status': entry['agent_status'], 'score_status': entry['status'],
                          'metric_flags': flags, 'undefined_metrics': undefined,

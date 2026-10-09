@@ -220,6 +220,14 @@ for tuning; four are held out for reporting after tuning. Only the final answer
 turn is scored, and exact state, arithmetic and ownership checks remain separate
 from RAGAS. No expanded provider-backed results are claimed.
 
+## Repeatable regression workflow
+
+Use the [regression workflow](regression-workflow.md) for the complete capture,
+validation, review, scoring, bundle and comparison commands. `make eval-check`
+runs offline format and focused regression checks without provider calls.
+[Step 8 verification](regression-verification.md) records compatibility rules,
+29 passing tests and the historical baseline's missing snapshot metadata.
+
 ## Make the small set effective
 
 Use these 12 cases as a smoke check, then grow to around 20–30 reviewed cases:

@@ -25,7 +25,9 @@ live RAGAS scoring and CSV export. One real `nel_age` capture now verifies the
 agent and evidence boundary; full-dataset capture and actual scoring are now
 verified, with explicit empty-evidence outcomes and completed Codex behaviour
 and answer-completeness reviews. The first local baseline bundle and failure
-interpretation are verified, including two judge repeats. Step 1's Codex review is against the repository
+interpretation are verified, including two judge repeats. The expanded frozen
+24-case dataset and repeatable regression workflow are also complete, with
+29 offline checks; no expanded provider baseline is claimed. Step 1's Codex review is against the repository
 snapshot; human review and fresh external website verification have not been
 performed.
 
@@ -43,7 +45,7 @@ existing checks and privacy-safe reporting.
 - [x] Step 5: Score the starter set and review behaviour.
 - [x] Step 6: Establish and interpret the first baseline.
 - [x] Step 7: Extend coverage to selected schools and conversations.
-- [ ] Step 8: Add a repeatable regression workflow.
+- [x] Step 8: Add a repeatable regression workflow.
 
 ## Step 1 — Review and freeze the starter cases
 
@@ -225,4 +227,4 @@ next action without marking the step complete.
 | 5 | Complete (2026-10-09) | Actual version 1.0.0 capture scored with OpenAI `gpt-4o-mini`, temperature 0: attempted/executed 12, scored 8, empty-evidence unscorable 2, execution/scoring errors 0, undefined 0. All ten evidence answers reviewed (eight complete); both behaviour cases reviewed (five of six checks pass). Failure-aware per-case exports and 13 offline tests pass. [Scores, reviews and verification](examples/ragas/scoring-verification.md). Initial sandbox provider access failed; approved retry succeeded. Raw artifacts remain outside Git; no baseline claimed. | Proceed to baseline bundle and interpretation in step 6; review comparison failures, unsupported-claim explanation and judge/manual discrepancies. |
 | 6 | Complete (2026-10-09) | Hash-verified private baseline bundle preserves all 12 captures, run metadata, exact scores, completed reviews and two judge repeats. Per-case/category report separates accepted agent (12) from controller fallback (0), explains empty comparison evidence, wrong comparison tool and failed evidence-limit behaviour. Original SPARK recall flagged at 0.6667; repeats vary 1.0/0.6667, while borderline play precision stays 0.8333. Provisional flags are not release gates; human calibration pending. [Baseline and next improvement](examples/ragas/baseline-report.md); 17 offline tests pass. | Next concrete improvement: general-pedagogy comparison routing, one failure category at a time; use the frozen starter for reruns. Step 7 coverage expansion remains pending. |
 | 7 | Complete (2026-10-09) | Separate frozen version 2.0.0 expands to 24 reviewed cases (16 RAGAS, eight behaviour), stable centre IDs, catalogue/evidence/policy hashes and a 20/4 tuning/held-out split. Conversation adapter replays actual setup turns with returned state, captures controlled wrong-school retrieval and records exact profile/fee/citation checks. 22 offline tests pass, including real deterministic conversation replay and 85 → 272 fee verification. [Review](examples/ragas/expanded/review.md); [verification](examples/ragas/coverage-verification.md). No expanded provider run or human review claimed. | Proceed to Step 8’s repeatable regression workflow; keep held-out outputs for reporting after tuning. |
-| 8 | Pending | No automated regression comparison. | Document workflow and compare compatible runs. |
+| 8 | Complete (2026-10-09) | Documented offline/provider workflow with exact 20/4 split counts; frozen split export, reviewed bundle support and hash-verified per-ID JSON/Markdown comparison report metric deltas, review regressions, fallback changes and unresolved failures. Incompatible dataset/evidence/judge/scorer inputs and unknown metadata are rejected; historical Step 6 bundle requires fresh supporting-snapshot metadata. 29 offline tests plus synthetic format smoke pass. [Workflow](examples/ragas/regression-workflow.md); [verification](examples/ragas/regression-verification.md). Raw artifacts remain private; no expanded provider baseline or release gate claimed. | Plan complete. Establish a fresh reviewed baseline with current capture tooling before provider regression comparisons; calibrate provisional flags with human review. |
