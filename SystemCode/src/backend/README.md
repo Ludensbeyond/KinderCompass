@@ -180,6 +180,12 @@ The development CORS policy accepts the frontend origins
 See the [`doc/` directory guide](doc/README.md) for ownership boundaries and
 more detail about each backend folder.
 
+See the [file-based vector store plan](../../../docs/file-vector-store-plan.md) for the
+planned embedding index of the Singapore preschool parent guide and its
+integration with the existing general-knowledge retrieval tool.
+Step 1 is complete; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
+for verified mappings, corpus exclusions and settings reserved for later runtime steps.
+
 | Path | Description |
 |---|---|
 | `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |

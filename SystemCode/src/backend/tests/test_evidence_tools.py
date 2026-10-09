@@ -16,6 +16,7 @@ from SystemCode.src.backend.agents.contracts import (
     CapabilityToolResult,
     ConversationRequestContext,
     EvidenceIndexContext,
+    GeneralKnowledgeEvidence,
 )
 
 
@@ -90,6 +91,28 @@ def by_name(tools):
 
 
 class ConversationEvidenceToolTests(unittest.TestCase):
+    def test_non_authoritative_passage_is_not_promoted_by_general_tool(self):
+        authoritative = GeneralKnowledgeEvidence(
+            chunk_id="GENERAL:official:0", text="An official framework description.",
+            citation={"citation_id": "GENERAL:official:0", "evidence_scope": "general",
+                      "url": "https://authority.example/framework", "title": "Framework",
+                      "retrieved_at": "2026-10-09T00:00:00+00:00"},
+        )
+        editorial = authoritative.model_copy(update={"evidence_category": "unknown"})
+
+        class Retriever:
+            def search(self, question, *, limit=3):
+                return [authoritative, editorial]
+
+        turn = context()
+        before = deepcopy(turn)
+        tool = by_name(create_evidence_tools(turn, general_retriever=Retriever()))[
+            GENERAL_KNOWLEDGE_EVIDENCE_TOOL_NAME
+        ]
+        result = tool.invoke({"question": "Explain the framework"})
+        self.assertEqual(result.evidence_category, "unknown")
+        self.assertEqual(turn, before)
+
     def test_registers_two_strict_read_only_tools(self):
         tools = create_evidence_tools(context())
 

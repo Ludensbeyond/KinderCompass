@@ -9,6 +9,7 @@ Working drafts and reference materials — not part of the final IRS submission 
 | [ragas-evaluation-plan.md](ragas-evaluation-plan.md) | Step-by-step RAGAS implementation plan, completion criteria and progress checklist |
 | [examples/ragas/README.md](examples/ragas/README.md) | RAGAS starter dataset, capture format and scoring instructions |
 | [agents-architecture.md](agents-architecture.md) | Mermaid diagram of agent orchestration, tools, rollout modes, and fallback |
+| [file-vector-store-plan.md](file-vector-store-plan.md) | File-based parent-guide embeddings, retrieval, agent integration, and evaluation plan |
 | `KinderCompass_Proposal Draft1.docx` | Group project proposal (working draft) |
 | `NUS ISS ILS Practice Module Ideas.pptx` | IRS idea selection reference (Idea 3) |
 

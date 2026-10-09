@@ -338,6 +338,7 @@ class GeneralKnowledgeEvidence(AgentContract):
     chunk_id: Identifier
     text: BoundedText
     citation: PublicCitation
+    evidence_category: Literal["authoritative_fact", "unknown"] = "authoritative_fact"
 
     @model_validator(mode="after")
     def citation_matches_passage(self) -> "GeneralKnowledgeEvidence":

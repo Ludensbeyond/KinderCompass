@@ -1,0 +1,1801 @@
+{
+  "schema_version": 1,
+  "document_path": "Singapore_Preschool_Parent_Guide.md",
+  "document_sha256": "b4e7a962468b959ef9c109cced25d19e2c39f45b8327653909540b150789c56e",
+  "document_checked_on": "2026-10-09",
+  "review_completed_on": "2026-10-09",
+  "indexed_at": null,
+  "citation_policy": {
+    "required_url_scheme": "https",
+    "one_primary_source_per_chunk": true,
+    "retrieved_at": "Use the primary source source_verified_at, never document_checked_on or indexed_at.",
+    "selection_policy": "Only verified runtime_eligible mappings may enter first corpus. Apply sentence/column selections and required qualifications before chunking; ranges are review locators, not generated chunks.",
+    "editorial_policy": "Omit editorial advice initially; future non-authoritative passages must use evidence_category=unknown.",
+    "secondary_links": "Internal metadata only; never fabricate a public URL for the local guide."
+  },
+  "sources": [
+    {
+      "source_id": "ef0e2d44abff",
+      "labels": [
+        "MOE preschool overview"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/overview",
+      "resolved_url": "https://www.moe.gov.sg/preschool/overview",
+      "fetch_attempted_at": "2026-10-09T05:52:05.986609+00:00",
+      "http_status": 200,
+      "body_sha256": "19af6c70f4e0f239d933cabb03a3ddc2fb8456fb19d9f2df13e9b170d94bd375",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:05.986609+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "ba9667b01020",
+      "labels": [
+        "LifeSG enrolment guide"
+      ],
+      "url": "https://www.life.gov.sg/guides/enrolling-in-preschool",
+      "resolved_url": "https://www.life.gov.sg/guides/enrolling-in-preschool",
+      "fetch_attempted_at": "2026-10-09T05:52:06.043071+00:00",
+      "http_status": 200,
+      "body_sha256": "d3f0f8599ff63f1214ff896bed7b0739a20b2a8232493051c738366816937f4f",
+      "fetch_status": "no_readable_content",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "154779cfb16c",
+      "labels": [
+        "ECDA age groups",
+        "Official staffing ratios"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cm4mgs6r9001cptnr5ez88gro",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cm4mgs6r9001cptnr5ez88gro",
+      "fetch_attempted_at": "2026-10-09T05:52:05.982004+00:00",
+      "http_status": 403,
+      "body_sha256": "2490e846fc596fcf90693429fa2cec6a3ff0792ac82b3697b90f3bfcfa0eef94",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "4ddbb20984fd",
+      "labels": [
+        "AOPs",
+        "AOP fee caps"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "resolved_url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "fetch_attempted_at": "2026-10-09T05:52:07.074506+00:00",
+      "http_status": 200,
+      "body_sha256": "647767a9323c5b32b1edcb33fff2c4365aeed65ef0c2e74d79ed818453769291",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.074506+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "bcd38511b36a",
+      "labels": [
+        "Current operators"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cm4mgs6tx00muptnrxvi86npu",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cm4mgs6tx00muptnrxvi86npu",
+      "fetch_attempted_at": "2026-10-09T05:52:06.006539+00:00",
+      "http_status": 403,
+      "body_sha256": "6282894983361b8484808416a98bc5e1d3077b5649877576c009e882612edbf6",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "fc29dd93b6fa",
+      "labels": [
+        "POPs",
+        "POP fee caps"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "resolved_url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "fetch_attempted_at": "2026-10-09T05:52:06.992691+00:00",
+      "http_status": 200,
+      "body_sha256": "87e176db8f5f26eb14c105f491dcbb2035ebd25ea18dc68635fb9c359e0543cb",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:06.992691+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "711cbd836837",
+      "labels": [
+        "MK and EYCs"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/mk-eyc",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/mk-eyc",
+      "fetch_attempted_at": "2026-10-09T05:52:06.027982+00:00",
+      "http_status": 200,
+      "body_sha256": "29ab36d27d0a90977c996de96ee2a97a90f8d14916b3f7f5240746d8c5cc8fba",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:06.027982+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "80cfe0303c8e",
+      "labels": [
+        "KCare"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/kindergarten-care",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/kindergarten-care",
+      "fetch_attempted_at": "2026-10-09T05:52:06.053317+00:00",
+      "http_status": 200,
+      "body_sha256": "af5513b5fc1a9ac7462ee9deccab2dad267da909364e45ad5794ff3d07999185",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "6f8d45122355",
+      "labels": [
+        "Subsidy programme scope"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies",
+      "resolved_url": "https://www.ecda.gov.sg/parents/preschool-subsidies",
+      "fetch_attempted_at": "2026-10-09T05:52:07.143030+00:00",
+      "http_status": 200,
+      "body_sha256": "2861fed0a940b138e755fe2a2ce9838a1332f0a46a36ac1dc74fab02222b7170",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "1d1085ad64b6",
+      "labels": [
+        "Childminding"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cm4mgs6ty00ngptnr70628lgm",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cm4mgs6ty00ngptnr70628lgm",
+      "fetch_attempted_at": "2026-10-09T05:52:06.048864+00:00",
+      "http_status": 403,
+      "body_sha256": "1070a4275f887343aff68f2dd081dcdcf05692fd2726bcdf50a6f85559f882f4",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "f90fdef969dd",
+      "labels": [
+        "EYDF"
+      ],
+      "url": "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework",
+      "resolved_url": "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework",
+      "fetch_attempted_at": "2026-10-09T05:52:07.115287+00:00",
+      "http_status": 200,
+      "body_sha256": "50355dbcee5b9a7f5a907bb686888c2b8d416af349bda71f5a5cee12a0311bcb",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.115287+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "3aaba7cea17f",
+      "labels": [
+        "NEL"
+      ],
+      "url": "https://nel.moe.edu.sg/tl/framework-and-guidelines/",
+      "resolved_url": "https://nel.moe.edu.sg/tl/framework-and-guidelines/",
+      "fetch_attempted_at": "2026-10-09T05:52:06.138639+00:00",
+      "http_status": 403,
+      "body_sha256": "e819b5169505d7f1d88cb9a04c023c97172cb1a929c28f79ec631fafb0b1d63a",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "b90f52cdcf0b",
+      "labels": [
+        "MK curriculum",
+        "MOE curriculum principles"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/curriculum-and-learning-environment/curriculum",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/curriculum-and-learning-environment/curriculum",
+      "fetch_attempted_at": "2026-10-09T05:52:06.227167+00:00",
+      "http_status": 200,
+      "body_sha256": "1ac4d393642aff56269748c64f5d7b3c622714547e122029f5d81ad404061064",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "c8f1e8e6c8f3",
+      "labels": [
+        "AMI Montessori"
+      ],
+      "url": "https://montessori-ami.org/about-montessori/montessori-environments",
+      "resolved_url": "https://montessori-ami.org/about-montessori/montessori-environments",
+      "fetch_attempted_at": "2026-10-09T05:52:06.821748+00:00",
+      "http_status": 200,
+      "body_sha256": "2168e48d9bf4bbbe3219c7f76aebd9618348b9300396cdc34d7ef643e0c9dfd8",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:06.821748+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "f392bf18dd5f",
+      "labels": [
+        "Reggio Children"
+      ],
+      "url": "https://www.reggiochildren.it/en/reggio-emilia-approach",
+      "resolved_url": "https://www.reggiochildren.it/en/reggio-emilia-approach",
+      "fetch_attempted_at": "2026-10-09T05:52:08.477615+00:00",
+      "http_status": 200,
+      "body_sha256": "fbe4fbc8028c71a3724b160cc9415225f6386f261074ef63b9c887c08cc18e2b",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "df97a33726b5",
+      "labels": [
+        "IB early years"
+      ],
+      "url": "https://ibo.org/globalassets/new-structure/interactive-development-toolkit/pdfs/pypeyheader-ib-brochure.pdf",
+      "resolved_url": "https://ibo.org/globalassets/new-structure/interactive-development-toolkit/pdfs/pypeyheader-ib-brochure.pdf",
+      "fetch_attempted_at": "2026-10-09T05:52:06.250208+00:00",
+      "http_status": 403,
+      "body_sha256": "2c22fd240ccd0200691925aa28e544e8efcb6c9d0eee5eb55cefc5c43d9b7b2e",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "4b39dfa6687e",
+      "labels": [
+        "Waldorf practice example"
+      ],
+      "url": "https://www.waldorfdupage.org/blog/purposeful-work-in-a-waldorf-kindergarten-why-it-matters",
+      "resolved_url": "https://www.waldorfdupage.org/blog/purposeful-work-in-a-waldorf-kindergarten-why-it-matters",
+      "fetch_attempted_at": "2026-10-09T05:52:06.493588+00:00",
+      "http_status": 200,
+      "body_sha256": "4d25577e11abd61fa0b5f6a2d403ee2d43b9067a4b6a7c2f1d2a828006857b3e",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "f691056d3e24",
+      "labels": [
+        "MK and KCare fees"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/fees",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/fees",
+      "fetch_attempted_at": "2026-10-09T05:52:07.592859+00:00",
+      "http_status": 200,
+      "body_sha256": "5907ffeeb611825ad53c9cdd83a85bec91a2d71b08b68993f578c4e7018ce273",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.592859+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "3eb5f843b92f",
+      "labels": [
+        "MK fee confirmation"
+      ],
+      "url": "https://www.westspringpri.moe.edu.sg/mkws/info-for-parents/mk-fees/",
+      "resolved_url": "https://www.westspringpri.moe.edu.sg/mkws/info-for-parents/mk-fees/",
+      "fetch_attempted_at": "2026-10-09T05:52:07.030641+00:00",
+      "http_status": 403,
+      "body_sha256": "0d6e673886667a89922ba29b9595fbf6e039b7f416138641fd47a41912906648",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "23699f85f585",
+      "labels": [
+        "GST rate"
+      ],
+      "url": "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/charging-gst-%28output-tax%29/when-to-charge-goods-and-services-tax-%28gst%29/prevailing-rate-of-9",
+      "resolved_url": "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/charging-gst-%28output-tax%29/when-to-charge-goods-and-services-tax-%28gst%29/prevailing-rate-of-9",
+      "fetch_attempted_at": "2026-10-09T05:52:07.096627+00:00",
+      "http_status": 200,
+      "body_sha256": "cf503b1c447930ed49828b37645589db5c9c46bd27d6ac0a1109609d1c98b839",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "8df4301ced47",
+      "labels": [
+        "Contracts and choosing a centre",
+        "Choosing and contracting"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child",
+      "resolved_url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child",
+      "fetch_attempted_at": "2026-10-09T05:52:07.789842+00:00",
+      "http_status": 200,
+      "body_sha256": "b7947258cdcf19af8edf52ee1df0ec13d102118153c8900e01474a8f876574d0",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "4abc2d24e8f0",
+      "labels": [
+        "Eligibility and exceptions"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "resolved_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "fetch_attempted_at": "2026-10-09T05:52:08.105462+00:00",
+      "http_status": 200,
+      "body_sha256": "307dd367dde58eaad9b79a40d8a12f29c8ca80262b454c604c750413fb40931a",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "4f9e587a7bdc",
+      "labels": [
+        "Subsidy tables updated 6 October 2026",
+        "2026 and 2027 subsidy tables"
+      ],
+      "url": "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "resolved_url": "https://file.go.gov.sg/ecda-subsidy-table-cc-ifc.pdf",
+      "fetch_attempted_at": "2026-10-09T05:52:07.250489+00:00",
+      "http_status": 200,
+      "body_sha256": "41a05d115dd7e62649752e0e3261c2513b85c8ea31b5c5e281416518d3a2e0ba",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.250489+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "106b66ec8c2d",
+      "labels": [
+        "Working status and Special Approval"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "fetch_attempted_at": "2026-10-09T05:52:07.182447+00:00",
+      "http_status": 403,
+      "body_sha256": "00818811f638341ffeee3c950bcca2b3114c5d59ab5aebc1fc7aa3a0195d4439",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "de76098f8467",
+      "labels": [
+        "Income assessment"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "fetch_attempted_at": "2026-10-09T05:52:07.210532+00:00",
+      "http_status": 403,
+      "body_sha256": "a598c0ec8d7e4bf9d170aecb45602c8cd0eceb4259410fd0919f8c59574b203c",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "1aa80ccedb12",
+      "labels": [
+        "PCI and 2027 thresholds",
+        "Eligibility thresholds"
+      ],
+      "url": "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies",
+      "resolved_url": "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies",
+      "fetch_attempted_at": "2026-10-09T05:52:07.307778+00:00",
+      "http_status": 200,
+      "body_sha256": "d6ae9d6c0b435b84dc22dbd4f477910e71b4d63215ad970854c61365b9f14a77",
+      "fetch_status": "no_readable_content",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "4078b7a1bfb4",
+      "labels": [
+        "KiFAS overview"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "resolved_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "fetch_attempted_at": "2026-10-09T05:52:08.007481+00:00",
+      "http_status": 200,
+      "body_sha256": "5fe0f1e67367eb9ac87fe9c71e22b6328e648e5622c61b714722491c50a6f42e",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.007481+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "13166cc72376",
+      "labels": [
+        "KiFAS and startup assistance",
+        "KiFAS changes"
+      ],
+      "url": "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "resolved_url": "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "fetch_attempted_at": "2026-10-09T05:52:07.346638+00:00",
+      "http_status": 200,
+      "body_sha256": "d6ae9d6c0b435b84dc22dbd4f477910e71b4d63215ad970854c61365b9f14a77",
+      "fetch_status": "no_readable_content",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "0b178cbb8f5f",
+      "labels": [
+        "KCare support"
+      ],
+      "url": "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool",
+      "resolved_url": "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool",
+      "fetch_attempted_at": "2026-10-09T05:52:07.496473+00:00",
+      "http_status": 200,
+      "body_sha256": "a3e1840c4d3bded5b40298f4626adf077e8518c15cf5ab16a59acd409ac4ed00",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.496473+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "3bd6a4002a9a",
+      "labels": [
+        "Childcare hardship assistance"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/other-financial-assistance-for-preschool-fees",
+      "resolved_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/other-financial-assistance-for-preschool-fees",
+      "fetch_attempted_at": "2026-10-09T05:52:08.019564+00:00",
+      "http_status": 200,
+      "body_sha256": "dca50a151148e6cb64a87ac34832883f60c80e7ddc6009f94f2e2e0fd22535cf",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "d325305b0102",
+      "labels": [
+        "KidSTART"
+      ],
+      "url": "https://kidstart.sg/",
+      "resolved_url": "https://kidstart.sg/",
+      "fetch_attempted_at": "2026-10-09T05:52:07.691803+00:00",
+      "http_status": 200,
+      "body_sha256": "24269698f2602b533c3624eb9a50be8e15de297d5861b43ff710f5be02192d15",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "773691057edc",
+      "labels": [
+        "CDA"
+      ],
+      "url": "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda",
+      "resolved_url": "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda",
+      "fetch_attempted_at": "2026-10-09T05:52:07.681949+00:00",
+      "http_status": 200,
+      "body_sha256": "4dd65f192e8aa43eb1fabe6673233cec60cc58fdfcc41a68c1ce33337aee23b7",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.681949+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "c426714db061",
+      "labels": [
+        "Approved institutions"
+      ],
+      "url": "https://www.msf.gov.sg/article/programmes/Baby-Bonus-Scheme",
+      "resolved_url": "https://www.msf.gov.sg/article/programmes/Baby-Bonus-Scheme",
+      "fetch_attempted_at": "2026-10-09T05:52:08.752564+00:00",
+      "http_status": 200,
+      "body_sha256": "3d80bb01578d81b5516ba006aa4078ac5e76fa78196920f06e4e149e108b6583",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "8134a4d3fda4",
+      "labels": [
+        "SG Child Support Package and transition"
+      ],
+      "url": "https://www.life.gov.sg/family-parenting/benefits-support/sg-child-support-package",
+      "resolved_url": "https://www.life.gov.sg/family-parenting/benefits-support/sg-child-support-package",
+      "fetch_attempted_at": "2026-10-09T05:52:07.848564+00:00",
+      "http_status": 200,
+      "body_sha256": "4987e247fb763c0e4d5bb81bf282498cc58e1b4ec02e14de55f62b7ca51f857f",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.848564+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "e56a8643c88c",
+      "labels": [
+        "LifeSG preschool search"
+      ],
+      "url": "https://www.life.gov.sg/services-tools/preschool-search",
+      "resolved_url": "https://www.life.gov.sg/services-tools/preschool-search",
+      "fetch_attempted_at": "2026-10-09T05:52:07.862637+00:00",
+      "http_status": 200,
+      "body_sha256": "9e7019ac980ed24021dac9f9d7e93b2ccdf0db98bc99bbd00aa9f3121528af62",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "dcf24f7c6ce6",
+      "labels": [
+        "Form 1"
+      ],
+      "url": "https://www.life.gov.sg/services-tools/form-1-preschool",
+      "resolved_url": "https://www.life.gov.sg/services-tools/form-1-preschool",
+      "fetch_attempted_at": "2026-10-09T05:52:07.881941+00:00",
+      "http_status": 200,
+      "body_sha256": "bf3afaecabc79a542f629da8d828b099b7a447f3b1d3fd480e5a3873e977918e",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.881941+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "0bda4bc736d5",
+      "labels": [
+        "Reassessment"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/how-to-apply-or-make-changes-to-subsidies/request-for-subsidy-reassessment",
+      "resolved_url": "https://www.ecda.gov.sg/parents/preschool-subsidies/how-to-apply-or-make-changes-to-subsidies/request-for-subsidy-reassessment",
+      "fetch_attempted_at": "2026-10-09T05:52:08.352888+00:00",
+      "http_status": 200,
+      "body_sha256": "dfdd17ce1293e3f4f2cc8b4dfb6481b851b90f8e0950d3a995e9f4413b020efa",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "b06f0b1405f2",
+      "labels": [
+        "MK registration"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register",
+      "fetch_attempted_at": "2026-10-09T05:52:07.950086+00:00",
+      "http_status": 200,
+      "body_sha256": "7d793c0473c86cdc1f23e85c797d821f7822eb80305b9a76c9dc652ed0d0bbce",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:07.950086+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "0c1f9cfe8ff2",
+      "labels": [
+        "2027 registration dates"
+      ],
+      "url": "https://www.horizonpri.moe.edu.sg/moe-kindergarten/register-with-us/",
+      "resolved_url": "https://www.horizonpri.moe.edu.sg/moe-kindergarten/register-with-us/",
+      "fetch_attempted_at": "2026-10-09T05:52:07.920796+00:00",
+      "http_status": 403,
+      "body_sha256": "47f04fa1978cb3cb5163b4f913923bb388115bdaaa51b4dbcaf1d32ae91502af",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "76ba401c9f0a",
+      "labels": [
+        "MK priority"
+      ],
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission",
+      "resolved_url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission",
+      "fetch_attempted_at": "2026-10-09T05:52:08.049925+00:00",
+      "http_status": 200,
+      "body_sha256": "3229d072887f7f0a9485ddd091e56cbbc925ab298b61c329dde464f54889d879",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.049925+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "ba36b2ea0b15",
+      "labels": [
+        "Choosing a preschool"
+      ],
+      "url": "https://www.ecda.gov.sg/beanstalk/parents-portal/parent-guides/choosing-a-preschool",
+      "resolved_url": "https://www.ecda.gov.sg/beanstalk/parents-portal/parent-guides/choosing-a-preschool",
+      "fetch_attempted_at": "2026-10-09T05:52:08.563806+00:00",
+      "http_status": 200,
+      "body_sha256": "503781e58027e09c7495fbea9f73d885e7e437d637695180b349972cf56cd961",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "be96d7eb7a44",
+      "labels": [
+        "SPARK 2.0"
+      ],
+      "url": "https://www.ecda.gov.sg/sparkinfo/introduction-spark-2/newframework",
+      "resolved_url": "https://www.ecda.gov.sg/sparkinfo/introduction-spark-2/newframework",
+      "fetch_attempted_at": "2026-10-09T05:52:08.558425+00:00",
+      "http_status": 200,
+      "body_sha256": "e6bfad3003edb36d682bb5ce67ac5064d7c8821cb61fb27607531db75cb523fd",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.558425+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "56b06932e371",
+      "labels": [
+        "CCTV requests"
+      ],
+      "url": "https://ask.gov.sg/ecda/questions/cm4mgs6rs005mptnryvdqoqm6",
+      "resolved_url": "https://ask.gov.sg/ecda/questions/cm4mgs6rs005mptnryvdqoqm6",
+      "fetch_attempted_at": "2026-10-09T05:52:08.056699+00:00",
+      "http_status": 403,
+      "body_sha256": "9cec16ad565afae54fd726decd375ac9ae216381fb4bf8e99b9f6541d45872f2",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "d9f372c31b34",
+      "labels": [
+        "ECDA DS-LS"
+      ],
+      "url": "https://www.ecda.gov.sg/parents/other-services/early-intervention-services/development-support-and-learning-support-programme-%28ds-ls%29",
+      "resolved_url": "https://www.ecda.gov.sg/parents/other-services/early-intervention-services/development-support-and-learning-support-programme-%28ds-ls%29",
+      "fetch_attempted_at": "2026-10-09T05:52:08.571335+00:00",
+      "http_status": 200,
+      "body_sha256": "c87cefbc98e25b1a95f1b0097555239fbf905ea5f86e51980c19508012278bc9",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.571335+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "8751a98d4e2c",
+      "labels": [
+        "SG Enable EIPIC guide"
+      ],
+      "url": "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/early-intervention-programme-for-infants-children",
+      "resolved_url": "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/early-intervention-programme-for-infants-children",
+      "fetch_attempted_at": "2026-10-09T05:52:08.283735+00:00",
+      "http_status": 200,
+      "body_sha256": "77a9807ba875928916990ecc27ea2f5a79cf63329612545adb74d768c14c98ad",
+      "fetch_status": "content_available",
+      "source_verified_at": "2026-10-09T05:52:08.283735+00:00",
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "5f1c3fd7d804",
+      "labels": [
+        "SG Enable DS-LS guide"
+      ],
+      "url": "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/development-support-and-learning-support",
+      "resolved_url": "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/development-support-and-learning-support",
+      "fetch_attempted_at": "2026-10-09T05:52:08.331168+00:00",
+      "http_status": 200,
+      "body_sha256": "37e76e677bce27140c0ca636015748213d92ceb80f6cd1b206216faed2568852",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "7fb85ba47961",
+      "labels": [
+        "Vaccinations"
+      ],
+      "url": "https://www.cda.gov.sg/public/vaccinations/",
+      "resolved_url": "https://www.cda.gov.sg/public/vaccinations/",
+      "fetch_attempted_at": "2026-10-09T05:52:08.318609+00:00",
+      "http_status": 403,
+      "body_sha256": "e35924fc3c024dda12ec6d8778400175556444cff4221e9df897a9312284828a",
+      "fetch_status": "access_denied",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "0295d0c5d4bd",
+      "labels": [
+        "MK and P1 admission"
+      ],
+      "url": "https://go.gov.sg/oa-registration-guide",
+      "resolved_url": "https://file.go.gov.sg/oa-registration-guide.pdf",
+      "fetch_attempted_at": "2026-10-09T05:52:08.522918+00:00",
+      "http_status": 200,
+      "body_sha256": "3b651822063d03bd41a6f2b8d1f1e98d04509ccf44fd9a766602663062f2717e",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    },
+    {
+      "source_id": "00c7da3c3bfa",
+      "labels": [
+        "P1 registration"
+      ],
+      "url": "https://www.moe.gov.sg/primary/p1-registration",
+      "resolved_url": "https://www.moe.gov.sg/primary/p1-registration",
+      "fetch_attempted_at": "2026-10-09T05:52:08.386682+00:00",
+      "http_status": 200,
+      "body_sha256": "b2af06655e952ce28d4cae9d82af43b45f3d00f2ad85fa983cc42de7818ef843",
+      "fetch_status": "content_available",
+      "source_verified_at": null,
+      "review_note": "Fetch is not claim verification; only individually approved mappings below may be used."
+    }
+  ],
+  "sections": [
+    {
+      "section": 1,
+      "heading": "1 Understand the preschool landscape",
+      "line_range": [
+        9,
+        31
+      ],
+      "subsections": [
+        {
+          "heading": "Three separate decisions",
+          "line": 24
+        }
+      ],
+      "tables": [
+        [
+          13,
+          20
+        ]
+      ],
+      "source_ids": [
+        "ef0e2d44abff",
+        "ba9667b01020",
+        "154779cfb16c"
+      ],
+      "dated_claim_lines": [
+        28
+      ],
+      "approved_mapping_ids": [
+        "sector-overview"
+      ],
+      "exclusions_and_review_notes": "Age/cohort table and entry-boundary advice omitted: AskGov age/ratio source returned 403. Three-decisions guidance is editorial."
+    },
+    {
+      "section": 2,
+      "heading": "2 Choose the service and operator",
+      "line_range": [
+        32,
+        60
+      ],
+      "subsections": [
+        {
+          "heading": "Anchor Operators and Partner Operators",
+          "line": 41
+        },
+        {
+          "heading": "MOE Kindergarten and Early Years Centres",
+          "line": 47
+        },
+        {
+          "heading": "Private and other alternatives",
+          "line": 53
+        }
+      ],
+      "tables": [
+        [
+          34,
+          39
+        ]
+      ],
+      "source_ids": [
+        "4ddbb20984fd",
+        "bcd38511b36a",
+        "fc29dd93b6fa",
+        "711cbd836837",
+        "80cfe0303c8e",
+        "6f8d45122355",
+        "1d1085ad64b6"
+      ],
+      "dated_claim_lines": [],
+      "approved_mapping_ids": [
+        "anchor-operators",
+        "mk-eyc-partnership"
+      ],
+      "exclusions_and_review_notes": "Service table mixes official claims and visit advice; split before use. MK citizenship/hours need separate citations. Childminding AskGov blocked. Private/family-care guidance and branch/philosophy judgements omitted."
+    },
+    {
+      "section": 3,
+      "heading": "3 Understand learning approaches",
+      "line_range": [
+        61,
+        87
+      ],
+      "subsections": [
+        {
+          "heading": "Singapore curriculum frameworks",
+          "line": 65
+        },
+        {
+          "heading": "Language and family values",
+          "line": 78
+        },
+        {
+          "heading": "How to judge the claims",
+          "line": 82
+        }
+      ],
+      "tables": [
+        [
+          69,
+          76
+        ]
+      ],
+      "source_ids": [
+        "f90fdef969dd",
+        "3aaba7cea17f",
+        "b90f52cdcf0b",
+        "c8f1e8e6c8f3",
+        "f392bf18dd5f",
+        "df97a33726b5",
+        "4b39dfa6687e"
+      ],
+      "dated_claim_lines": [],
+      "approved_mapping_ids": [
+        "eydf-framework",
+        "montessori-emphasis"
+      ],
+      "exclusions_and_review_notes": "Mixed-source framework paragraph requires sentence split. Reggio description partly supported but project emphasis not established by fetched overview; omit pending deeper review. IB PDF blocked. Waldorf linked school blog is an example, not primary general authority. Visit questions/language/judgement advice omitted."
+    },
+    {
+      "section": 4,
+      "heading": "4 Build a realistic preschool budget",
+      "line_range": [
+        88,
+        121
+      ],
+      "subsections": [
+        {
+          "heading": "Illustration using Basic Subsidy only",
+          "line": 104
+        },
+        {
+          "heading": "Costs that change the comparison",
+          "line": 108
+        }
+      ],
+      "tables": [
+        [
+          92,
+          100
+        ]
+      ],
+      "source_ids": [
+        "4ddbb20984fd",
+        "fc29dd93b6fa",
+        "f691056d3e24",
+        "3eb5f843b92f",
+        "23699f85f585",
+        "8df4301ced47"
+      ],
+      "dated_claim_lines": [
+        92,
+        100
+      ],
+      "approved_mapping_ids": [
+        "aop-2026-fees",
+        "pop-2026-fees",
+        "mk-kcare-2026-fees"
+      ],
+      "exclusions_and_review_notes": "Mixed fee table must split by operator/source and retain conditions. GST 9% source verified, but fee examples are derived calculations and must remain deterministic. Budget checklists/advice omitted."
+    },
+    {
+      "section": 5,
+      "heading": "5 Understand infant and childcare subsidies",
+      "line_range": [
+        122,
+        153
+      ],
+      "subsections": [
+        {
+          "heading": "Basic Subsidy and the working applicant rule",
+          "line": 126
+        },
+        {
+          "heading": "Additional Subsidy in 2026",
+          "line": 132
+        },
+        {
+          "heading": "Why the maximum may differ from your award",
+          "line": 148
+        }
+      ],
+      "tables": [
+        [
+          136,
+          144
+        ]
+      ],
+      "source_ids": [
+        "4abc2d24e8f0",
+        "4f9e587a7bdc",
+        "106b66ec8c2d",
+        "de76098f8467",
+        "1aa80ccedb12"
+      ],
+      "dated_claim_lines": [
+        132,
+        136,
+        152
+      ],
+      "approved_mapping_ids": [
+        "subsidy-scope",
+        "basic-subsidy-and-exception",
+        "subsidy-income-ceiling",
+        "additional-subsidy-2026-table"
+      ],
+      "exclusions_and_review_notes": "Income-assessment AskGov blocked; bonuses/earnings assertion omitted. All 2026 AS table rows independently verified in PDF. Numeric net-bill illustration is derived, not a source quote."
+    },
+    {
+      "section": 6,
+      "heading": "6 Other grants and financial support",
+      "line_range": [
+        154,
+        179
+      ],
+      "subsections": [
+        {
+          "heading": "Kindergarten Fee Assistance Scheme",
+          "line": 156
+        },
+        {
+          "heading": "KCare has a separate subsidy route",
+          "line": 162
+        },
+        {
+          "heading": "When the remaining bill is still difficult",
+          "line": 166
+        },
+        {
+          "heading": "Using the Child Development Account",
+          "line": 172
+        }
+      ],
+      "tables": [],
+      "source_ids": [
+        "4078b7a1bfb4",
+        "13166cc72376",
+        "0b178cbb8f5f",
+        "3bd6a4002a9a",
+        "d325305b0102",
+        "773691057edc",
+        "c426714db061"
+      ],
+      "dated_claim_lines": [
+        158,
+        176
+      ],
+      "approved_mapping_ids": [
+        "kifas-2026-scope",
+        "kcare-subsidies",
+        "cda-current-benefits"
+      ],
+      "exclusions_and_review_notes": "KiFAS Start-Up $240 and $1,900/$650 thresholds remain unverified: SupportGoWhere is a JavaScript shell and KiFAS overview does not establish them. Hardship/KidSTART sources accessible but combined paragraph requires splitting and eligibility review; not approved in first corpus."
+    },
+    {
+      "section": 7,
+      "heading": "7 Changes to plan for in 2027",
+      "line_range": [
+        180,
+        213
+      ],
+      "subsections": [
+        {
+          "heading": "From January 2027 wider subsidy eligibility",
+          "line": 184
+        },
+        {
+          "heading": "From April 2027 the SG Child Support Package",
+          "line": 200
+        },
+        {
+          "heading": "What parents should do",
+          "line": 208
+        }
+      ],
+      "tables": [
+        [
+          188,
+          196
+        ]
+      ],
+      "source_ids": [
+        "4f9e587a7bdc",
+        "1aa80ccedb12",
+        "13166cc72376",
+        "8134a4d3fda4"
+      ],
+      "dated_claim_lines": [
+        180,
+        182,
+        184,
+        188,
+        200,
+        202,
+        204,
+        206,
+        210,
+        212
+      ],
+      "approved_mapping_ids": [
+        "additional-subsidy-2027-table",
+        "sg-child-support-2027"
+      ],
+      "exclusions_and_review_notes": "AS 2027 bands verified. Claim that KiFAS rises to $15,000/$3,400 remains unverified: linked SupportGoWhere shell and current KiFAS overview do not establish those exact future values. Do not generalise childcare PDF to KiFAS. Parent-action advice omitted."
+    },
+    {
+      "section": 8,
+      "heading": "8 Enrolment from search to first day",
+      "line_range": [
+        214,
+        253
+      ],
+      "subsections": [
+        {
+          "heading": "Step 1 Set your family requirements",
+          "line": 216
+        },
+        {
+          "heading": "Step 2 Shortlist and confirm availability",
+          "line": 220
+        },
+        {
+          "heading": "Step 3 Visit and read the agreement",
+          "line": 224
+        },
+        {
+          "heading": "Step 4 Accept the place and prepare documents",
+          "line": 228
+        },
+        {
+          "heading": "Step 5 Complete the subsidy application",
+          "line": 242
+        },
+        {
+          "heading": "The separate MOE Kindergarten route",
+          "line": 246
+        }
+      ],
+      "tables": [],
+      "source_ids": [
+        "e56a8643c88c",
+        "dcf24f7c6ce6",
+        "0bda4bc736d5",
+        "b06f0b1405f2",
+        "0c1f9cfe8ff2",
+        "76ba401c9f0a"
+      ],
+      "dated_claim_lines": [
+        248,
+        252
+      ],
+      "approved_mapping_ids": [
+        "form-1-application",
+        "mk-registration-dates",
+        "mk-priority"
+      ],
+      "exclusions_and_review_notes": "Registration dates independently verified on MOE despite blocked Horizon link. Documents and visit/search checklists are editorial and vary by centre. Form 1 reassessment sentence needs separate ECDA mapping. K2 admissions and KCare requirements require separate source mapping."
+    },
+    {
+      "section": 9,
+      "heading": "9 Assess quality and safety during a visit",
+      "line_range": [
+        254,
+        294
+      ],
+      "subsections": [
+        {
+          "heading": "Understand staffing numbers",
+          "line": 258
+        },
+        {
+          "heading": "Questions worth asking",
+          "line": 273
+        },
+        {
+          "heading": "Licensing and SPARK",
+          "line": 285
+        },
+        {
+          "heading": "CCTV and handling concerns",
+          "line": 289
+        }
+      ],
+      "tables": [
+        [
+          262,
+          269
+        ]
+      ],
+      "source_ids": [
+        "154779cfb16c",
+        "ba36b2ea0b15",
+        "be96d7eb7a44",
+        "56b06932e371"
+      ],
+      "dated_claim_lines": [],
+      "approved_mapping_ids": [
+        "spark-quality"
+      ],
+      "exclusions_and_review_notes": "Staffing ratios table and CCTV incident-access claims remain unverified: AskGov 403. Visit questions and classroom judgements are editorial. SPARK approved separately."
+    },
+    {
+      "section": 10,
+      "heading": "10 Support health development and settling in",
+      "line_range": [
+        295,
+        328
+      ],
+      "subsections": [
+        {
+          "heading": "Share needs early and agree on a plan",
+          "line": 297
+        },
+        {
+          "heading": "Where developmental support can begin",
+          "line": 301
+        },
+        {
+          "heading": "Health and care arrangements",
+          "line": 313
+        },
+        {
+          "heading": "A practical settling in plan",
+          "line": 317
+        }
+      ],
+      "tables": [
+        [
+          305,
+          309
+        ]
+      ],
+      "source_ids": [
+        "d9f372c31b34",
+        "8751a98d4e2c",
+        "5f1c3fd7d804",
+        "7fb85ba47961"
+      ],
+      "dated_claim_lines": [],
+      "approved_mapping_ids": [
+        "ds-ls-role",
+        "eipic-role"
+      ],
+      "exclusions_and_review_notes": "Vaccination legal claim omitted: CDA page returned 403. DS-Plus/InSP row combines distinct programmes and requires split review. Health/referral/settling advice is editorial; approved DS-LS/EIPIC descriptions must split and retain headers."
+    },
+    {
+      "section": 11,
+      "heading": "11 Prepare for Primary 1 and make a choice",
+      "line_range": [
+        329,
+        361
+      ],
+      "subsections": [
+        {
+          "heading": "Readiness is broader than early academics",
+          "line": 331
+        },
+        {
+          "heading": "Preschool admission and primary admission are separate",
+          "line": 337
+        },
+        {
+          "heading": "A shortlist that is easy to compare",
+          "line": 343
+        },
+        {
+          "heading": "Questions parents commonly ask",
+          "line": 355
+        }
+      ],
+      "tables": [
+        [
+          345,
+          351
+        ]
+      ],
+      "source_ids": [
+        "b90f52cdcf0b",
+        "0295d0c5d4bd",
+        "00c7da3c3bfa",
+        "8df4301ced47"
+      ],
+      "dated_claim_lines": [
+        341
+      ],
+      "approved_mapping_ids": [],
+      "exclusions_and_review_notes": "No passage approved initially. MK/P1 Phase 2A claim points to an MK online-registration PDF that does not establish P1 priority. P1 overview does not establish announced 2027/2028 changes. Readiness/shortlist/FAQ advice is editorial; verify admission claims against direct P1 phase sources before use."
+    }
+  ],
+  "approved_mappings": [
+    {
+      "mapping_id": "sector-overview",
+      "section": 1,
+      "line_ranges": [
+        [
+          11,
+          11
+        ]
+      ],
+      "content_sha256": "6fc4dc3d3438846396de3116cb373a001d9fd7e3281d95e78c06b21ffe6675b3",
+      "primary_source_id": "ef0e2d44abff",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:05.986609+00:00",
+      "review_note": "MOE supports ECDA oversight and MK/NEL roles; preschool is encouraged rather than compulsory.",
+      "policy_dates": {},
+      "required_qualifications": [],
+      "sentence_selection": [
+        2,
+        3
+      ]
+    },
+    {
+      "mapping_id": "anchor-operators",
+      "section": 2,
+      "line_ranges": [
+        [
+          43,
+          43
+        ]
+      ],
+      "content_sha256": "65d5e8cbefa521067db43563252a8dccca1accab4a2e85eb20662bff63db84e5",
+      "primary_source_id": "4ddbb20984fd",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.074506+00:00",
+      "review_note": "ECDA lists all five operators and affordability/quality funding commitments. POP/branch claim is general context; split away from AOP list in step 2 if expanded.",
+      "policy_dates": {},
+      "required_qualifications": [],
+      "sentence_selection": [
+        1,
+        2
+      ]
+    },
+    {
+      "mapping_id": "mk-eyc-partnership",
+      "section": 2,
+      "line_ranges": [
+        [
+          51,
+          51
+        ]
+      ],
+      "content_sha256": "308f31362b1477b1e9113e3824ca86d3ee35a25339fee038504a9194ea54f708",
+      "primary_source_id": "711cbd836837",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:06.027982+00:00",
+      "review_note": "Partner EYC guarantee confirmed. Only eligible SC/PR children enrolled by 15 March of N2 and registered via EYC form during MK exercise qualify.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Keep eligible/participating/partner MK restrictions and distinguish MK from KCare."
+      ]
+    },
+    {
+      "mapping_id": "eydf-framework",
+      "section": 3,
+      "line_ranges": [
+        [
+          67,
+          67
+        ]
+      ],
+      "content_sha256": "1124024b2cf700322ca58adce6078fab0fd37fe8f7fead330c53da76b4cb7ff6",
+      "primary_source_id": "f90fdef969dd",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.115287+00:00",
+      "review_note": "Only the first sentence about EYDF birth-to-3 is approved; remaining MOE/NEL sentences require their own primary source.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Select first sentence only; do not emit the full mixed-source paragraph."
+      ],
+      "sentence_selection": [
+        1
+      ]
+    },
+    {
+      "mapping_id": "montessori-emphasis",
+      "section": 3,
+      "line_ranges": [
+        [
+          70,
+          70
+        ],
+        [
+          72,
+          72
+        ]
+      ],
+      "content_sha256": "9d27bd0519456c1419f3ad2e3b0af2740a80f8b02d3f305a36a0b2b63b302f32",
+      "primary_source_id": "c8f1e8e6c8f3",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:06.821748+00:00",
+      "review_note": "AMI supports prepared materials, practical skills, observation, self-directed learning and mixed-age environments. Exclude visit-question column.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Keep table headers; emit Approach and Typical emphasis columns only."
+      ],
+      "table_columns": [
+        0,
+        1
+      ]
+    },
+    {
+      "mapping_id": "aop-2026-fees",
+      "section": 4,
+      "line_ranges": [
+        [
+          94,
+          94
+        ],
+        [
+          96,
+          96
+        ],
+        [
+          98,
+          98
+        ]
+      ],
+      "content_sha256": "508e086557a904ab7440f95bb25f7d5458acde2a838ed0efb7cf7bf0c73b81cb",
+      "primary_source_id": "4ddbb20984fd",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.074506+00:00",
+      "review_note": "ECDA confirms childcare $610, infant $1,235 and kindergarten $150 excluding GST.",
+      "policy_dates": {
+        "fee_year": 2026
+      },
+      "required_qualifications": [
+        "AOP caps, before GST and subsidies; kindergarten before KiFAS. Do not generalise to every private centre or citizenship quote."
+      ]
+    },
+    {
+      "mapping_id": "pop-2026-fees",
+      "section": 4,
+      "line_ranges": [
+        [
+          95,
+          95
+        ],
+        [
+          97,
+          97
+        ]
+      ],
+      "content_sha256": "7850ad1bbde893596e775be586957e241456c092c26e7540d719e3055ea6259e",
+      "primary_source_id": "fc29dd93b6fa",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:06.992691+00:00",
+      "review_note": "ECDA confirms SC full-day childcare $650 and infant care $1,290 from January 2026.",
+      "policy_dates": {
+        "effective_from": "2026-01-01",
+        "fee_year": 2026
+      },
+      "required_qualifications": [
+        "Singapore Citizen children at participating POP centres; excluding GST and subsidies."
+      ]
+    },
+    {
+      "mapping_id": "mk-kcare-2026-fees",
+      "section": 4,
+      "line_ranges": [
+        [
+          99,
+          100
+        ]
+      ],
+      "content_sha256": "c0fc450254817f7f4be5fd44f2a1b46dbad24b6d5d9b139876ba75e3e025c43a",
+      "primary_source_id": "f691056d3e24",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.592859+00:00",
+      "review_note": "MOE confirms MK $160 SC/$320 PR and KCare maximum $425; fees payable June/December.",
+      "policy_dates": {
+        "fee_year": 2026
+      },
+      "required_qualifications": [
+        "Separate MK and KCare charges; before applicable subsidies; maximum KCare fees may vary in 2027."
+      ]
+    },
+    {
+      "mapping_id": "subsidy-scope",
+      "section": 5,
+      "line_ranges": [
+        [
+          124,
+          124
+        ]
+      ],
+      "content_sha256": "83afdcf340aa83f51110e86b5c2253ecda4f0a6af9a7e9bd3a8f3becfc8663fe",
+      "primary_source_id": "4abc2d24e8f0",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+      "review_note": "ECDA confirms citizen child and licensed infant/childcare requirements.",
+      "policy_dates": {},
+      "required_qualifications": []
+    },
+    {
+      "mapping_id": "basic-subsidy-and-exception",
+      "section": 5,
+      "line_ranges": [
+        [
+          128,
+          130
+        ]
+      ],
+      "content_sha256": "cf9cfac6d6cfaef0d7344e86200c6a0eab8e4499a7daa6c89d5089c617a0e085",
+      "primary_source_id": "4abc2d24e8f0",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+      "review_note": "Verified $600/$300 working rates, $150 ordinary non-working rate, 56 hours, mother/single-father rule and childcare-only HHI $6,000/PCI $1,500 exception.",
+      "policy_dates": {
+        "review_as_of": "2026-10-09",
+        "childcare_exception_from": "2024-12-09"
+      },
+      "required_qualifications": [
+        "Never separate childcare exception from infant-care qualification and Special Approval sentence."
+      ]
+    },
+    {
+      "mapping_id": "subsidy-income-ceiling",
+      "section": 5,
+      "line_ranges": [
+        [
+          134,
+          134
+        ]
+      ],
+      "content_sha256": "51aa0ce996deb767c17adde1afdae4b74d0e7d461d805f65eefc75ebeaa0ca22",
+      "primary_source_id": "4abc2d24e8f0",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+      "review_note": "ECDA confirms $12,000 HHI/$3,000 PCI with at least five qualifying members; expenses excluded. Bonuses require separate income-assessment verification.",
+      "policy_dates": {
+        "policy_year": 2026
+      },
+      "required_qualifications": [
+        "Omit sentence about bonuses until income assessment source is verified."
+      ],
+      "sentence_selection": [
+        1,
+        2
+      ]
+    },
+    {
+      "mapping_id": "additional-subsidy-2026-table",
+      "section": 5,
+      "line_ranges": [
+        [
+          136,
+          146
+        ]
+      ],
+      "content_sha256": "ea5f2c5791df28b8bd6ecb21e455391f0feffed0ad16f4ec07a47b8f2d432f42",
+      "primary_source_id": "4f9e587a7bdc",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.250489+00:00",
+      "review_note": "All seven HHI rows and childcare/infant maxima match PDF pages 2/4, dated 6 October 2026.",
+      "policy_dates": {
+        "effective_from": "2026-01-01",
+        "effective_until": "2026-12-31",
+        "source_updated_on": "2026-10-06"
+      },
+      "required_qualifications": [
+        "Keep full-day maximum, Basic Subsidy, minimum co-payment, fee dependence and service-type qualifications."
+      ]
+    },
+    {
+      "mapping_id": "kifas-2026-scope",
+      "section": 6,
+      "line_ranges": [
+        [
+          158,
+          158
+        ]
+      ],
+      "content_sha256": "dd2508e5d523731d5b3f7502fb31494382278801e7798d3aea23cb46230c8707",
+      "primary_source_id": "4078b7a1bfb4",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.007481+00:00",
+      "review_note": "ECDA supports SC AOP/MOE kindergarten means testing, larger household PCI and minimum co-payment. Employment does not appear as eligibility condition.",
+      "policy_dates": {
+        "policy_year": 2026
+      },
+      "required_qualifications": []
+    },
+    {
+      "mapping_id": "kcare-subsidies",
+      "section": 6,
+      "line_ranges": [
+        [
+          164,
+          164
+        ]
+      ],
+      "content_sha256": "d645189e7c004881f5eaee683a6191c47f4f87b2d6d3a36249705555c3c665ed",
+      "primary_source_id": "0b178cbb8f5f",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.496473+00:00",
+      "review_note": "MSF confirms $150 KCare Basic Subsidy and HHI $6,000 employment exception; KCare and KiFAS are separate.",
+      "policy_dates": {
+        "review_as_of": "2026-10-09"
+      },
+      "required_qualifications": [
+        "Do not substitute ordinary $300 childcare Basic Subsidy."
+      ]
+    },
+    {
+      "mapping_id": "cda-current-benefits",
+      "section": 6,
+      "line_ranges": [
+        [
+          174,
+          176
+        ]
+      ],
+      "content_sha256": "06594930f204c5f7562b1b3c9a09b4164e713bad396503ef0e933cff38554af1",
+      "primary_source_id": "773691057edc",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.681949+00:00",
+      "review_note": "LifeSG confirms restricted approved uses, birth-order grants and increased third/subsequent grant from 18 February 2025. Editorial cash-outlay comparison excluded.",
+      "policy_dates": {
+        "third_child_grant_from": "2025-02-18",
+        "review_as_of": "2026-10-09"
+      },
+      "required_qualifications": [
+        "Select first two sentences of line 174 plus line 176; retain birth-cohort and co-matching cap qualifications; consult section 7 transition."
+      ],
+      "sentence_selection_by_line": {
+        "174": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "mapping_id": "additional-subsidy-2027-table",
+      "section": 7,
+      "line_ranges": [
+        [
+          188,
+          198
+        ]
+      ],
+      "content_sha256": "440bd4b9bbf34c7f486cad0ba5825f4ce75ec6229b26f1ad7534e5ad90b0035b",
+      "primary_source_id": "4f9e587a7bdc",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.250489+00:00",
+      "review_note": "All seven rows match PDF pages 1/3. PDF confirms $15,000 HHI/$3,400 PCI for infant/childcare AS, not KiFAS.",
+      "policy_dates": {
+        "effective_from": "2027-01-01",
+        "source_updated_on": "2026-10-06"
+      },
+      "required_qualifications": [
+        "Announced future rates; keep full-day maxima, minimum co-payment, eligibility and actual fee notes."
+      ]
+    },
+    {
+      "mapping_id": "sg-child-support-2027",
+      "section": 7,
+      "line_ranges": [
+        [
+          202,
+          206
+        ]
+      ],
+      "content_sha256": "7a840b910f4f7a8a76cb9ae587554e820d8dedac8ec03475e8b295b9fdb2f395",
+      "primary_source_id": "8134a4d3fda4",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.848564+00:00",
+      "review_note": "LifeSG confirms replacement/transition, April payouts, Child Credits, grants/caps, September/October transition and PayNow account requirement.",
+      "policy_dates": {
+        "payouts_from": "2027-04-01",
+        "birth_cohort_from": "2027-04-01",
+        "old_co_matching_until": "2027-09-30",
+        "new_co_matching_from": "2027-10-01"
+      },
+      "required_qualifications": [
+        "Retain eligibility, birth-cohort and PayNow/CDA distinctions; announced future package, not current monthly preschool subsidies."
+      ]
+    },
+    {
+      "mapping_id": "form-1-application",
+      "section": 8,
+      "line_ranges": [
+        [
+          244,
+          244
+        ]
+      ],
+      "content_sha256": "854b8796a3922b7870c546efe857e8ab23137fd618bcc1091e3e851bac9aab31",
+      "primary_source_id": "dcf24f7c6ce6",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.881941+00:00",
+      "review_note": "LifeSG confirms post-enrolment Form 1, other-parent consent and supporting documents. Reassessment is a separate source; omit final reassessment sentence.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Split final reassessment sentence into separately sourced mapping."
+      ],
+      "sentence_selection": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "mapping_id": "mk-registration-dates",
+      "section": 8,
+      "line_ranges": [
+        [
+          248,
+          248
+        ]
+      ],
+      "content_sha256": "5f5bd1b7085e3d749f307967339f15097d43fb0fce304050ba3fc246b66faa29",
+      "primary_source_id": "b06f0b1405f2",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:07.950086+00:00",
+      "review_note": "MOE directly confirms 23–31 March 2026 for 2027 K1; linked Horizon page blocked. K2 and separate KCare claims are not covered here.",
+      "policy_dates": {
+        "registration_from": "2026-03-23",
+        "registration_until": "2026-03-31",
+        "intake_year": 2027
+      },
+      "required_qualifications": [
+        "Select first three sentences only; treat window as past as of review date."
+      ],
+      "sentence_selection": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "mapping_id": "mk-priority",
+      "section": 8,
+      "line_ranges": [
+        [
+          250,
+          250
+        ]
+      ],
+      "content_sha256": "428ca7c8bfdb0cfe85e6a427c41940727aa96382846ea3161cfabc75914671c6",
+      "primary_source_id": "76ba401c9f0a",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.049925+00:00",
+      "review_note": "MOE confirms citizenship, income, sibling and distance priority and balloting; submission order does not guarantee admission.",
+      "policy_dates": {},
+      "required_qualifications": []
+    },
+    {
+      "mapping_id": "spark-quality",
+      "section": 9,
+      "line_ranges": [
+        [
+          287,
+          287
+        ]
+      ],
+      "content_sha256": "30a04b286c1ef152ab044840ab282e05c787f46ffc6deca33ed9b01df7b3bdcd",
+      "primary_source_id": "be96d7eb7a44",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.558425+00:00",
+      "review_note": "ECDA confirms licensing foundation, self-appraisal and validated accreditation; classroom judgement is editorial.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Only SPARK framework description in sentence 2 is approved; visit advice is editorial."
+      ],
+      "sentence_selection": [
+        2
+      ]
+    },
+    {
+      "mapping_id": "ds-ls-role",
+      "section": 10,
+      "line_ranges": [
+        [
+          306,
+          307
+        ]
+      ],
+      "content_sha256": "b787e04a9d29f7b783e0ba64bdbc5470c2c8457bb437e2ef5a0238292183adad",
+      "primary_source_id": "d9f372c31b34",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.571335+00:00",
+      "review_note": "ECDA supports K1/K2 low intervention needs, preschool assessment and availability.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Keep table headers; exclude Parent action column as editorial."
+      ],
+      "table_columns": [
+        0,
+        1
+      ]
+    },
+    {
+      "mapping_id": "eipic-role",
+      "section": 10,
+      "line_ranges": [
+        [
+          306,
+          306
+        ],
+        [
+          308,
+          308
+        ]
+      ],
+      "content_sha256": "0a357d8e599b60f81064daeed1c124d2ad6e43d6321d5b8c597355576c9d991d",
+      "primary_source_id": "8751a98d4e2c",
+      "review_status": "verified",
+      "runtime_eligible": true,
+      "evidence_scope": "general",
+      "evidence_category": "authoritative_fact",
+      "source_verified_at": "2026-10-09T05:52:08.283735+00:00",
+      "review_note": "SG Enable supports EIPIC/EIPIC-P suitability assessment and referral; availability is not guaranteed.",
+      "policy_dates": {},
+      "required_qualifications": [
+        "Keep table headers; exclude Parent action column as editorial."
+      ],
+      "table_columns": [
+        0,
+        1
+      ]
+    }
+  ]
+}

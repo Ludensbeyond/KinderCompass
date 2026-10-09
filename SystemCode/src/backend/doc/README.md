@@ -28,3 +28,9 @@ The normal request path is `main.py` → `services/` → `repositories/` and
 `pipeline/`, with shared request and response shapes supplied by `domain/`.
 Browser code must call the FastAPI boundary and must not access repositories,
 resources, or external providers directly.
+
+The [file-based vector store plan](../../../../docs/file-vector-store-plan.md) describes the
+planned parent-guide index under `SystemCode/data/vectors/`, its source review,
+agent integration, deterministic fallback, and evaluation gates.
+The [step 1 source review](file-vector-source-review.md) records approved
+citations, excluded claims and the fixed embedding configuration.
