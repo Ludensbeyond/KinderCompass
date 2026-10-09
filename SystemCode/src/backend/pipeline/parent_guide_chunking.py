@@ -59,7 +59,7 @@ class GuideChunk:
     policy_dates: dict
     document_checked_on: str
     source_verified_at: str
-    indexed_at: None = None
+    indexed_at: str | None = None
 
     def to_dict(self) -> dict:
         """JSON-ready metadata; the later builder owns indexing timestamps."""

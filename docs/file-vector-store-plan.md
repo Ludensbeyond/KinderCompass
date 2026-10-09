@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Steps 1 and 2 complete; no vector runtime or embeddings have been created.
+Status: Steps 1–3 complete; persistent document embeddings exist. Runtime retrieval is deferred.
 
 ## Objective and first-version scope
 
@@ -278,4 +278,32 @@ the documented demo with local artifacts and no vector database provisioning.
   untouched archive without `.env` likewise had only that ingestion failure
   (309 of 310 passed). No deterministic regression was observed.
 - Next implementation step: Step 3, build and validate the persistent index.
+  Stop here for this implementation request.
+- Step 3 completed on 9 October 2026: added an explicit offline build CLI,
+  injectable batched OpenAI embeddings with bounded transient retries/timeouts,
+  and validated NumPy/JSON artifact loading. Compatible unchanged vectors are
+  reused; missing, corrupt or incompatible builds cannot supply reused vectors.
+- Completed builds are validated before atomically replacing `CURRENT`; failed
+  embedding, write, validation or publication leaves the prior index active.
+  The loader rejects invalid IDs/rows/counts, model/dimension mismatches,
+  non-finite/zero/non-unit vectors, pickle arrays and artifact hash mismatches.
+  Empty NumPy artifacts become validation errors so rebuilds recover.
+- Reviewed both pre-existing uncommitted 23-chunk, 1536-dimensional builds and
+  validated them in fresh processes against the configured model and original
+  reviewed metadata. One build records 23 embeddings; its successor records
+  complete reuse. Both small builds are retained for reproducible loading and
+  rollback. This verification made no new provider embedding requests.
+- Added NumPy to backend requirements and documented build, validation, reuse,
+  network requirements and rollback in the
+  [index construction guide](../SystemCode/src/backend/doc/file-vector-index.md).
+  Runtime retrieval, fallback, routing and service injection remain deferred.
+- Verification: all 39 focused persistence/chunking/configuration/evidence-tool
+  tests passed. Required full backend discovery outside the sandbox, with dotenv
+  loading and all four optional LLM flags disabled, ran 338 tests in 15.644
+  seconds: 337 passed and the existing incremental ingestion checkpoint test
+  failed. An untouched `b5204ea` archive with identical settings ran 321 tests
+  in 15.453 seconds: 320 passed, with that same failure. No deterministic
+  regression was observed. Sandboxed full runs stalled in API tests; completed
+  verification uses the outside-sandbox runs above.
+- Next implementation step: Step 4, implement retrieval and fallback.
   Stop here for this implementation request.

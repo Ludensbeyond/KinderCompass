@@ -233,6 +233,10 @@ while the older Stage 1 scoring functions are migrated incrementally.
 
 ### Maintenance scripts
 
+The [persistent parent-guide index guide](doc/file-vector-index.md) documents
+the explicit offline build and validation commands, vector reuse and rollback.
+The build extension is complete through Step 3; runtime retrieval is deferred.
+
 | Script | Purpose |
 |---|---|
 | `check_kg.py` | Verify Neo4j connectivity and inspect preschool counts, property keys, and sample records. |

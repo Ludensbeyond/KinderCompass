@@ -8,6 +8,9 @@ indexes, and prepare human-review packets.
 Scripts may read curated `resources/` and write generated `output/`. Keep them
 safe to run deliberately from the repository root, document required
 environment variables, and avoid importing script modules into the online API.
+
+`build_parent_guide_index.py` explicitly builds/publishes reviewed guide vectors
+or validates an existing build without provider calls. See [index construction](file-vector-index.md).
 Commands that inspect systems should remain read-only unless their purpose and
 write effects are explicit.
 

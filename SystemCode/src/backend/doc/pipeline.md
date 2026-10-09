@@ -22,3 +22,6 @@ features.
 `parent_guide_chunking.py` parses reviewed Markdown selections into reproducible,
 citation-compatible chunks without provider calls or writes. See
 [parent-guide chunking](file-vector-chunking.md) for selection and size rules.
+
+`parent_guide_embeddings.py` and `parent_guide_build.py` batch offline embeddings
+and publish completed persistent builds. See [index construction](file-vector-index.md).
