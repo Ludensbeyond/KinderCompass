@@ -73,13 +73,26 @@ class ParentGuideEvaluationTests(unittest.TestCase):
         self.assertEqual(selected_tools('Does this centre use Montessori?', 'ask_selected_school_evidence'),
                          ['search_selected_school_evidence'])
 
+    def test_broader_routing_variants_preserve_preference_and_school_scope(self):
+        from SystemCode.src.backend.pipeline.stage1.intent_router import classify_intent
+        for question in ('Explain ECDA services', 'Who runs the Anchor Operators?',
+                         'What does DS-LS mean?', 'What is P1 admission priority?'):
+            self.assertEqual(classify_intent(question).intent, 'ask_general_knowledge')
+        for question in ('How can I fix a leaking tap?', 'Write a travel itinerary'):
+            self.assertEqual(classify_intent(question).intent, 'needs_clarification')
+        self.assertEqual(classify_intent('I prefer SPARK centres').intent, 'update_preferences')
+        self.assertEqual(classify_intent('Does this centre have SPARK accreditation?').intent,
+                         'ask_selected_school_evidence')
+
     def test_report_exposes_actual_failures_and_offline_is_incomplete(self):
         report = evaluate(self.config, self.labels)
         self.assertFalse(report['vector_evaluated'])
         self.assertFalse(report['acceptance_passed'])
+        self.assertFalse(report['automated_evaluation_passed'])
+        self.assertFalse(report['independent_answer_review_completed'])
         self.assertEqual(len(report['corpus_exclusions']), 11)
         self.assertGreater(report['measurement']['matrix_bytes'], 0)
         self.assertEqual(report['summary']['lexical']['negative_rejections'], 7)
-        # Fixed broad questions expose real current routing gaps; do not bless them as preferences.
-        self.assertFalse(next(c for c in report['cases'] if c['case_id'] == 'landscape')['routing_ok'])
-        self.assertFalse(next(c for c in report['cases'] if c['case_id'] == 'kifas')['lexical']['hit'])
+        self.assertTrue(report['routing_ok'])
+        self.assertTrue(report['deterministic_answers_ok'])
+        self.assertTrue(report['summary']['lexical']['gates_passed'])

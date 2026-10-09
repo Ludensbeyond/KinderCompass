@@ -24,6 +24,7 @@ from SystemCode.src.backend.pipeline.parent_guide_embeddings import (
 )
 from SystemCode.src.backend.pipeline.parent_guide_retrieval import (
     ParentGuideRetriever, VECTOR_MIN_SIMILARITY, _eligible, _evidence, _question_topic,
+    _retrieval_question,
 )
 from SystemCode.src.backend.pipeline.stage1.conversation import update_conversation
 from SystemCode.src.backend.pipeline.stage1.intent_router import classify_intent
@@ -51,6 +52,7 @@ def selected_tools(question, intent):
 
 def vector_search(retriever, provider, question):
     """Independent vector ranking: never credit lexical/provider fallback as a hit."""
+    question = _retrieval_question(question)
     expected = EmbeddingSettings.from_config(retriever.config)
     if provider.settings != expected:
         raise ValueError('Incompatible query provider')
@@ -178,8 +180,12 @@ def evaluate(config, labels, *, provider=None):
         'corpus_exclusions': [{ 'section': s['section'], 'notes': s['exclusions_and_review_notes']}
                               for s in provenance['sections']],
         'summary': summaries, 'routing_ok': routing_ok, 'deterministic_answers_ok': answer_ok,
-        'acceptance_passed': provider is not None and routing_ok and answer_ok
-                             and all(s['gates_passed'] for s in summaries.values()),
+        'automated_evaluation_passed': provider is not None and routing_ok and answer_ok
+                                       and all(s['gates_passed'] for s in summaries.values()),
+        # The fixed labels explicitly record no independent human adjudication.
+        # Backend checks are run separately; retrieval metrics cannot certify them.
+        'independent_answer_review_completed': False,
+        'acceptance_passed': False,
         'cases': results,
     }
 

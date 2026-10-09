@@ -48,12 +48,39 @@ def _periods(chunk):
 def _question_topic(question):
     """Use explicit subject words to constrain reviewed section metadata."""
     value = question.casefold()
+    # Excluded subjects must not borrow support from adjacent reviewed topics.
+    if re.search(r"\b(?:primary\s*(?:1|one)|p1|cctv|livestream|waitlist)\b", value):
+        return set()
+    if re.search(r"\bkifas\b", value) and "kcare" not in value:
+        return {"kifas-2026-scope"}
+    if re.search(r"\banchor operators?\b", value):
+        return {"anchor-operators"}
+    if re.search(r"\bmk\b|moe kindergarten", value) and re.search(
+        r"submit|submitting|submission|priority|ballot|guarantee", value
+    ) and not re.search(r"\beyc\b|early years|partnership", value):
+        return {"mk-priority"}
     if "subsid" in value and not any(term in value for term in ("kcare", "kifas", "kindergarten")):
         return {"subsidy-scope", "basic-subsidy-and-exception", "subsidy-income-ceiling",
                 "additional-subsidy-2026-table", "additional-subsidy-2027-table"}
     if re.search(r"\bcda\b|child development account", value):
         return {"cda-current-benefits", "sg-child-support-2027"}
     return None
+
+
+def _retrieval_question(question):
+    """Separate an explicit general explanation from a combined school query.
+
+    Expand domain abbreviations/eligibility wording without altering the corpus
+    or dropping exceptions and dates from a single-subject question.
+    """
+    parts = re.split(r"\band\s+(?=(?:what is|what are|explain)\b)", question, flags=re.I)
+    if len(parts) > 1 and re.search(r"\b(?:this|selected)\s+(?:school|centre|center|preschool)\b", parts[0], re.I):
+        question = parts[-1].strip()
+    question = re.sub(r"\bqualif(?:y|ies)\b", "eligible", question, flags=re.I)
+    question = re.sub(r"\bAnchor Operators\b", "Anchor Operators AOP", question, flags=re.I)
+    if re.search(r"\bMK\b", question, re.I) and re.search(r"submit|submitting|submission", question, re.I):
+        question += " MOE Kindergarten admission priority submission order submit"
+    return question
 
 
 def _eligible(chunk, years, topic):
@@ -127,6 +154,7 @@ class ParentGuideRetriever:
         valid = (isinstance(question, str) and bool(question.strip())
                  and len(question) <= self.config.max_query_characters and limit > 0)
         if valid:
+            question = _retrieval_question(question)
             years = {int(value) for value in re.findall(r"\b(20\d{2})\b", question)}
             if year is not None:
                 years = {year}
@@ -159,6 +187,8 @@ class ParentGuideRetriever:
                 records = [{"chunk_id": self.chunks[row].chunk_id,
                             "text": self.chunks[row].text} for row in rows]
                 lexical_question = re.sub(r"\b20\d{2}\b", "", question)
+                if subjects == {"mk-priority"}:
+                    lexical_question = re.sub(r"\b(?:MK|registration|submitting|submission|order)\b", "", lexical_question, flags=re.I)
                 matches = _rank_chunks(records, re.sub(r"\bthresholds?\b", "HHI", lexical_question, flags=re.I), limit=limit,
                                        min_relevance=LEXICAL_MIN_RELEVANCE)
                 by_id = {chunk.chunk_id: chunk for chunk in self.chunks}
@@ -168,7 +198,7 @@ class ParentGuideRetriever:
             if not results:
                 # Curated metadata cannot enforce guide topic/year constraints.
                 # Do not let this fallback undo an explicit dated restriction.
-                if not years and topic is None:
+                if not years and topic is None and subjects is None:
                     results = self.curated.search(question, limit=limit)[:limit]
                     if results:
                         mode = "curated"

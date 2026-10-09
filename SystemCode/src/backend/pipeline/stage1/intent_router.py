@@ -125,11 +125,12 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
     subsidy_topics = general_topics[16:]
     guide_question = bool(re.search(
         r"\b(?:cctv|livestream|waitlist|enrol|enroll|enrolment|enrollment|registration|cda|eipic|kcare|"
-        r"aop|pop|fee caps?|child development account|primary.school transition)\b"
+        r"aop|pop|anchor operators?|ecda|mk|moe kindergarten|early years centre|spark|ds-ls|"
+        r"development support|learning support|fee caps?|child development account|primary.school transition|primary 1|p1)\b"
         r"|subsid|work exception|(?:policy|changes?|thresholds?).*2027|2027.*(?:policy|changes?|thresholds?)",
         lowered,
     ))
-    asks_question = asks_for_fact or lowered.startswith(("can ", "when ", "why ", "explain ")) or "?" in lowered
+    asks_question = asks_for_fact or lowered.startswith(("can ", "when ", "why ", "who ", "explain ")) or "?" in lowered
     asks_for_explanation = any(
         phrase in lowered for phrase in ("what is", "what does that mean", "explain", "difference between", "how does it work")
     )
@@ -159,6 +160,11 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
         phrase in lowered for phrase in ("suitable", "good fit", "right for me")
     ):
         return IntentResult(intent="assess_selected_preschool", confidence=1)
+    if asks_question or lowered.startswith(("write ", "tell ", "explain ")):
+        return IntentResult(
+            intent="needs_clarification", confidence=1,
+            clarification="Could you clarify the preschool task you want help with?",
+        )
     return None
 
 

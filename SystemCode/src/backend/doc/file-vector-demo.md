@@ -1,10 +1,12 @@
 # Parent-guide evaluation and demo (step 6)
 
-The evaluation is implemented, but demo acceptance **fails** on the broader set.
+Automated retrieval and routing gates now pass on the unchanged labels.
+Demo acceptance **remains open** because the full backend suite has an existing
+failure and independent human answer adjudication is outstanding.
 Keep retrieval opt-in. The checked-in report is
 [`output/parent_guide_evaluation.json`](../output/parent_guide_evaluation.json).
-This step changes evaluation and documentation; it does not tune retrieval,
-change routing, expand provenance, or rebuild document vectors.
+The Step 6 follow-up fixes runtime routing, subject constraints and query wording.
+Source-review exclusions, labels, provenance and document vectors remain unchanged.
 
 ## Labels and evaluation
 
@@ -34,13 +36,13 @@ Offline runs make no provider calls. `--real-provider` makes 31 bounded syntheti
 question-embedding calls using the configured OpenAI model/key, requiring network
 access and incurring API usage. Neither command changes source, CURRENT or builds.
 The script disables optional intent/answer providers and loads `.env` without
-overriding shell settings. Exit status is 0 for all acceptance gates passing,
-1 for failed/incomplete gates (including offline-only evaluation), and 2 for a
+overriding shell settings. Exit status is 0 only for complete acceptance,
+1 for failed/incomplete gates (including outstanding independent review), and 2 for a
 setup/report failure. Provider failures remain failed cases with categories;
 lexical recovery is never credited as vector success.
 
-Both modes rank the same persisted 23-chunk corpus with the existing topic/year
-constraints and top-three thresholds. Lexical uses the existing BM25/coverage
+Both modes rank the same persisted 23-chunk corpus with shared subject/year
+constraints, query normalization and unchanged top-three thresholds. Lexical uses the existing BM25/coverage
 helpers without curated fallback. Vector evaluation applies cosine ranking
 without lexical fallback. Runtime fallback is separately covered in retrieval
 and service tests. The harness checks actual deterministic routing and the
@@ -56,36 +58,37 @@ Results on 9 October 2026, Linux x86_64 demo workspace, active build
 
 | Gate/measurement | Guide lexical (BM25) | Independent vectors |
 |---|---:|---:|
-| Expected passage in top three | 22/24 (91.7%) | 22/24 (91.7%) |
-| Unsupported/excluded rejection | 7/7 | 6/7 |
-| Reviewed qualifications | Fail | Fail |
+| Expected passage in top three | 24/24 (100%) | 24/24 (100%) |
+| Unsupported/excluded rejection | 7/7 | 7/7 |
+| Reviewed qualifications | Pass | Pass |
 | Returned citations match approved URL/timestamp/scope | Pass | Pass |
 | Provider failures | 0 | 0 |
-| Query latency p50 / p95 | 2.46 / 4.29 ms | 229.44 / 411.29 ms |
+| Query latency p50 / p95 | 2.41 / 4.67 ms | 203.05 / 279.76 ms |
 
-The 90% retrieval gate passes independently, but the mandatory qualification and
-unsupported-evidence gates fail. No hybrid is introduced on these results.
-Actual routing/tool expectations pass 24/34 cases. Five answerable questions
-(ECDA services, Anchor Operators, EYC partnership, SPARK and DS-LS), the excluded
-Primary 1 question and four unrelated questions route to preferences. The
-structured-fee, budget-update and school-Montessori cases select the expected
-capabilities; combined routing correctly permits both evidence tools.
+All automated retrieval gates pass independently. Actual routing/tool expectations
+pass 34/34 cases, and deterministic general-answer qualification, citation and
+state checks pass. `automated_evaluation_passed` records this narrower result;
+`acceptance_passed` remains false and `independent_answer_review_completed` false.
+The evaluator cannot certify separately run backend checks or human review.
 
-Lexical misses KiFAS eligibility (returns KCare guidance) and the full combined
-question (returns nothing). Its KiFAS deterministic answer consequently loses
-the private-kindergarten/co-payment qualification. Vectors miss Anchor Operators
-and MK submission-order priority; the latter returns registration dates without
-the admission qualification. Vectors also return MK admissions/partnership
-passages for the excluded Primary 1 guarantee question. These related passages
-must not be treated as support for a Primary 1 admission guarantee. All four
-unrelated questions are rejected by standalone retrieval in both modes. The
-report lists individual failures and all section exclusions.
+Broader ECDA/operator/EYC/SPARK/DS-LS and Primary 1 questions reach guidance;
+unrecognized questions/requested content reach clarification without preference
+mutation. Selected-centre and explicit preference scopes remain protected.
+Primary 1, CCTV and waitlists cannot borrow adjacent guide or curated evidence.
+KiFAS and MK submission-priority questions constrain reviewed subjects; query
+wording expands eligibility and MOE Kindergarten terminology. Combined questions
+retrieve the explicit general explanation separately from the school clause.
+No hybrid ranking, threshold reduction, source expansion or rebuild was needed.
 
-A warm-process validated index load took 8.63 ms, with 1,057,707 peak traced bytes
+The fixed labels remain implementation-authored and overlap earlier calibration;
+these gains are tuning results, not independent holdout validation. The report
+retains all source-review exclusions. CCTV, waitlists and section 11 remain excluded.
+
+A warm-process validated index load took 8.23 ms, with 1,057,707 peak traced bytes
 and 141,312 matrix bytes (141,440 bytes including the `.npy` header on disk).
 These are incremental index-load allocations, not total backend RSS. Query p95
 excludes neither initial API setup nor outliers; the first vector query took
-0.92 seconds. Measurements are from this workspace, not a promise for another
+0.73 seconds. Measurements are from this workspace, not a promise for another
 machine. Repeat the live command on the actual presentation machine.
 
 ## Run a limited demo
@@ -105,7 +108,7 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
 Use `--mode vector` for hosted question embeddings. Lexical queries use local
 artifacts and require no API/network. Prefer passing examples such as Montessori,
 2027 subsidy thresholds and the childcare/infant-care work exception for a limited
-demo; disclose the failures above. CCTV, waitlist and Primary 1 advice remain
+demo; disclose the incomplete acceptance gates above. CCTV, waitlist and Primary 1 advice remain
 excluded. Exact selected-centre fees use structured data, not this corpus.
 
 For backend opt-in, put `GENERAL_KNOWLEDGE_RETRIEVAL_MODE=lexical` or `vector`
@@ -180,12 +183,13 @@ timeout fallback, routing, combined evidence and state preservation. The new
 suite verifies complete label coverage, independent vector failure accounting,
 qualification/citation mutations, capability restrictions and honest failed gates.
 
-Final backend discovery ran 363 tests: 362 passed, with the existing incremental
-ingestion checkpoint failure. An untouched `51271e3` archive reproduced the same
-sole failure in 358 tests. All 84 focused checks passed; fresh-process artifact
-validation passed.
+Final backend discovery ran 366 tests: 365 passed, with the existing incremental
+ingestion checkpoint failure (`second["school_attempts"]` is 1, expected 0).
+An untouched `fb5d9bd` archive under identical offline settings reproduced that
+sole failure in 363 tests. All 87 focused checks passed; fresh-process artifact
+validation and `git diff --check` passed. Full suites ran outside the sandbox
+with dotenv loading and the four optional LLM features disabled.
 
-Step 6 acceptance remains open: fix the recorded routing, qualification and
-unsupported-evidence failures in a separately scoped implementation; obtain
-independent human answer review and repeat the same gates. The current report
-must not be presented as passing comprehensive end-to-end demo acceptance.
+Step 6 acceptance remains open until the full backend gate passes and independent
+human answer review is obtained. This follow-up resolves the recorded labelled
+retrieval/routing/qualification failures but does not waive either remaining gate.

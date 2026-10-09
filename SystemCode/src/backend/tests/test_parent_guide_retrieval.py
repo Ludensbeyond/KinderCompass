@@ -73,6 +73,28 @@ class ParentGuideRetrievalTests(unittest.TestCase):
         self.assertIn(chunk.text, matches[0].text)
         self.provider.embed.assert_called_once_with(["What is Montessori?"], timeout_seconds=8.0)
 
+    def test_excluded_topics_cannot_borrow_vectors_or_curated_evidence(self):
+        self.query_vector("mk-priority")
+        curated = Mock()
+        r = ParentGuideRetriever(self.config, provider=self.provider, curated=curated)
+        for question in ("Can MK attendance secure P1 enrolment?", "What are CCTV access rules?",
+                         "How does a waitlist work?"):
+            self.assertEqual(r.search(question), [])
+        self.provider.embed.assert_not_called()
+        curated.search.assert_not_called()
+
+    def test_qualification_and_combined_query_variants(self):
+        r = ParentGuideRetriever(replace(self.config, mode="lexical"))
+        for question, mapping, term in (
+            ("Do I qualify for KiFAS in 2026?", "kifas-2026-scope", "private kindergartens"),
+            ("Does MK submission order affect admission?", "mk-priority", "first to submit"),
+            ("Does this centre use Montessori and explain Montessori?", "montessori-emphasis", "self-directed"),
+        ):
+            with self.subTest(question=question):
+                matches = r.search(question)
+                self.assertIn(mapping, self.mappings(r, matches))
+                self.assertIn(term, "\n".join(m.text for m in matches))
+
     def test_load_once_and_embed_only_questions(self):
         self.query_vector("spark-quality")
         with patch("SystemCode.src.backend.pipeline.parent_guide_retrieval.load_active_index", wraps=load_active_index) as loader:

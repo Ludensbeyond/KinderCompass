@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Steps 1–5 complete. Step 6 evaluation and demo documentation implemented; acceptance fails on recorded retrieval/routing cases and remains open.
+Status: Steps 1–5 complete. Step 6 labelled retrieval/routing fixes pass automated evaluation; acceptance remains open on the full backend gate and independent human answer review.
 
 ## Objective and first-version scope
 
@@ -409,3 +409,30 @@ the documented demo with local artifacts and no vector database provisioning.
   reported routing/retrieval/qualification failures, obtain independent human
   answer review, and rerun the fixed gates. Stop here for this implementation
   request; do not declare demo acceptance complete.
+
+- Step 6 follow-up on 9 October 2026: fixed broader ECDA/operator/EYC/SPARK/DS-LS
+  and Primary 1 routing, and clarify unsupported questions/content requests instead
+  of routing them to preference updates. School facts and preference turns retain
+  their isolated capabilities. Added variant coverage for those boundaries.
+- Retrieval rejects excluded Primary 1/CCTV/waitlist subjects before vector,
+  lexical and curated fallback. Reviewed KiFAS, operator and MK submission-priority
+  subject constraints and domain query wording preserve the intended qualifications.
+  Combined questions separate the explicit general explanation from school scope.
+  Vector/lexical thresholds remain unchanged; no hybrid or corpus expansion.
+- Reran the unchanged 34 labels offline and with real OpenAI embeddings. Both
+  independent modes retrieve 24/24 expected passages, reject 7/7 negatives, and
+  pass all reviewed qualifications and approved citation checks. Routing passes
+  34/34; deterministic answers preserve qualifications, citations and user state.
+  Zero provider failures. Updated the generated report and demo measurements.
+- Labels retain SHA-256 `318197723070fb89965579ea0aacf44c07a708c9da19f4182c1b1588502a1917`.
+  Source/provenance exclusions, Markdown, CURRENT and both builds are unchanged.
+  Results reflect tuning on this implementation-authored set, not human adjudication.
+- Verification: 87 focused tests pass. Final required backend discovery outside
+  the sandbox with dotenv and four optional LLM features disabled runs 366 tests:
+  365 pass, with the same incremental ingestion checkpoint failure. Untouched
+  `fb5d9bd` under identical settings runs 363 tests and reproduces that sole failure.
+  Fresh-process active artifact validation and whitespace checks pass.
+- Acceptance remains open: the existing backend failure is not waived, and
+  independent human answer review remains outstanding. The report distinguishes
+  automated evaluation success from acceptance and exits 1 while acceptance is
+  incomplete. Next work: resolve the backend gate and obtain independent review.
