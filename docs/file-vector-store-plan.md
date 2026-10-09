@@ -1,6 +1,6 @@
 # File-based preschool knowledge retrieval plan
 
-Status: Step 1 complete; no vector runtime or embeddings have been created.
+Status: Steps 1 and 2 complete; no vector runtime or embeddings have been created.
 
 ## Objective and first-version scope
 
@@ -244,10 +244,38 @@ the documented demo with local artifacts and no vector database provisioning.
   LLM-value fallback and incremental ingestion checkpointing). No new regression
   was observed. Optional live LLM features were disabled for both full runs;
   in-process API tests required execution outside the filesystem sandbox.
-- Next implementation step: Step 2, parse and chunk the Markdown. Stop here for
-  this implementation request.
+- After Step 1, the next implementation step was Step 2, parse and chunk the Markdown.
 - Step 1 reverified on 9 October 2026 against implementation commit `16f8ef2`:
   all 11 focused tests passed again. Full backend discovery outside the sandbox
   ran 310 tests in 69.762 seconds: 307 passed, with the same two failures and
   one error listed above. Optional live LLM features were disabled. No further
   implementation was needed, and Step 2 remains unstarted.
+- Step 2 completed on 9 October 2026: added pure offline Markdown parsing and
+  reviewed sentence/column selection under `pipeline/parent_guide_chunking.py`.
+  All 23 eligible mappings produce reproducible chunks covering sections 1–10;
+  all existing corpus exclusions remain recorded. Section 11 remains excluded.
+- Tables reconstruct their original headers, split mixed primary sources, and
+  repeat explanatory notes with each size-limited row group. Atomic reviewed
+  prose preserves exceptions and qualifications; oversized atomic selections
+  fail for further review instead of being truncated. The soft target is 1,800
+  characters and the hard cap is 5,000 including embedding heading context.
+- Added hashed, sentence-specific context selections for the already-reviewed
+  citizen-child fee-cap and MK/KCare holiday-payment conditions. Source text is
+  unchanged; no sources were fetched. Policy dates and citation fetch timestamps
+  are copied from reviewed metadata without inferred expiry dates.
+- Details: [backend chunking guide](../SystemCode/src/backend/doc/file-vector-chunking.md).
+  No embeddings, build artifacts, publication command or runtime wiring were added.
+- Verification: all 22 focused chunking/configuration/evidence-tool tests passed.
+  Required backend discovery outside the sandbox ran 321 tests in 71.974 seconds:
+  317 passed, three failures and one error. A matched untouched `HEAD` archive
+  with the same repository `.env` ran 310 tests in 68.938 seconds and reproduced
+  the previously recorded combined-routing, invalid-value fallback and ingestion
+  issues. The implementation run also had a variable Montessori/SPARK routing
+  failure. Backend startup loads `.env` with `override=True`, so shell flags did
+  not reliably disable optional providers. A controlled offline run disabled
+  dotenv loading and all four optional LLM flags: 320 of 321 tests passed in
+  14.987 seconds, with only the existing ingestion checkpoint failure. The
+  untouched archive without `.env` likewise had only that ingestion failure
+  (309 of 310 passed). No deterministic regression was observed.
+- Next implementation step: Step 3, build and validate the persistent index.
+  Stop here for this implementation request.

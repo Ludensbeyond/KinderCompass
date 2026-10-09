@@ -18,3 +18,7 @@ should remain callable by services and tests without starting an HTTP server.
 Keep credentials in server-side configuration, isolate external calls in their
 existing clients, and preserve deterministic fallbacks for optional LLM
 features.
+
+`parent_guide_chunking.py` parses reviewed Markdown selections into reproducible,
+citation-compatible chunks without provider calls or writes. See
+[parent-guide chunking](file-vector-chunking.md) for selection and size rules.

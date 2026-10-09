@@ -34,3 +34,5 @@ planned parent-guide index under `SystemCode/data/vectors/`, its source review,
 agent integration, deterministic fallback, and evaluation gates.
 The [step 1 source review](file-vector-source-review.md) records approved
 citations, excluded claims and the fixed embedding configuration.
+The [step 2 chunking guide](file-vector-chunking.md) describes offline Markdown
+selection, stable chunk metadata, and preservation of table and policy context.

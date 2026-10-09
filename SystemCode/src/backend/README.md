@@ -183,8 +183,9 @@ more detail about each backend folder.
 See the [file-based vector store plan](../../../docs/file-vector-store-plan.md) for the
 planned embedding index of the Singapore preschool parent guide and its
 integration with the existing general-knowledge retrieval tool.
-Step 1 is complete; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
-for verified mappings, corpus exclusions and settings reserved for later runtime steps.
+Steps 1 and 2 are complete; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
+and [Markdown chunking](doc/file-vector-chunking.md) for verified mappings,
+corpus exclusions and offline parsing. Index builds and runtime wiring remain pending.
 
 | Path | Description |
 |---|---|

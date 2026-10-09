@@ -1354,6 +1354,20 @@
       },
       "required_qualifications": [
         "AOP caps, before GST and subsidies; kindergarten before KiFAS. Do not generalise to every private centre or citizenship quote."
+      ],
+      "context_selections": [
+        {
+          "line_ranges": [
+            [
+              102,
+              102
+            ]
+          ],
+          "content_sha256": "08b601c68001746a7bd63fd24becc25d84f8d25d700c1348655430fadbd72dab",
+          "sentence_selection": [
+            1
+          ]
+        }
       ]
     },
     {
@@ -1383,6 +1397,20 @@
       },
       "required_qualifications": [
         "Singapore Citizen children at participating POP centres; excluding GST and subsidies."
+      ],
+      "context_selections": [
+        {
+          "line_ranges": [
+            [
+              102,
+              102
+            ]
+          ],
+          "content_sha256": "08b601c68001746a7bd63fd24becc25d84f8d25d700c1348655430fadbd72dab",
+          "sentence_selection": [
+            1
+          ]
+        }
       ]
     },
     {
@@ -1407,6 +1435,20 @@
       },
       "required_qualifications": [
         "Separate MK and KCare charges; before applicable subsidies; maximum KCare fees may vary in 2027."
+      ],
+      "context_selections": [
+        {
+          "line_ranges": [
+            [
+              102,
+              102
+            ]
+          ],
+          "content_sha256": "08b601c68001746a7bd63fd24becc25d84f8d25d700c1348655430fadbd72dab",
+          "sentence_selection": [
+            4
+          ]
+        }
       ]
     },
     {
