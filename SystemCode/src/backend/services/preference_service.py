@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from copy import deepcopy
 from pathlib import Path
 from threading import Lock
@@ -37,6 +38,7 @@ from SystemCode.src.backend.services.conversation_calculations import (
 from stage1.conversation import update_conversation
 from stage1.intent_router import classify_intent
 from stage1.scorer import rank_schools
+from stage1.nlp_mapper import summarize_profile
 from stage1.web_rag import load_json
 
 
@@ -383,6 +385,29 @@ class PreferenceService:
         selected_school_ids: list[str], eligible_school_ids: list[str],
         excluded_school_ids: list[str], family: FamilyDetails | None, home_postal_code: str | None,
     ) -> dict[str, Any]:
+        # Social turns need no school lookup, geocoding, or model call. Keep
+        # saved preferences and any unresolved decision intact.
+        if re.fullmatch(r"(?:hi|hello|hey|good morning|good afternoon|good evening)[\s!.]*", message.strip(), re.IGNORECASE):
+            saved = deepcopy(profile or {})
+            pending_question = next((
+                saved[key].get("question")
+                for key in ("pending_contradiction", "pending_relaxation")
+                if saved.get(key)
+            ), None)
+            ready = bool(saved.get("hard_constraints") or saved.get("preferences") or saved.get("preference_items")) and not any(
+                saved.get(key) for key in ("pending", "pending_contradiction", "pending_relaxation")
+            )
+            question = "Hi! Tell me what you would like in a preschool, such as language, teaching approach, or distance from home."
+            if pending_question:
+                question = f"Hi! {pending_question}"
+            elif saved.get("pending"):
+                question = "Hi! Would you like your last preference to be required or preferred?"
+            elif ready:
+                question = "Hi! Add another preschool preference or click Show recommendations to use your saved preferences."
+            return {
+                "profile": saved, "understood": summarize_profile(saved),
+                "ready_to_search": ready, "question": question,
+            }
         current = profile or {}
         before = deepcopy(current)
         active = current.get("active_school") or {}

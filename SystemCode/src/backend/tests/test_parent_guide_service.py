@@ -17,6 +17,34 @@ from stage1.intent_router import classify_intent
 
 
 class ParentGuideServiceTests(unittest.TestCase):
+    def test_education_overview_calls_general_tool_and_vector_retrieval(self):
+        from SystemCode.src.backend.agents import run_conversation_supervisor
+
+        message = "tell me about education system in singapore"
+        chunk = self.target("spark-quality")
+        context = self.service.build_conversation_context(
+            message=message, profile=self.profile, selected_school_ids=[],
+            eligible_school_ids=[], excluded_school_ids=[], family=None, home_postal_code=None,
+            intent=classify_intent(message),
+        )
+        model = SequencedModel([
+            tool_calls(("search_general_knowledge", {})),
+            tool_calls(("generated_conversation_answer", {
+                "answer": chunk.text[:700], "citation_ids": [chunk.chunk_id],
+            })),
+        ])
+        fallback = Mock(side_effect=AssertionError("unexpected fallback"))
+        with self.assertLogs("kindercompass", level="INFO") as logs:
+            outcome = run_conversation_supervisor(
+                context, self.service._conversation_tools(context), fallback, model=model,
+            )
+        self.assertTrue(outcome.metadata.validation_succeeded)
+        self.assertEqual(outcome.metadata.tool_names, ["search_general_knowledge"])
+        self.assertEqual(outcome.metadata.profile_mutations, 0)
+        self.assertIn("mode=vector", "\n".join(logs.output))
+        self.provider.embed.assert_called_once()
+        fallback.assert_not_called()
+
     def setUp(self):
         self.env = patch.dict(os.environ, {
             "GENERAL_KNOWLEDGE_RETRIEVAL_MODE": "vector",

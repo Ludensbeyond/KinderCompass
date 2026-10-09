@@ -434,6 +434,7 @@ class ConversationExecutionMetadata(AgentContract):
         "mutation_limit", "iteration_limit", "timeout", "validation_failed", "error",
     ]
     fallback_reason: Literal[
+        "clarification_required",
         "invalid_routing", "unknown_tool", "invalid_arguments", "missing_context",
         "conflicting_results", "multiple_mutations", "malformed_output",
         "unsupported_citation", "timeout", "execution_limit", "model_unavailable",

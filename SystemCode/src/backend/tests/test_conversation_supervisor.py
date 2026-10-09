@@ -134,9 +134,14 @@ class ConversationSupervisorTests(unittest.TestCase):
             })),
         ])
 
-        result = create_conversation_supervisor_graph(
-            turn, create_evidence_tools(turn), model=model,
-        ).invoke({})
+        with self.assertLogs("kindercompass.conversation_agent", level="INFO") as logs:
+            result = create_conversation_supervisor_graph(
+                turn, create_evidence_tools(turn), model=model,
+            ).invoke({})
+
+        self.assertIn("event=started tool=search_general_knowledge", logs.output[0])
+        self.assertIn("event=completed tool=search_general_knowledge", logs.output[1])
+        self.assertNotIn(turn.message, "\n".join(logs.output))
 
         self.assertEqual(result["termination_reason"], "completed")
         self.assertEqual(result["tool_calls"], 1)

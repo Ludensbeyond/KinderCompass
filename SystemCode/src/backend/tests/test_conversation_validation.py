@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from langchain_core.messages import AIMessage, ToolMessage
 
@@ -148,6 +148,22 @@ def deterministic_result():
 
 
 class ConversationValidationTests(unittest.TestCase):
+    def test_clarification_uses_specific_fallback_reason_and_runs_no_tools(self):
+        from SystemCode.src.backend.agents.observability import build_conversation_observation
+
+        turn = context("Can you help with that?")
+        turn.deterministic_intent = "needs_clarification"
+        fallback = Mock(return_value=deterministic_result())
+        outcome = run_conversation_supervisor(
+            turn, create_evidence_tools(turn), fallback, model=SequencedModel([]),
+        )
+        fallback.assert_called_once()
+        self.assertEqual(outcome.metadata.termination_reason, "clarification")
+        self.assertEqual(outcome.metadata.fallback_reason, "clarification_required")
+        self.assertEqual(outcome.metadata.tool_calls, 0)
+        observation = build_conversation_observation(outcome.metadata, mode="agent")
+        self.assertEqual(observation.fallback_reason, "clarification_required")
+
     def setUp(self):
         self.context = context()
         self.tools = create_evidence_tools(self.context)

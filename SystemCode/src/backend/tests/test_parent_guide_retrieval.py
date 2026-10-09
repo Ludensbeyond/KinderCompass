@@ -62,7 +62,14 @@ class ParentGuideRetrievalTests(unittest.TestCase):
     def test_cosine_ranking_typed_citations_and_three_result_bound(self):
         self.query_vector("montessori-emphasis")
         r = ParentGuideRetriever(self.config, provider=self.provider)
-        matches = r.search("What is Montessori?", limit=100)
+        with self.assertLogs("kindercompass.retrieval", level="INFO") as logs:
+            matches = r.search("What is Montessori?", limit=100)
+        self.assertIn("event=started", logs.output[0])
+        self.assertIn("configured_mode=vector", logs.output[0])
+        self.assertIn("event=completed", logs.output[1])
+        self.assertIn("mode=vector", logs.output[1])
+        self.assertIn("failure_category=None", logs.output[1])
+        self.assertNotIn("What is Montessori?", "\n".join(logs.output))
         self.assertLessEqual(len(matches), 3)
         self.assertEqual(self.mappings(r, matches)[0], "montessori-emphasis")
         self.assertEqual(r.status.mode, "vector")
@@ -143,7 +150,12 @@ class ParentGuideRetrievalTests(unittest.TestCase):
             with self.subTest(failure=type(failure).__name__):
                 self.provider.embed.side_effect = failure if isinstance(failure, Exception) else None
                 self.provider.embed.return_value = failure
-                self.assertEqual(self.mappings(r, r.search("What is Montessori?")), ["montessori-emphasis"])
+                with self.assertLogs("kindercompass.retrieval", level="INFO") as logs:
+                    matches = r.search("What is Montessori?")
+                self.assertEqual(self.mappings(r, matches), ["montessori-emphasis"])
+                self.assertIn("mode=lexical", logs.output[1])
+                self.assertIn("failure_category=embedding_unavailable", logs.output[1])
+                self.assertNotIn("private details", "\n".join(logs.output))
                 self.assertEqual(r.status.failure_category, "embedding_unavailable")
         self.provider.settings = EmbeddingSettings("openai", "wrong", 1536)
         self.provider.embed.reset_mock()

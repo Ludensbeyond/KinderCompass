@@ -32,7 +32,7 @@ class AgentModelFactoryTests(unittest.TestCase):
                 )
                 self.assertIs(result, client)
                 client_factory.assert_called_once_with(
-                    model="gpt-4o-mini", timeout=8.0, api_key="test-api-key",
+                    model="gpt-4o-mini", timeout=8.0, api_key="test-api-key", max_retries=0,
                 )
 
     def test_deterministic_mode_does_not_construct_a_client_or_require_credentials(self):
@@ -60,6 +60,7 @@ class AgentModelFactoryTests(unittest.TestCase):
             model="gpt-test-model",
             timeout=12.5,
             api_key="test-api-key",
+            max_retries=0,
         )
 
     def test_agent_mode_uses_bounded_configuration_defaults(self):

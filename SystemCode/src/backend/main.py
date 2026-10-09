@@ -52,7 +52,10 @@ from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
 from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
 from SystemCode.src.backend.services.chat_feedback_service import ChatAnswerNotFoundError, ChatFeedbackService  # noqa: E402
 from SystemCode.src.backend.services.school_rating_service import SchoolRatingService  # noqa: E402
+from SystemCode.src.backend.agents.observability import configure_runtime_logging  # noqa: E402
 
+
+configure_runtime_logging()
 
 app = FastAPI(title="KinderCompass API", version="0.1.0")
 app.add_middleware(

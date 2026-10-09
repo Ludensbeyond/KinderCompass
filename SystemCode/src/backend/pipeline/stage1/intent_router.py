@@ -62,6 +62,16 @@ class IntentResult(BaseModel):
     message_type: Literal["preference", "question", "operation", "mixed", "unknown"] = "unknown"
 
 
+def _education_overview(text: str) -> bool:
+    """Recognise education guidance without treating school preferences as questions."""
+
+    return bool(re.search(
+        r"\beducation(?:al)?\s+system\b|\beducation\s+in\s+singapore\b|"
+        r"\bsingapore(?:'s)?\s+education\b|\b(?:early[- ]childhood|preschool)\s+education\b",
+        text.lower(),
+    ))
+
+
 def _rules(text: str, active_school_name: str | None = None) -> IntentResult | None:
     lowered = (text or "").strip().lower()
     if any(phrase in lowered for phrase in (
@@ -131,9 +141,11 @@ def _rules(text: str, active_school_name: str | None = None) -> IntentResult | N
         lowered,
     ))
     asks_question = asks_for_fact or lowered.startswith(("can ", "when ", "why ", "who ", "explain ")) or "?" in lowered
+    if not asks_about_school and _education_overview(lowered) and asks_question:
+        return IntentResult(intent="ask_general_knowledge", confidence=1, message_type="question")
     asks_for_explanation = any(
         phrase in lowered for phrase in ("what is", "what does that mean", "explain", "difference between", "how does it work")
-    )
+    ) or (not asks_about_school and lowered.startswith("tell me about "))
     if asks_about_school and asks_for_explanation and (
         any(topic in lowered for topic in general_topics) or guide_question
     ):
@@ -177,7 +189,7 @@ def _llm_enabled() -> bool:
 def _classify_with_openai(text: str, active_school_name: str | None = None) -> IntentResult:
     from openai import OpenAI
 
-    client = OpenAI(timeout=float(os.getenv("OPENAI_INTENT_TIMEOUT_SECONDS", "8")))
+    client = OpenAI(timeout=float(os.getenv("OPENAI_INTENT_TIMEOUT_SECONDS", "8")), max_retries=0)
     response = client.responses.parse(
         model=os.getenv("OPENAI_INTENT_MODEL", "gpt-4o-mini").strip() or "gpt-4o-mini",
         instructions=(
@@ -203,6 +215,7 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
             "explain_school_exclusion asks why a school was removed from eligible recommendations. "
             "ask_selected_school_evidence asks a factual question about exactly one selected school, such as its curriculum, languages, fees, facilities, or philosophy. "
             "ask_general_knowledge explains general preschool guidance, including curriculum, enrolment, waitlists, CCTV, CDA, developmental support, fee caps, subsidies and dated 2027 policies, without making a claim about one school. "
+            "Information requests such as 'tell me about education system in Singapore' or 'tell me about Montessori' use ask_general_knowledge; retrieval determines the available evidence. "
             "ask_combined_evidence combines a selected school's verified claim with a separately sourced general explanation. "
             "Use needs_clarification when meaning is genuinely ambiguous and provide one short question."
         ),
@@ -226,6 +239,9 @@ def _classify_with_openai(text: str, active_school_name: str | None = None) -> I
 def classify_intent(text: str, active_school_name: str | None = None) -> IntentResult:
     """Protect explicit operations, then prioritize LLM semantics when enabled."""
     deterministic = _rules(text, active_school_name)
+    if deterministic and deterministic.intent == "ask_general_knowledge" and _education_overview(text):
+        # Explicit education questions have an unambiguous retrieval capability.
+        return deterministic
     llm_priority_intents = {
         "ask_general_knowledge",
         "ask_combined_evidence",

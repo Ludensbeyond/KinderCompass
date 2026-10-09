@@ -1,8 +1,10 @@
 """Typed guide retrieval shared by standalone queries and backend guidance."""
 
 from dataclasses import dataclass
+import logging
 import re
 import time
+from uuid import uuid4
 
 import numpy as np
 
@@ -23,6 +25,7 @@ from SystemCode.src.backend.repositories.parent_guide_index import load_active_i
 # not probabilities. See doc/file-vector-retrieval.md for limits and results.
 VECTOR_MIN_SIMILARITY = 0.40
 LEXICAL_MIN_RELEVANCE = 0.45
+LOGGER = logging.getLogger("kindercompass.retrieval")
 
 
 @dataclass(frozen=True)
@@ -147,6 +150,14 @@ class ParentGuideRetriever:
     def search(self, question: str, *, limit: int = 3, topic: str | None = None,
                year: int | None = None) -> list[GeneralKnowledgeEvidence]:
         started = time.monotonic()
+        execution_id = uuid4().hex
+        try:
+            LOGGER.info(
+                "guide_retrieval event=started execution_id=%s configured_mode=%s",
+                execution_id, GeneralKnowledgeRetrievalMode(self.config.mode).value,
+            )
+        except Exception:
+            pass
         failure = self.load_failure
         mode = "unavailable"
         results = []
@@ -204,8 +215,18 @@ class ParentGuideRetriever:
                         mode = "curated"
         else:
             failure = "invalid_query"
-        self.status = RetrievalStatus(
+        status = RetrievalStatus(
             self.index.build_id if self.index else None, mode,
             round((time.monotonic() - started) * 1000, 3), len(results), failure,
         )
+        self.status = status
+        try:
+            LOGGER.info(
+                "guide_retrieval event=completed execution_id=%s mode=%s "
+                "result_count=%s elapsed_ms=%.3f failure_category=%s",
+                execution_id, status.mode, status.result_count,
+                status.elapsed_ms, status.failure_category,
+            )
+        except Exception:
+            pass
         return results

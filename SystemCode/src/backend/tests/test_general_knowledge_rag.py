@@ -55,6 +55,27 @@ SCHOOL_INDEX = {
 
 
 class GeneralKnowledgeRagTests(unittest.TestCase):
+    def test_education_overviews_reach_retrieval_with_or_without_llm_routing(self):
+        for enabled in ("true", "false"):
+            with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": enabled}):
+                with patch("stage1.intent_router._classify_with_openai", side_effect=AssertionError("unexpected model call")) as model:
+                    for message in (
+                        "tell me about education system in singapore",
+                        "Explain Singapore's education system",
+                        "How does education in Singapore work?",
+                        "Tell me about preschool education",
+                    ):
+                        with self.subTest(enabled=enabled, message=message):
+                            self.assertEqual(classify_intent(message).intent, "ask_general_knowledge")
+                    model.assert_not_called()
+
+    def test_tell_me_about_known_topics_and_preferences_remain_distinct(self):
+        with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": "false"}):
+            self.assertEqual(classify_intent("Tell me about Montessori").intent, "ask_general_knowledge")
+            self.assertEqual(classify_intent("I want Montessori preschool education").intent, "update_preferences")
+            self.assertEqual(classify_intent("Tell me about this school's curriculum").intent, "ask_selected_school_evidence")
+            self.assertEqual(classify_intent("Tell me about repairing my bicycle").intent, "needs_clarification")
+
     def test_routes_general_curriculum_question_without_selected_school(self):
         self.assertEqual(classify_intent("What is Montessori?").intent, "ask_general_knowledge")
         turn = update_conversation(None, "What is Montessori?", general_knowledge_index=GENERAL_INDEX)

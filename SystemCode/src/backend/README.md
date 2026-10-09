@@ -110,6 +110,22 @@ when the model is unavailable, execution fails, or validation rejects its result
 Full-conversation agent and shadow modes disable the separate selected-school
 graph for that request. No frontend configuration or API contract change is needed.
 
+The backend console logs each executed agent tool with `tool_execution`, its
+name, a generated execution ID, and `event=started`, `completed`, or `failed`.
+Completion and failure include elapsed milliseconds. Parent-guide searches also
+emit `guide_retrieval` with the configured mode at start and the actual mode,
+result count, elapsed time, and safe failure category at completion. For example,
+`mode=vector` confirms vector ranking was used; `mode=lexical` with
+`failure_category=embedding_unavailable` identifies fallback. Questions, tool
+arguments, evidence text, and provider error messages are excluded. These INFO
+logs are enabled in the API console; restart the backend to load this change.
+An actual clarification stops before executing tools and uses
+`fallback_reason=clarification_required`; `invalid_routing` indicates a rejected
+route rather than an ordinary clarification. Explicit education overview requests
+such as “tell me about education system in Singapore” route to general-knowledge
+retrieval. Answers remain limited to the available reviewed early-childhood
+documents; routing does not add evidence about the entire education system.
+
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
 takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.
 It returns a closed intent plus validated topic names, semantic categories, and
