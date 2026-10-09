@@ -208,6 +208,18 @@ observations. The bundle CLI checks input integrity and separates controller
 fallback metrics from accepted-agent metrics; private bundles remain ignored by Git.
 Human calibration is pending; these 12 cases remain a smoke check.
 
+## Expanded school and conversation coverage
+
+Step 7 adds a separate [24-case dataset](expanded/manifest.json), preserving the
+frozen starter and baseline. It covers selected-school evidence, missing
+webpage evidence, a controlled wrong-school passage, combined evidence,
+confirmed preference changes and a deterministic fee explanation. See the
+[review and replay contract](expanded/review.md) and
+[verification and capture command](coverage-verification.md). Twenty cases are
+for tuning; four are held out for reporting after tuning. Only the final answer
+turn is scored, and exact state, arithmetic and ownership checks remain separate
+from RAGAS. No expanded provider-backed results are claimed.
+
 ## Make the small set effective
 
 Use these 12 cases as a smoke check, then grow to around 20–30 reviewed cases:

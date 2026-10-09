@@ -32,7 +32,9 @@ def execution_case(item):
     if set(item) != {"case_id", "user_input", "setup"}:
         raise ValueError("execution input must contain only case_id, user_input and setup")
     setup = item["setup"]
-    if set(setup) != {"profile", "selected_school_ids", "conversation_history"}:
+    if set(setup) - {"profile", "selected_school_ids", "conversation_history", "family"} or not {
+        "profile", "selected_school_ids", "conversation_history"
+    } <= set(setup):
         raise ValueError("unsupported setup fields")
     if setup["conversation_history"]:
         raise ValueError("starter runner supports independent single turns only")
@@ -40,6 +42,7 @@ def execution_case(item):
         case_id=item["case_id"], sequence=1, conversation_id=item["case_id"], turn=1,
         message=item["user_input"], profile=deepcopy(setup["profile"]),
         selected_school_ids=deepcopy(setup["selected_school_ids"]),
+        family=deepcopy(setup.get("family")),
         # Required schema placeholders; staged_runner does not consume expectations.
         expected_intent="unused", expected_route_scope="clarification",
     )
@@ -58,6 +61,11 @@ def composer_evidence(invocations, observed):
     # original text independently of the answer's final citation selection.
     for payload in payloads:
         for fact in payload["grounding_facts"]:
+            if payload.get("evidence_category") in {"calculated_estimate", "authoritative_fact"} or payload.get("mutates_profile"):
+                passages.append({"text": fact, "basis": "transformed_tool_fact",
+                                 "tool_name": payload.get("tool_name"),
+                                 "citations": deepcopy(payload.get("citations", []))})
+                continue
             candidates = [passage for passage in observed if passage["text"] == fact]
             citation_ids = {c.get("citation_id") for c in payload.get("citations", [])}
             candidates = [p for p in candidates if p["chunk_id"] in citation_ids]
@@ -150,7 +158,11 @@ def run_dataset(inputs, output, metadata, execute):
     if not ids or len(ids) != len(set(ids)):
         raise ValueError("execution IDs must be nonempty and unique")
     for item in inputs:
-        execution_case(item)
+        if metadata.get("execution_schema") == "conversation_adapter_v1":
+            from coverage_cases import validate_input
+            validate_input(item)
+        else:
+            execution_case(item)
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest_path = output.with_suffix(".manifest.json")
     manifest = {**metadata, "started_at": datetime.now(timezone.utc).isoformat(),
@@ -188,6 +200,8 @@ def main():
     parser.add_argument("--staged", required=True, action="store_true",
                         help="Invoke configured agent provider (incurs charges; no judge).")
     parser.add_argument("--output", type=Path, default=Path("/tmp/kindercompass-ragas-runs.jsonl"))
+    parser.add_argument("--dataset-dir", type=Path, default=Path(__file__).parent)
+    parser.add_argument("--split", choices=("tuning", "held_out"))
     args = parser.parse_args()
     output = args.output.resolve()
     if output.is_relative_to(REPO_ROOT):
@@ -195,7 +209,7 @@ def main():
     load_dotenv(REPO_ROOT / ".env")
     os.environ["LANGSMITH_TRACING"] = "false"
     os.environ["LANGCHAIN_TRACING_V2"] = "false"
-    directory = Path(__file__).parent
+    directory = args.dataset_dir.resolve()
     frozen = json.loads((directory / "manifest.json").read_text())
     for name, record in frozen["files"].items():
         if sha256(directory / name) != record["sha256"]:
@@ -203,9 +217,21 @@ def main():
     index = REPO_ROOT / frozen["evidence_snapshot"]["path"]
     if sha256(index) != frozen["evidence_snapshot"]["sha256"]:
         parser.error("frozen general evidence snapshot hash mismatch")
+    for record in frozen.get("supporting_snapshots", []):
+        if sha256(REPO_ROOT / record["path"]) != record["sha256"]:
+            parser.error(f"frozen supporting snapshot hash mismatch: {record['path']}")
+    if frozen.get("supporting_snapshots"):
+        expected_index = REPO_ROOT / "SystemCode/src/backend/output/web_rag_pilot_index.json"
+        if Path(os.getenv("WEB_RAG_INDEX_PATH") or expected_index).resolve() != expected_index:
+            parser.error("expanded dataset requires the frozen selected-school index")
     inputs = read_jsonl(directory / "inputs.jsonl")
     if len(inputs) != frozen["case_count"]:
         parser.error("input count differs from frozen manifest")
+    if args.split:
+        if args.split not in frozen.get("splits", {}):
+            parser.error("dataset has no requested split")
+        selected_ids = set(frozen["splits"][args.split])
+        inputs = [item for item in inputs if item["case_id"] in selected_ids]
     dependencies = {}
     for package in ("langchain-core", "langchain-openai", "langgraph", "openai", "pydantic"):
         try:
@@ -218,7 +244,11 @@ def main():
         "git_revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip(),
         "git_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=REPO_ROOT, text=True).strip()),
         "collector_sha256": sha256(Path(__file__)),
-        "recording_model_sha256": sha256(directory / "capture_one.py"),
+        "recording_model_sha256": sha256(Path(__file__).with_name("capture_one.py")),
+        "split": args.split or "all",
+        "execution_schema": frozen.get("execution_schema", "single_turn_v1"),
+        "conversation_adapter_sha256": sha256(Path(__file__).with_name("coverage_cases.py"))
+        if frozen.get("execution_schema") == "conversation_adapter_v1" else None,
         "python": platform.python_version(), "dependencies": dependencies,
         "model_settings": {"model": os.getenv("OPENAI_WEB_RAG_MODEL", "gpt-4o-mini"),
                            "timeout_seconds": os.getenv("OPENAI_WEB_RAG_TIMEOUT_SECONDS", "8.0"),
@@ -241,11 +271,23 @@ def main():
         schools = SchoolRepository(REPO_ROOT / "SystemCode/data/processed/kindercompass_master.json")
         service = PreferenceService(schools, EvaluationService(schools), LocationService(
             schools, REPO_ROOT / "SystemCode/data/raw/PreSchoolsLocation.geojson"), REPO_ROOT)
+        if frozen.get("execution_schema") == "conversation_adapter_v1":
+            from coverage_cases import capture_conversation
+            return capture_conversation(service, item, staged_model_factory)
         return capture(service, item, staged_model_factory())
 
     rows, manifest = run_dataset(inputs, output, metadata, execute)
     # References are loaded only AFTER every execution, for format validation.
     cases = read_jsonl(directory / "cases.jsonl")
+    cases = [case for case in cases if case["case_id"] in {item["case_id"] for item in inputs}]
+    if frozen.get("execution_schema") == "conversation_adapter_v1":
+        from coverage_cases import check_capture
+        for row in rows:
+            row["coverage_checks"] = check_capture(next(c for c in cases if c["case_id"] == row["case_id"]), row)
+        output.write_text("".join(json.dumps(row, default=str) + "\n" for row in rows))
+        manifest["capture_sha256"] = sha256(output)
+        manifest["coverage_checks"] = {row["case_id"]: row["coverage_checks"] for row in rows}
+        output.with_suffix(".manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     successful = [row for row in rows if not row.get("execution_error")]
     subset = [case for case in cases if case["case_id"] in {row["case_id"] for row in successful}]
     prepared, _, behaviour = prepare(subset, successful)
