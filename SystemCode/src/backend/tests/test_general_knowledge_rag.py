@@ -55,6 +55,18 @@ SCHOOL_INDEX = {
 
 
 class GeneralKnowledgeRagTests(unittest.TestCase):
+    def setUp(self):
+        # Rule/evidence regressions must not inherit live provider settings.
+        # Model-specific cases explicitly enable and inject their own model.
+        settings = patch.dict(os.environ, {
+            "OPENAI_INTENT_CLASSIFICATION_ENABLED": "false",
+            "OPENAI_PREFERENCE_EXTRACTION_ENABLED": "false",
+            "OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "false",
+            "OPENAI_WEB_RAG_ANSWERS_ENABLED": "false",
+        })
+        settings.start()
+        self.addCleanup(settings.stop)
+
     def test_education_overviews_reach_retrieval_with_or_without_llm_routing(self):
         for enabled in ("true", "false"):
             with patch.dict(os.environ, {"OPENAI_INTENT_CLASSIFICATION_ENABLED": enabled}):

@@ -399,3 +399,8 @@ The [standalone parent-guide retrieval guide](doc/file-vector-retrieval.md) docu
 step 4 query commands, relevance calibration, dated constraints and fallback.
 The [backend integration guide](doc/file-vector-service.md) documents step 5
 service injection, runtime opt-in and deterministic fallbacks.
+
+The active [LLM-first phase](../../../docs/llm-first-conversation-plan.md) and
+[Step 1 baseline](doc/llm-first-baseline.md) record the next architecture phase.
+See [backend progress](doc/agents.md) for Step 1 completion evidence and the
+historical supervisor rollout evidence.

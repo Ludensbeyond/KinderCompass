@@ -45,3 +45,7 @@ a server. See [standalone retrieval](file-vector-retrieval.md).
 `evaluate_parent_guide.py` compares fixed manual labels against independent BM25
 and optional real-provider vectors, checks routing/qualifications/citations, and
 reports failed gates. See [evaluation and demo](file-vector-demo.md).
+
+`capture_llm_first_baseline.py` captures reproducible synthetic, injected-model
+control-flow traces without provider calls or persistent writes. See the
+[Step 1 baseline](llm-first-baseline.md) for scope, command and limitations.

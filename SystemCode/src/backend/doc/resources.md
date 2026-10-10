@@ -20,3 +20,7 @@ not belong here.
 `parent_guide_evaluation.json` contains fixed synthetic, manually specified
 all-section retrieval, qualification and routing labels. See
 [evaluation and demo](file-vector-demo.md) for review limitations.
+
+`llm_first_conversation_evaluation.json` is the fixed v1 target conversation
+dataset for the new phase, separate from the legacy intent evaluator. See
+[Step 1 baseline](llm-first-baseline.md) for fixture/scoring contracts.
