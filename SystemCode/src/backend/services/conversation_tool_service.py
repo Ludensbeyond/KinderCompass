@@ -1,6 +1,7 @@
 """Request-local new-flow capabilities, with no model or persistence calls."""
 
 from copy import deepcopy
+from threading import RLock
 from typing import Callable
 
 from langchain_core.tools import StructuredTool
@@ -76,6 +77,7 @@ class ConversationToolService:
         self._calls = 0
         self._mutations = 0
         self._closed = False
+        self._state_lock = RLock()
         self._specs = {
             "read_school_facts": (SchoolFactsArguments, self._facts),
             "search_school_evidence": (SchoolEvidenceArguments, self._school_evidence),
@@ -88,20 +90,27 @@ class ConversationToolService:
         }
 
     @property
+    def initial_context(self) -> InitialConversationContext:
+        return self._context.model_copy(deep=True)
+
+    @property
     def staged_profile(self) -> dict:
-        return deepcopy(self._profile)
+        with self._state_lock:
+            return deepcopy(self._profile)
 
     def abort(self) -> None:
-        self._profile = deepcopy(self._initial_profile)
-        self._closed = True
+        with self._state_lock:
+            self._profile = deepcopy(self._initial_profile)
+            self._closed = True
 
     def export_validated_state(self, *, response_validated: bool, shadow: bool = False) -> dict:
-        if self._closed or not response_validated:
-            self.abort()
-            raise ValueError("cannot export an unvalidated or closed turn")
-        result = sync_preference_schema(deepcopy(self._initial_profile if shadow else self._profile))
-        self._closed = True
-        return result
+        with self._state_lock:
+            if self._closed or not response_validated:
+                self.abort()
+                raise ValueError("cannot export an unvalidated or closed turn")
+            result = sync_preference_schema(deepcopy(self._initial_profile if shadow else self._profile))
+            self._closed = True
+            return result
 
     def invoke(self, name: str, arguments: dict) -> StructuredToolResult:
         if self._closed:
@@ -145,6 +154,12 @@ class ConversationToolService:
         ) for name, (schema, _) in self._specs.items() if name in self._context.capabilities]
 
     def _stage(self, candidate: dict, changed: list[str]):
+        with self._state_lock:
+            return self._stage_open(candidate, changed)
+
+    def _stage_open(self, candidate: dict, changed: list[str]):
+        if self._closed:
+            raise ValueError("turn is closed")
         self._mutations += 1
         if self._mutations > 4:
             raise ValueError("turn mutation limit exceeded")

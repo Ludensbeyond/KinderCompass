@@ -24,6 +24,8 @@ one-step session protocol; the completed readiness work remains historical. The
 history, session leases and the minimal new-flow model context. The
 [Step 3 tool contract](llm-first-tools.md) documents typed capabilities and
 request-local staged state. The
+[Step 4 model loop](llm-first-loop.md) documents model-first action selection,
+dependent calls and execution/failure bounds. The
 [Implementation 2 archive](impl2-agent-step2.md) preserves the completed
 full-conversation supervisor migration, and the
 [Implementation 1 archive](impl1-agent-step1.md) preserves the completed

@@ -22,3 +22,7 @@ see [their contract and integration constraints](llm-first-context.md).
 request-local staged preference transaction. Its tools reuse the repositories,
 scorer, evaluator, distances and retrieval without nested answer generation;
 see [tool contracts and transaction boundaries](llm-first-tools.md).
+
+The Step 4 [LLM-controlled loop](llm-first-loop.md) orchestrates these new-flow
+capabilities with model-selected actions and bounded execution. It returns a
+candidate for later response validation and HTTP integration.

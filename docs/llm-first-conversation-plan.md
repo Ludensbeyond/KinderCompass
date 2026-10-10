@@ -1,7 +1,7 @@
 # LLM-first conversation plan
 
 Date: 2026-10-10
-Status: Steps 1–3 complete; Step 4 next
+Status: Steps 1–4 complete; Step 5 next
 
 ## Objective
 
@@ -310,12 +310,50 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline .venv/bin/pyth
 - [x] Step 1: Baseline and architecture record
 - [x] Step 2: Bounded conversation context
 - [x] Step 3: Structured tools and staged state
-- [ ] Step 4: LLM-controlled tool loop
+- [x] Step 4: LLM-controlled tool loop
 - [ ] Step 5: LLM responses and grounding
 - [ ] Step 6: HTTP integration and evaluation
 - [ ] Step 7: Controlled rollout and cleanup
 
-Next step: Step 4 — LLM-controlled tool loop. Not started in this session.
+Next step: Step 5 — LLM responses and grounding. Not started in this session.
+
+### Step 4 completion — 2026-10-10
+
+Implemented `agents/conversation_loop.py`: every valid new-flow invocation
+calls the injected model before semantic decisions or tools, exposes all
+server-permitted capabilities without intent/keyword filtering, permits direct
+replies and clarifications, and executes combined/dependent calls sequentially
+against current staged state. Structured missing-input and unavailable results
+return to the model. Invalid calls, duplicate IDs, provider failures, timeout,
+cancellation and execution/context/output overflow abort the transaction.
+Added transaction closure locking so late synchronous workers cannot stage or
+export discarded state. The loop returns an unvalidated candidate and never
+exports state or writes history/memory.
+
+Acceptance covered by 15 new injected-model tests, including varied mixed
+requests, ambiguous references, zero-tool turns, dependent calls, missing-input
+recovery, access and argument rejection, rollback and resource bounds. See
+[the durable loop contract](../SystemCode/src/backend/doc/llm-first-loop.md).
+
+Verification: required backend command **421 tests in 40.533s, OK, exit 0**
+outside the sandbox (`/tmp/llm-first-step4-backend.log`). Sandbox attempt
+**exit 124 after 50s**, stalled after the first `test_llm_first_loop` case
+(`/tmp/llm-first-step4-backend-sandbox.log`). Final focused loop/tools checks:
+**26 tests in 0.667s, OK** (`/tmp/llm-first-step4-focused-escalated.log`).
+The first focused run exposed an invalid empty-capability fixture; corrected
+and rerun. `make eval-check`: **29 tests in 3.463s, OK**, plus validate-only
+RAGAS fixture validation (`/tmp/llm-first-step4-eval.log`). Diff/scope/secrets,
+local links, `git diff --check` and unrelated-work preservation review pass.
+
+Limitations: injected models establish control flow, not live conversational
+quality. Candidates require Step 5 factual/citation validation and bounded
+repair; HTTP/history/memory integration remains Step 6. Synchronous external
+reads may finish after timeout, but cannot restore staged state. Accepted-byte
+bounds do not cap provider generation cost. No frontend/public contract,
+authoritative facts, deterministic algorithm or served rollout change.
+Pre-existing greeting/help code/tests and documentation hunks remain excluded.
+
+Acceptance met. Next: Step 5 — LLM responses and grounding. Not begun.
 
 ### Step 3 completion — 2026-10-10
 

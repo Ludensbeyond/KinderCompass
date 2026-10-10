@@ -72,8 +72,9 @@ Nearby search reports catalogue proximity; it does not assert family eligibility
 Bounds: 12 invocations, four mutations, 64,000 UTF-8 bytes per result, at most
 20 returned schools, three passages per school/general query, and bounded JSON
 structure. Provider exceptions propagate as turn failures after rollback.
-Step 4 must add overall elapsed-time, model iteration and total-context budgets;
-this synchronous service does not cancel a blocking external provider.
+The [Step 4 loop](llm-first-loop.md) adds overall elapsed-time, model iteration
+and total-context budgets. Synchronous external reads can finish late; closed
+transactions reject staging/export after abort under a mutation lock.
 
 ## Verification and remaining limits
 

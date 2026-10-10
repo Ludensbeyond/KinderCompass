@@ -408,3 +408,6 @@ The [Step 3 tool contract](doc/llm-first-tools.md) describes structured
 capabilities and request-local staged state for the new flow.
 See [backend progress](doc/agents.md) for completed-step verification and the
 historical supervisor rollout evidence.
+
+The [Step 4 model loop](doc/llm-first-loop.md) records LLM-controlled action
+selection, dependent tools and bounded execution for the new flow.
