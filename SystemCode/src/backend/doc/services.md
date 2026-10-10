@@ -17,3 +17,8 @@ and repository-resolved school identities without ranking or geocoding.
 RAM with expiry and one active lease per session. These Step 2 foundations are
 separate from the served legacy supervisor and persistent preference memory;
 see [their contract and integration constraints](llm-first-context.md).
+
+`conversation_tool_service.py` provides the Step 3 structured capabilities and
+request-local staged preference transaction. Its tools reuse the repositories,
+scorer, evaluator, distances and retrieval without nested answer generation;
+see [tool contracts and transaction boundaries](llm-first-tools.md).

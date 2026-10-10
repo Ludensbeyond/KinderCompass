@@ -404,5 +404,7 @@ The active [LLM-first phase](../../../docs/llm-first-conversation-plan.md) and
 [Step 1 baseline](doc/llm-first-baseline.md) record the next architecture phase.
 The [Step 2 context contract](doc/llm-first-context.md) describes bounded opt-in
 ephemeral history and minimal context preparation for the forthcoming new flow.
+The [Step 3 tool contract](doc/llm-first-tools.md) describes structured
+capabilities and request-local staged state for the new flow.
 See [backend progress](doc/agents.md) for completed-step verification and the
 historical supervisor rollout evidence.

@@ -3,8 +3,8 @@
 ## Active phase — LLM-first conversation, 2026-10-10
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
-the current phase. Steps 1–2 are **complete**, including passing required
-regressions. Step 3 has not started. The Implementation 3 readiness plan below is retained as history,
+the current phase. Steps 1–3 are **complete**, including passing required
+regressions. Step 4 has not started. The Implementation 3 readiness plan below is retained as history,
 including its completed checks and subsequent default-agent rollout.
 
 Current sessions read contributor/folder guidance, this record and the new
@@ -13,6 +13,42 @@ commit only step-owned changes when all required checks pass, then stop.
 The old blocked-mode instruction and frontend freeze are historical; do not
 change the shipped rollout for a documentation baseline failure. Step 2 must
 document any minimal history contract/frontend change before implementation.
+
+### LLM-first Step 3 completion — 2026-10-10
+
+Implemented the [structured capability and staged-state contract](llm-first-tools.md)
+in `agents/structured_contracts.py` and `services/conversation_tool_service.py`.
+Eight registered tools accept typed patches, operations, IDs, focused queries
+and scenario overrides. Results contain explicit statuses, data, result IDs,
+state revisions and provenance without answer generation. Existing repositories,
+scorer, evaluator, distance and retrieval algorithms remain authoritative.
+Later tools read updated working state; hypothetical family inputs are isolated.
+Failures discard staged changes, invalidate export and never write memory.
+Pending choices have typed resolutions; conflicting requirements remain staged
+until resolved. Shadow exports return the original state.
+
+Acceptance covered by 11 new tests: invalid IDs, forged facts, unsupported
+fields/patches, update-then-search, current-profile calculation, deterministic
+scenario equality, family isolation, typed pending resolution, detached results,
+single export, failures/limits/overflow rollback, lazy providers and citations.
+
+Required backend discovery: **406 tests in 39.781s, OK, exit 0**, outside the
+sandbox (`/tmp/llm-first-step3-backend.log`). Sandbox attempt: **exit 124** after
+50s at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+(`/tmp/llm-first-step3-backend-sandbox.log`). Five focused modules: **45 tests
+in 1.806s, OK** (`/tmp/llm-first-step3-focused.log`), after correcting a nonexistent
+history module in the first command. `make eval-check`: **29 tests in 3.381s,
+OK**, plus RAGAS validate-only fixture validation (`/tmp/llm-first-step3-eval.log`).
+Diff/scope/secrets/local links, `git diff --check` and preservation review pass.
+
+Limitations: capabilities remain separate from the served legacy supervisor;
+HTTP/session commit wiring is Step 6, model loop/overall time/context bounds
+are Step 4 and final grounding validation is Step 5. No frontend, public schema,
+deterministic algorithm or rollout change. Live-provider quality remains
+unmeasured. Pre-existing greeting/help implementation/tests and documentation
+hunks are preserved and excluded from this step's commit.
+
+**Next step: Step 4 — LLM-controlled tool loop.** Not begun.
 
 ### LLM-first Step 2 completion — 2026-10-10
 
@@ -46,7 +82,8 @@ needs eager domain context until Step 3 replacements land. No frontend/public
 schema, deterministic algorithms, served routing or rollout changes. Existing
 greeting/help code/tests and matching README/docs-index changes are excluded.
 
-**Next step: Step 3 — structured tools and staged state.** Not begun. Model
+**Historical Step 2 next step: Step 3 — structured tools and staged state.**
+Superseded by the Step 3 completion above. Model
 reference interpretation/control-flow and live quality remain later-step checks.
 
 ### LLM-first Step 1 completion — 2026-10-10

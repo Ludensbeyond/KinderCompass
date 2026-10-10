@@ -22,6 +22,8 @@ The [active progress record](agents.md) links the repository LLM-first plan and
 one-step session protocol; the completed readiness work remains historical. The
 [Step 2 context contract](llm-first-context.md) documents ephemeral opt-in
 history, session leases and the minimal new-flow model context. The
+[Step 3 tool contract](llm-first-tools.md) documents typed capabilities and
+request-local staged state. The
 [Implementation 2 archive](impl2-agent-step2.md) preserves the completed
 full-conversation supervisor migration, and the
 [Implementation 1 archive](impl1-agent-step1.md) preserves the completed

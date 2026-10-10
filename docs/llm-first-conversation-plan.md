@@ -1,7 +1,7 @@
 # LLM-first conversation plan
 
 Date: 2026-10-10
-Status: Steps 1–2 complete; Step 3 next
+Status: Steps 1–3 complete; Step 4 next
 
 ## Objective
 
@@ -309,13 +309,52 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline .venv/bin/pyth
 
 - [x] Step 1: Baseline and architecture record
 - [x] Step 2: Bounded conversation context
-- [ ] Step 3: Structured tools and staged state
+- [x] Step 3: Structured tools and staged state
 - [ ] Step 4: LLM-controlled tool loop
 - [ ] Step 5: LLM responses and grounding
 - [ ] Step 6: HTTP integration and evaluation
 - [ ] Step 7: Controlled rollout and cleanup
 
-Next step: Step 3 — structured tools and staged state. Not started in this session.
+Next step: Step 4 — LLM-controlled tool loop. Not started in this session.
+
+### Step 3 completion — 2026-10-10
+
+Implemented `agents/structured_contracts.py` and
+`services/conversation_tool_service.py`: eight registered capabilities with
+typed model-selected arguments, explicit structured statuses/results and
+server-owned provenance. New-flow preferences accept validated patches without
+the legacy message extractor/controller. Read/search/compare/calculation tools
+use current staged state and existing authoritative repositories, scorer,
+evaluator, location service and retrieval. Hypothetical family inputs remain
+isolated. Invalid arguments, tool/output failures, execution bounds and invalid
+final-response export discard changes; shadow exports cannot publish mutations.
+
+Acceptance covered by 11 new integration/contract tests, including invalid IDs,
+forged facts, unsupported fields/patches, update-then-search, read-your-writes,
+scenario isolation, pending resolutions and discard on failure. The durable
+[tool contract](../SystemCode/src/backend/doc/llm-first-tools.md) records arguments,
+state behavior, bounds and integration constraints.
+
+Verification: required backend command **406 tests in 39.781s, OK, exit 0**
+outside the sandbox (`/tmp/llm-first-step3-backend.log`). Sandbox attempt timed
+out after 50s at
+`test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+(exit 124; `/tmp/llm-first-step3-backend-sandbox.log`). Five focused modules:
+**45 tests in 1.806s, OK** (`/tmp/llm-first-step3-focused.log`); the initial
+focused command used a nonexistent history module, corrected and rerun.
+`make eval-check`: **29 tests in 3.381s, OK**, plus validate-only RAGAS fixture
+validation (`/tmp/llm-first-step3-eval.log`). Scope/diff/secrets/local-link and
+unrelated-work preservation review, `git diff --check` pass.
+
+Limitations: new capabilities are a foundation, not yet the served path.
+Legacy eager context and answer wrappers remain for compatibility until later
+integration. No HTTP/frontend/rollout or deterministic-algorithm change.
+Overall elapsed/model/total-context budgets belong to Step 4; synchronous
+providers cannot be cancelled here. Session/commit coordination is Step 6.
+Live model selection/quality is unmeasured and belongs to later steps.
+Pre-existing greeting/help code, tests and documentation hunks remain excluded.
+
+Acceptance met. Next: Step 4 — LLM-controlled tool loop. Not begun.
 
 ### Step 1 completion — 2026-10-10
 
