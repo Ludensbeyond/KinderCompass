@@ -3,7 +3,8 @@
 `POST /api/preferences/llm-first` uses `PreferenceService.handle_llm_first`
 with the bounded context, structured transaction, model loop and validated
 response layer. It bypasses the legacy greeting/help and closest-keyword gates.
-`/api/preferences` retains its existing rollout pending Step 7. Response fields
+`/api/preferences` now selects the default new flow, shadow comparison or legacy
+rollback; see [Step 7 rollout](llm-first-rollout.md). Response fields
 include profile, understood, ready_to_search, question, citations and answer_id.
 Citation chunk_id aliases preserve UI rendering. Model/tool failures return the
 fixed service message, original submitted profile and no memory/history commit.
@@ -56,7 +57,8 @@ loop, context and tool tests provide adversarial integrity coverage.
 
 Step 6 requires the selected evaluation profile to pass; school-demo completion
 does not claim strict evaluation or production readiness. See [backend progress](agents.md) for the current run and blockers.
-Numeric production latency/cost/failure budgets and rollout remain Step 7.
+Step 7 records observed latency/cost and demo rollout; production budgets remain
+unagreed.
 
 ## Continuation findings
 
@@ -120,4 +122,4 @@ manual reviews remain required; HTTP success alone cannot pass scoring.
 
 Latest evidence: `/tmp/step6-school-live.json`, `/tmp/step6-school-review.json`
 and `/tmp/step6-school-scored.json` (scoring exit 0). Strict acceptance remains
-unmet; the endpoint remains explicitly selectable pending Step 7.
+unmet; the explicit evaluation endpoint remains available alongside the default route.

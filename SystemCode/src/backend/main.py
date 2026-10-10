@@ -126,7 +126,6 @@ def search(request: SearchRequest) -> dict[str, Any]:
     }
 
 
-@app.post("/api/preferences", response_model=PreferenceResponse)
 def preferences(request: PreferenceRequest) -> dict[str, Any]:
     try:
         if "closest" in request.message.lower() and not request.home_postal_code:
@@ -148,6 +147,32 @@ def preferences(request: PreferenceRequest) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/preferences", response_model=PreferenceResponse)
+async def routed_preferences(request: PreferenceRequest) -> dict[str, Any]:
+    from SystemCode.src.backend.agents.config import ConversationFlowMode, get_conversation_flow_mode
+    from starlette.concurrency import run_in_threadpool
+
+    try:
+        mode = get_conversation_flow_mode()
+    except ValueError:
+        raise HTTPException(status_code=503, detail="Invalid conversation rollout configuration.") from None
+    if mode is ConversationFlowMode.LLM_FIRST:
+        return await llm_first_preferences(request)
+    # Keep the original callable and contracts for explicit rollback callers.
+    result = await run_in_threadpool(preferences, request)
+    if mode is ConversationFlowMode.SHADOW:
+        try:
+            await PREFERENCE_SERVICE.handle_llm_first(
+                request, history=CONVERSATION_HISTORY_SERVICE,
+                memory=CONVERSATION_MEMORY_SERVICE, feedback=CHAT_FEEDBACK_SERVICE,
+                shadow=True, legacy_result=result,
+            )
+        except Exception:
+            # Shadow failure cannot change the single served legacy response.
+            pass
+    return result
 
 
 @app.post("/api/memory/restore", response_model=ConversationMemoryResponse)

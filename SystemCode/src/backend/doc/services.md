@@ -27,4 +27,5 @@ The Step 4 [LLM-controlled loop](llm-first-loop.md) orchestrates these new-flow
 capabilities with model-selected actions and bounded execution. It returns a
 candidate. The [Step 5 response layer](llm-first-responses.md) validates model
 wording and support, repairs within the turn budget and exports state only
-after acceptance; HTTP/history/memory integration remains Step 6.
+after acceptance; [HTTP/history/memory integration](llm-first-http.md) and
+[default/shadow/legacy rollout](llm-first-rollout.md) now connect this path.

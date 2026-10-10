@@ -100,6 +100,18 @@ Agent-mode model construction uses
 `OPENAI_WEB_RAG_MODEL` and requires `OPENAI_WEB_RAG_TIMEOUT_SECONDS` to be
 between 1 and 30 seconds.
 
+`POST /api/preferences` defaults to the validated LLM-first model/tool loop.
+Set `CONVERSATION_FLOW_MODE=shadow` for an isolated inline comparison while
+serving legacy responses, or `legacy` for rollback. The explicit
+`/api/preferences/llm-first` evaluation endpoint remains available. New-flow
+failures return a fixed service error and discard staged state. See the
+[rollout contract](doc/llm-first-rollout.md) for seven-day observation, token/cost
+telemetry, school-demo acceptance and remaining limitations.
+
+The following routing, greeting/help and supervisor settings describe the
+retained **legacy** implementation. They apply when `CONVERSATION_FLOW_MODE`
+is `legacy` or `shadow`.
+
 The full-conversation supervisor defaults to `agent` when
 `CONVERSATION_AGENT_MODE` is missing, blank, or invalid. Set it explicitly to
 `deterministic` to restore the existing conversation controller, or `shadow` to

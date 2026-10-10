@@ -44,7 +44,7 @@ from stage1.web_rag import load_json
 
 class PreferenceService:
     async def handle_llm_first(self, request, *, history, memory, feedback,
-                               model_factory=None, limits=None):
+                               model_factory=None, limits=None, shadow=False, legacy_result=None):
         """Staged HTTP orchestration; no legacy routing or per-turn fallback."""
         from SystemCode.src.backend.agents.conversation_response import SERVICE_ERROR, run_validated_conversation
         from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
@@ -52,11 +52,18 @@ class PreferenceService:
         from SystemCode.src.backend.services.conversation_context_service import ConversationContextService
         from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
 
+        from SystemCode.src.backend.agents.conversation_telemetry import TurnTelemetry
+
         original = deepcopy(request.profile or {})
-        lease = history.begin_turn(request.anonymous_session_id, profile=original,
-                                   retain=request.remember_conversation)
+        telemetry = TurnTelemetry("shadow" if shadow else "llm-first")
+        lease = None
         tools = None
+        response = None
         try:
+            # Shadow has no shared lease, transcript store or persistent side effect.
+            if not shadow:
+                lease = history.begin_turn(request.anonymous_session_id, profile=original,
+                                           retain=request.remember_conversation)
             context = ConversationContextService(self.schools).build(
                 message=request.message, profile=original,
                 selected_school_ids=request.selected_school_ids,
@@ -76,7 +83,8 @@ class PreferenceService:
                     {**os.environ, "CONVERSATION_AGENT_MODE": "agent"})
             except Exception:
                 model = None
-            response = await run_validated_conversation(context, tools, model=model, limits=limits)
+            response = await run_validated_conversation(
+                context, tools, model=telemetry.wrap(model), limits=limits, shadow=shadow)
             succeeded = response.status == "ok"
             profile = response.profile if succeeded else original
             result = {
@@ -89,6 +97,15 @@ class PreferenceService:
                 "fallback_reason": response.failure_reason,
             }
             PreferenceResponse.model_validate(result)
+
+            if shadow:
+                staged = tools.staged_profile
+                telemetry.compare(legacy_result, {
+                    **result, "profile": staged,
+                    "ready_to_search": bool(staged.get("hard_constraints") or staged.get("preferences"))
+                        and not any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                })
+                return result
 
             def persist():
                 result["answer_id"] = feedback.record_answer(result)
@@ -103,7 +120,11 @@ class PreferenceService:
             else:
                 persist()
             return result
+        except BaseException:
+            response = None
+            raise
         finally:
+            telemetry.emit(response)
             if tools:
                 tools.abort()
             history.abort(lease)

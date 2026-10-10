@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import threading
 import unittest
 import uuid
@@ -164,6 +165,9 @@ class LlmFirstHttpTests(unittest.IsolatedAsyncioTestCase):
         self.feedback.record_answer.assert_not_called()
 
     async def test_consent_validation_and_legacy_endpoint_compatibility(self):
+        rollout = patch.dict(os.environ, {"CONVERSATION_FLOW_MODE": "legacy"})
+        rollout.start()
+        self.addCleanup(rollout.stop)
         from SystemCode.src.backend import main
         with (patch.object(main, "PREFERENCE_SERVICE", self.service),
               patch.object(main, "CHAT_FEEDBACK_SERVICE", self.feedback)):

@@ -1,7 +1,7 @@
 # LLM-first conversation plan
 
 Date: 2026-10-10
-Status: Steps 1–6 complete under school-demo acceptance; Step 7 next
+Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
 ## Objective
 
@@ -311,6 +311,65 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline .venv/bin/pyth
 
 ## Progress
 
+### Step 7 completion — controlled school-demo rollout, 2026-10-10
+
+Identified Step 7 as the first incomplete step from committed Steps 1–6 and the
+active records. Added backend `CONVERSATION_FLOW_MODE=llm-first|shadow|legacy`:
+new flow is the missing/blank default for `/api/preferences`, invalid modes are
+visible 503s, and the explicit evaluation endpoint remains. Legacy rollback
+retains its old supervisor settings/contracts. Shadow serves one legacy response,
+stages independently without shared history access/leases, and never writes
+history, memory or feedback. Comparisons contain only profile/readiness/citation
+booleans. Existing authoritative facts, calculations and validation are preserved.
+
+Added scalar-only new-flow telemetry for elapsed time, registered attempted tool
+names, executed count, model calls, validation/failure categories and usage.
+Official OpenAI documentation verifies GPT-4o mini and configured GPT-5.4 mini
+standard token rates; cost is null for unknown prices/incomplete usage. Updated
+architecture, service/HTTP docs and [rollout decisions](../SystemCode/src/backend/doc/llm-first-rollout.md) with a minimum
+seven-day observation period (earliest repository review 2026-10-17). Legacy
+wrappers remain required by active rollback/shadow callers; retirement needs a
+later reviewed maintenance decision. No observation-period completion or
+production budget/readiness pass is claimed. School-demo gates from Step 6
+justify enablement; strict evaluation and its five failed cases remain visible.
+
+Verification:
+
+- Required backend discovery: **462 tests in 42.252s, OK, exit 0**,
+  `/tmp/step7-backend-final.log`, outside sandbox. Earlier full run failed one
+  new assertion expecting an unnormalized empty shadow profile; corrected to
+  verify absence of staged preferences. Intermediate rerun: 460 tests, OK.
+- Focused HTTP/rollout: **21 tests in 1.995s, OK**,
+  `/tmp/step7-focused.log`; final full suite also covers the last comparison fix.
+  Default model-first zero-tool/tool turns, explicit rollback, successful/failed
+  shadow, consented no-write mutation isolation, failure without fallback,
+  telemetry redaction and both model prices are covered.
+- `make eval-check`: **29 tests in 4.323s, OK**, RAGAS validate-only fixture
+  passes; `/tmp/step7-eval-final.log`. Syntax, documentation links,
+  whitespace and diff/scope/secrets review pass.
+- Fresh configured GPT-5.4 mini default HTTP traces: **2/2 validated responses**,
+  `/tmp/step7-live.log`. Greeting: one model call, no tools, **2.667s**,
+  estimated **$0.00059535**. Chinese-required request: two model calls,
+  `update_preferences` once, committed required Chinese, **2.003s**,
+  estimated **$0.00173745**. Synthetic schools and mocked persistence establish
+  default behavior, not production Neo4j/OneMap or general live quality.
+- Sandbox focused/full worker-thread runs timed out at 45/50 seconds; sandbox
+  live trace returned a safe execution failure. Outside-sandbox reruns passed.
+  Official pricing fetch also required outside-sandbox network access.
+
+The Step 6 capture's recorded token split estimates **$0.08954235** at configured
+GPT-5.4 mini standard rates; observed p95 remains **6.093s**. Estimates exclude
+missing usage, embeddings and other providers; no production cost gate claimed.
+Single-worker RAM history, stateless concurrency, separate-store atomicity,
+semantic grounding limits and absent frontend transcript consent remain.
+
+Acceptance met for Step 7 controlled school-demo rollout. All seven implementation
+steps are complete. Next: observe deployment for at least seven days and review
+before legacy retirement; no further implementation step begun. Preserved and
+excluded pre-existing greeting/help source/tests, backend README paragraph and
+docs index from this step's commit. Legacy HTTP tests now explicitly select
+rollback while new tests verify the default route.
+
 ### Step 6 completion — school-project criteria, 2026-10-10
 
 The user explicitly authorized relaxing rules/checks for this school project.
@@ -439,7 +498,7 @@ atomicity limits are documented; operational rollout budgets remain Step 7.
 - [x] Step 4: LLM-controlled tool loop
 - [x] Step 5: LLM responses and grounding
 - [x] Step 6: HTTP integration and evaluation (school-demo profile)
-- [ ] Step 7: Controlled rollout and cleanup
+- [x] Step 7: Controlled rollout and cleanup (legacy retained through observation)
 
 Next step: Step 7 — Controlled rollout and cleanup. Step 7 has not begun.
 

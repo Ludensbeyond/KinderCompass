@@ -48,3 +48,6 @@ selection, stable chunk metadata, and preservation of table and policy context.
 
 The [step 6 evaluation and demo guide](file-vector-demo.md) records independent
 lexical/vector results, failures, memory/latency and build/query/rollback commands.
+
+[LLM-first rollout](llm-first-rollout.md) records default dispatch, isolated shadow,
+legacy rollback, privacy-safe telemetry and token cost estimation.

@@ -66,3 +66,20 @@ def get_conversation_agent_mode(
         return ConversationAgentMode(configured)
     except ValueError:
         return ConversationAgentMode.AGENT
+
+
+class ConversationFlowMode(str, Enum):
+    """HTTP rollout, independent of the retained legacy supervisor modes."""
+
+    LLM_FIRST = "llm-first"
+    SHADOW = "shadow"
+    LEGACY = "legacy"
+
+
+def get_conversation_flow_mode(environ=None) -> ConversationFlowMode:
+    source = os.environ if environ is None else environ
+    configured = source.get("CONVERSATION_FLOW_MODE", "llm-first").strip().lower()
+    if not configured:
+        configured = "llm-first"
+    # A misspelled rollback must be visible, rather than silently choosing a flow.
+    return ConversationFlowMode(configured)

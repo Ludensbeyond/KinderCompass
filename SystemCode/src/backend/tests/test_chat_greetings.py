@@ -59,6 +59,12 @@ class ChatGreetingTests(unittest.TestCase):
 
 
 class ChatGreetingApiTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        import os
+        rollout = patch.dict(os.environ, {"CONVERSATION_FLOW_MODE": "legacy"})
+        rollout.start()
+        self.addCleanup(rollout.stop)
+
     async def test_hi_returns_through_http_and_records_one_answer(self):
         from SystemCode.src.backend import main
 
