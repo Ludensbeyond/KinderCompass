@@ -49,3 +49,8 @@ reports failed gates. See [evaluation and demo](file-vector-demo.md).
 `capture_llm_first_baseline.py` captures reproducible synthetic, injected-model
 control-flow traces without provider calls or persistent writes. See the
 [Step 1 baseline](llm-first-baseline.md) for scope, command and limitations.
+
+`evaluate_llm_first_conversation.py` captures the fixed LLM-first dataset with
+the configured provider and synthetic catalogue/location fixtures. Its report
+requires semantic and separate injected-integrity scoring; capture alone cannot
+pass rollout gates. See [Step 6 HTTP evaluation](llm-first-http.md).

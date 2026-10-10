@@ -95,6 +95,10 @@ class StructuredConversationToolsTests(unittest.TestCase):
             ("update_preferences", {"set": [{"attribute": "max_distance_km", "value": -1, "importance": "required"}]}, ValidationError),
             ("update_preferences", {"remove": ["base_fee"]}, ValidationError),
             ("update_preferences", {"set": [{"attribute": "spark_certified", "value": 1, "importance": "required"}]}, ValidationError),
+            ("update_preferences", {"set": [{"attribute": "language", "value": "Chinese"},
+                                                   {"attribute": "pedagogy", "value": "Montessori"}]}, ValidationError),
+            ("update_preferences", {"set": [{"attribute": "max_distance_km", "value": 1}]}, ValidationError),
+            ("update_preferences", {"set": [{"attribute": "language", "value": "Malay"}]}, ValueError),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"gross_household_income": float("nan")}}, ValidationError),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"base_fee": 1}}, ValidationError),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"citizenship": None}}, ValidationError),
@@ -110,6 +114,24 @@ class StructuredConversationToolsTests(unittest.TestCase):
                 self.assertEqual(service.staged_profile, original)
                 with self.assertRaises(ValueError):
                     service.export_validated_state(response_validated=True)
+
+    def test_pending_choice_preserves_direction_and_blocks_other_mutations(self):
+        service = self.service()
+        result = service.invoke("update_preferences", {"set": [
+            {"attribute": "pedagogy", "value": "Montessori", "desired": False}]})
+        self.assertEqual(result.status, "needs_input")
+        self.assertFalse(service.staged_profile["pending"]["desired"])
+        blocked = self.update(service)
+        self.assertEqual(blocked.status, "needs_input")
+        blocked_resolution = service.invoke("reset_continue_preferences", {
+            "operation": "resolve_strength", "choice": "preferred"})
+        self.assertEqual(blocked_resolution.missing_inputs, ["choice_in_later_turn"])
+        self.context.profile = service.export_validated_state(response_validated=True)
+        service = self.service()
+        service.invoke("reset_continue_preferences", {"operation": "resolve_strength", "choice": "preferred"})
+        item = next(i for i in service.staged_profile["preference_items"] if i["attribute"] == "pedagogy")
+        self.assertFalse(service.staged_profile["preferences"]["pedagogy"]["desired"])
+        self.assertEqual(item["importance"], "preferred")
 
     def test_tool_failure_and_invalid_final_response_discard_changes(self):
         for failure in ("tool", "response", "abort", "shadow"):
@@ -139,6 +161,12 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Chinese")
         blocked = self.update(service, "pedagogy", "Montessori", "preferred")
         self.assertEqual(blocked.missing_inputs, ["pending_decision_resolution"])
+        premature = service.invoke("reset_continue_preferences", {
+            "operation": "resolve_contradiction", "choice": "use_incoming"})
+        self.assertEqual(premature.missing_inputs, ["choice_in_later_turn"])
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Chinese")
+        self.context.profile = service.export_validated_state(response_validated=True)
+        service = self.service()
         service.invoke("reset_continue_preferences", {"operation": "resolve_contradiction", "choice": "use_incoming"})
         self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
         self.assertFalse(service.staged_profile.get("pending_contradiction"))

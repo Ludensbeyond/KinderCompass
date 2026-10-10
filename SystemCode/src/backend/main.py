@@ -50,7 +50,7 @@ from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
     FeedbackSchoolMismatchError, FeedbackService, FeedbackSnapshotNotFoundError,
 )
 from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
-from SystemCode.src.backend.services.conversation_history_service import ConversationHistoryService  # noqa: E402
+from SystemCode.src.backend.services.conversation_history_service import ConversationHistoryConflict, ConversationHistoryService  # noqa: E402
 from SystemCode.src.backend.services.chat_feedback_service import ChatAnswerNotFoundError, ChatFeedbackService  # noqa: E402
 from SystemCode.src.backend.services.school_rating_service import SchoolRatingService  # noqa: E402
 from SystemCode.src.backend.agents.observability import configure_runtime_logging  # noqa: E402
@@ -160,6 +160,23 @@ def restore_conversation_memory(request: ConversationMemoryRequest) -> dict[str,
     }
 
 
+@app.post("/api/preferences/llm-first", response_model=PreferenceResponse)
+async def llm_first_preferences(request: PreferenceRequest) -> dict[str, Any]:
+    try:
+        return await PREFERENCE_SERVICE.handle_llm_first(
+            request, history=CONVERSATION_HISTORY_SERVICE,
+            memory=CONVERSATION_MEMORY_SERVICE, feedback=CHAT_FEEDBACK_SERVICE,
+        )
+    except ConversationHistoryConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except SchoolNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid conversation context.") from None
+    except Exception:
+        raise HTTPException(status_code=503, detail="The conversation service is unavailable. Please try again.") from None
+
+
 @app.post("/api/memory/save", response_model=ConversationMemoryResponse)
 def save_conversation_memory(request: SaveConversationMemoryRequest) -> dict[str, Any]:
     CONVERSATION_MEMORY_SERVICE.save(request.anonymous_session_id, request.profile)
@@ -169,8 +186,8 @@ def save_conversation_memory(request: SaveConversationMemoryRequest) -> dict[str
 
 @app.post("/api/memory/forget", response_model=ForgetConversationMemoryResponse)
 def forget_conversation_memory(request: ConversationMemoryRequest) -> dict[str, str]:
-    CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id)
-    CONVERSATION_HISTORY_SERVICE.forget(request.anonymous_session_id)
+    CONVERSATION_HISTORY_SERVICE.forget(request.anonymous_session_id, after_forget=lambda:
+        CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id))
     return {"status": "forgotten"}
 
 

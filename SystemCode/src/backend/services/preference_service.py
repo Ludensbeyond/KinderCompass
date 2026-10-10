@@ -43,6 +43,71 @@ from stage1.web_rag import load_json
 
 
 class PreferenceService:
+    async def handle_llm_first(self, request, *, history, memory, feedback,
+                               model_factory=None, limits=None):
+        """Staged HTTP orchestration; no legacy routing or per-turn fallback."""
+        from SystemCode.src.backend.agents.conversation_response import SERVICE_ERROR, run_validated_conversation
+        from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
+        from SystemCode.src.backend.domain.models import PreferenceResponse
+        from SystemCode.src.backend.services.conversation_context_service import ConversationContextService
+        from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
+
+        original = deepcopy(request.profile or {})
+        lease = history.begin_turn(request.anonymous_session_id, profile=original,
+                                   retain=request.remember_conversation)
+        tools = None
+        try:
+            context = ConversationContextService(self.schools).build(
+                message=request.message, profile=original,
+                selected_school_ids=request.selected_school_ids,
+                family=request.family, home_postal_code=request.home_postal_code,
+                history=lease,
+            )
+            tools = ConversationToolService(
+                context, self.schools, self.evaluation, self.locations,
+                school_index_loader=lambda: load_json(Path(os.getenv("WEB_RAG_INDEX_PATH") or
+                    self.repo_root / "SystemCode/src/backend/output/web_rag_pilot_index.json")),
+                general_retriever_loader=lambda: self._knowledge_retriever(load_json(
+                    self.repo_root / "SystemCode/src/backend/resources/web_rag/general_knowledge_index.json")),
+            )
+            try:
+                # Explicit staged path uses configured provider even in legacy rollback mode.
+                model = model_factory() if model_factory else create_conversation_agent_model(
+                    {**os.environ, "CONVERSATION_AGENT_MODE": "agent"})
+            except Exception:
+                model = None
+            response = await run_validated_conversation(context, tools, model=model, limits=limits)
+            succeeded = response.status == "ok"
+            profile = response.profile if succeeded else original
+            result = {
+                "profile": profile, "understood": summarize_profile(profile),
+                "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences"))
+                    and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                "question": response.answer if succeeded else SERVICE_ERROR,
+                "citations": [{**c.model_dump(mode="json"), "chunk_id": c.citation_id} for c in response.citations],
+                "answer_method": "llm_first" if succeeded else "service_error",
+                "fallback_reason": response.failure_reason,
+            }
+            PreferenceResponse.model_validate(result)
+
+            def persist():
+                result["answer_id"] = feedback.record_answer(result)
+                PreferenceResponse.model_validate(result)
+                if succeeded and request.remember_preferences:
+                    memory.save(request.anonymous_session_id, profile)
+
+            if succeeded and lease:
+                history.commit(lease, message=request.message, answer=response.answer,
+                               profile=profile, retain=request.remember_conversation,
+                               before_commit=persist)
+            else:
+                persist()
+            return result
+        finally:
+            if tools:
+                tools.abort()
+            history.abort(lease)
+
     def __init__(
         self, schools: SchoolRepository, evaluation: EvaluationService,
         locations: LocationService, repo_root: Path,

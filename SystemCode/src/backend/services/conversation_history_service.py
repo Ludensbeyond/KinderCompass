@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from copy import deepcopy
 from dataclasses import dataclass, field
 from threading import Lock
 from time import monotonic
@@ -30,6 +31,7 @@ class _Session:
     exchanges: list[ConversationExchange] = field(default_factory=list)
     omitted: bool = False
     token: str | None = None
+    profile: dict | None = None
 
 
 class ConversationHistoryService:
@@ -79,20 +81,41 @@ class ConversationHistoryService:
                                 tuple(e.model_copy(deep=True) for e in session.exchanges),
                                 session.omitted)
 
-    def commit(self, lease: HistoryLease, *, message: str, answer: str) -> None:
-        exchange = ConversationExchange(user=message, assistant=answer)
+    def begin_turn(self, session_id, *, profile: dict, retain: bool) -> HistoryLease | None:
+        if session_id is None:
+            return self.begin(None, retain=retain)
+        lease = self.begin(session_id, retain=True)
+        with self._lock:
+            session = self._sessions.get(lease.session_id)
+            if session is None or session.token != lease.token:
+                raise ConversationHistoryConflict("Conversation lease was forgotten")
+            if session.profile is not None and session.profile != profile:
+                session.token = None
+                raise ConversationHistoryConflict("Submitted preference state is stale")
+        return lease if retain else HistoryLease(lease.session_id, lease.token, (), False)
+
+    def commit(self, lease: HistoryLease, *, message: str, answer: str,
+               profile: dict | None = None, retain: bool = True,
+               before_commit: Callable[[], None] | None = None) -> None:
+        exchange = ConversationExchange(user=message, assistant=answer) if retain else None
+        detached = deepcopy(profile)
         with self._lock:
             self._expire(self._clock())
             session = self._sessions.get(lease.session_id)
             if session is None or session.token != lease.token:
                 raise ConversationHistoryConflict("Conversation lease expired or was forgotten")
-            session.exchanges.append(exchange)
+            if before_commit:
+                before_commit()
+            if exchange:
+                session.exchanges.append(exchange)
             while len(session.exchanges) > 6 or sum(
                 len(e.user) + len(e.assistant) for e in session.exchanges
             ) > 8000:
                 session.exchanges.pop(0)
                 session.omitted = True
             session.token = None
+            if detached is not None:
+                session.profile = detached
             session.touched = self._clock()
             self._sessions.move_to_end(lease.session_id)
 
@@ -104,6 +127,8 @@ class ConversationHistoryService:
             if session is not None and session.token == lease.token:
                 session.token = None
 
-    def forget(self, session_id: UUID | str) -> None:
+    def forget(self, session_id: UUID | str, *, after_forget: Callable[[], None] | None = None) -> None:
         with self._lock:
             self._sessions.pop(self._id(session_id), None)
+            if after_forget:
+                after_forget()

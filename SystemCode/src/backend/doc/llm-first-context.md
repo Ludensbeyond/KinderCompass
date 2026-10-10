@@ -46,6 +46,28 @@ for the UUID. Restore/save remain preference-only and never restore transcripts.
 
 ## Initial model context
 
+### Step 6 HTTP decision (before implementation)
+
+Expose `/api/preferences/llm-first` as a staged sibling of `/api/preferences`,
+using the same request/response fields plus `remember_conversation` (false by
+default). Keep the existing endpoint and default mode for Step 7 rollout.
+The frontend remains unchanged and does not opt in to transcripts; a future
+UI choice must explain RAM retention, expiry and separate preference consent.
+Any supplied UUID leases the session, even without transcript consent, to
+serialize state commits. Keep the last committed profile in ephemeral session
+state and reject stale submitted profiles with HTTP 409. Stateless requests
+have client-owned profiles and no cross-request concurrency guarantee.
+Only consented exchanges enter model history. Current request state overrides
+dialogue. Forget invalidates leases before clearing preference memory under
+the same session lock. Validate the public response before committing history,
+state and the single consented preference-memory write. Provider/validation
+failures return the fixed service message with the original submitted profile.
+An expired/forgotten lease returns 409 without recording or saving the turn.
+Memory and answer metadata use separate SQLite stores; there is no distributed
+transaction. Record answer metadata before memory so a memory failure cannot
+leave a saved new profile with a failed response. An orphan metadata row after
+a storage failure is possible; it contains no dialogue or family inputs.
+
 `InitialConversationContext` includes the newest message, bounded recent
 exchanges, omission marker, current profile, typed unresolved decisions, family
 inputs, postal code, selected/active school IDs and repository-resolved names,

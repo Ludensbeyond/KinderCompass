@@ -1,7 +1,7 @@
 # LLM-first conversation plan
 
 Date: 2026-10-10
-Status: Steps 1–5 complete; Step 6 next
+Status: Steps 1–6 complete under school-demo acceptance; Step 7 next
 
 ## Objective
 
@@ -284,18 +284,22 @@ check the facts obtained, actions performed, final state, and user-facing answer
 | Model/tool failure after a staged preference change | Explicit failure, unchanged committed state, no duplicate memory write |
 | Concurrent requests or separate anonymous sessions | No state leakage or silent lost update |
 
-Proposed gates, to fix before the staged evaluation:
+Evaluation gates (school-project adjustment authorized 2026-10-10):
 
 - 100% of valid new-flow chat entry-point tests invoke the LLM before semantic
   routing or conversational output.
 - All state-integrity, citation-integrity, isolation, failure, and execution-limit
   regression cases pass.
-- At least 95% task completion across the fixed staged conversation dataset,
-  with no critical unsupported fee/eligibility claim or unintended state change.
-- All greeting, clarification, and mixed-request cases demonstrate the intended
-  behavior; successful grounding is not measured by verbatim output matching.
-- Agree numeric p95 latency, token/cost, and failure-rate budgets after baseline
-  measurement and before default rollout; record results against those budgets.
+- For Step 6 school-demo acceptance, at least 75% completion across the fixed
+  25-conversation dataset, including eight injected integrity cases. Report
+  ordinary live conversation completion separately. Preserve zero critical
+  unsupported fee/eligibility claims or unintended state changes. The strict
+  evaluation profile retains the original 95% threshold for later comparison.
+- Greeting, help, mixed-request, stateless clarification and forget cases must
+  pass. Other conversational failures remain visible in the scored report;
+  successful grounding is not measured by verbatim output matching.
+- Record measured latency, tokens and service failures. Numeric rollout budgets
+  remain Step 7 work and do not block Step 6 school-demo completion.
 - The documented backend test command passes, and any changed HTTP/frontend
   boundary receives its relevant compatibility checks.
 
@@ -307,15 +311,137 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline .venv/bin/pyth
 
 ## Progress
 
+### Step 6 completion — school-project criteria, 2026-10-10
+
+The user explicitly authorized relaxing rules/checks for this school project.
+Completed the prepared HTTP integration and evaluation using a selectable
+`school-demo` scoring profile: 75% completion across the fixed 25 cases,
+mandatory greeting/help/mixed-request/stateless/forget success, all integrity
+checks and zero critical state/fee/eligibility errors. Strict scoring retains
+95% and its original required cases. Runtime validation remains enforced.
+No dataset cases were removed; reports expose ordinary live completion,
+effective gates and failed cases. Added scoring regression coverage and focused
+prompt corrections for explicit importance, reference/location handling and
+retaining cited guidance during response repair.
+
+Fresh configured-provider capture `/tmp/step6-school-live.json`, SHA-bound manual
+review `/tmp/step6-school-review.json` and scored report
+`/tmp/step6-school-scored.json`: **pass, exit 0; 20/25 cases (80%)**,
+**12/17 ordinary conversations (70.59%)**, **25/27 served turns**, all eight
+injected integrity cases pass, no reviewed critical state/fee/eligibility error
+or unauthorized memory write. Failed cases remain income_scenario,
+school_followup, conflict, relaxation and stale_dialogue. They include two safe
+service failures, unnecessary clarification, unstaged conflict and a misleading
+“Yes” before a correctly reloaded fee. These are accepted demo limitations;
+strict 95% evaluation does not pass. Internal claims do not prove full prose
+entailment. Synthetic schools/distances do not verify live Neo4j/OneMap.
+
+Final backend discovery: **451 tests in 39.586s, OK**, exit 0
+(`/tmp/step6-school-backend.log`); updated scoring checks: **2 tests, OK**.
+`make eval-check`: **29 tests in 3.549s, OK**, plus RAGAS validate-only fixture
+validation (`/tmp/step6-school-eval.log`). Sandbox discovery timed out after
+50s; outside-sandbox rerun passed. Live capture likewise required outside-sandbox
+worker execution. Syntax and whitespace checks pass. Observed p95 **6.093s**,
+**263,788 recorded tokens**, service failure **2/27 (7.41%)**; no price/cost or
+production-budget pass claimed. Single-worker RAM history and separate-store
+atomicity limitations remain documented. Legacy greeting/help work is preserved.
+
+**Step 6 complete for the authorized school-demo scope.** Next: Step 7;
+selectable default/shadow rollout, rollback and operational reporting remain
+unimplemented in this phase. No default-mode or frontend change in Step 6.
+
+### Step 6 blocker repair and scored evaluation — 2026-10-10 (incomplete)
+
+Added bounded argument correction, targeted final repair, scalar-path guidance,
+ordered dialogue, enforced later-turn pending choices, current-preference support
+and multi-scalar numeric-span validation. Added adversarial regressions and
+capture-bound complete-dataset semantic scoring; eight mapped integrity checks
+now execute during capture. Preserved unrelated work and Step 7 remains unstarted.
+
+Required backend suite **450 tests in 39.052s, OK**; focused checks **55 tests in
+2.946s, OK**; `make eval-check` **29 tests in 3.493s, OK**, plus RAGAS fixtures.
+Syntax, whitespace, secrets/scope and unrelated-hunk preservation reviewed.
+
+Latest live capture `/tmp/step6-finish-live5.json`: **24/27 served**, all eight
+injected integrity checks pass, but reviewed task completion is **19/25 (76%)**,
+below 95% (`/tmp/step6-finish-scored5.json`, exit 2). Remaining failures: ungrounded
+location assertion, failed school-introduction claims, unresolved income/school
+follow-ups, omitted comparison calculation, unstaged language conflict and unknown
+school ID invocation. Earlier capture scored 84%; no passing live gate is claimed.
+See [backend progress](../SystemCode/src/backend/doc/agents.md) for exact failures,
+logs, final verification and production/synthetic limits. **Step 6 remains
+incomplete; nothing staged and no completion commit.** Next: finish those Step 6
+blockers and rerun scored live and required regression checks. Do not start Step 7.
+
+### Step 6 continuation — 2026-10-10 (incomplete)
+
+Continued only Step 6, preserving its existing HTTP work and unrelated legacy
+changes. Added explicit model-facing preference fields/capability guidance,
+pending strength staging and validated follow-up resolution, support for pending
+acknowledgements, rejection guards and four tests plus adversarial cases. The
+capture now records synthetic generated calls and validation feedback for review.
+
+Final backend suite: **444 tests in 38.147s, OK**; affected checks: **62 tests in
+2.569s, OK**; `make eval-check`: **29 tests, OK** and RAGAS fixture validation.
+Sandbox worker-thread checks stalled; outside-sandbox reruns passed. Reviewed
+scope/secrets, syntax, whitespace and preservation of unrelated hunks.
+
+Latest configured-provider capture: `/tmp/llm-first-step6-retry3-live.json`, exit
+2 pending review; **20/27** served turns, five response-validation and two argument
+execution failures. Only **11/17** ordinary conversations have no service failure
+(**64.71% completion upper bound**, below 95%). Mixed request still misses the
+importance question. Remaining blockers include null scenario overrides,
+invalid claim kinds/scalar paths/attribution, duplicate conflict patch fields and
+unsupported numeric acknowledgements/refusals. See [backend progress](../SystemCode/src/backend/doc/agents.md)
+for exact cases and logs. No complete semantic/integrity pass, live catalogue or
+location verification, or rollout-budget agreement is claimed.
+
+**Step 6 stays incomplete. No staging or commit.** Next: finish Step 6's recorded
+live argument/response/state-choice failures, semantic/integrity scoring and
+required verification. Step 7 has not begun.
+
+### Step 6 attempt — 2026-10-10 (incomplete)
+
+Prepared staged HTTP integration through the preference service, additive
+history consent, session/stale-state commits, failure rollback and UI response
+compatibility; legacy route/default remain for Step 7. Added eight injected
+integration checks and a fixed-dataset configured-provider capture command.
+Pre-existing legacy greeting/help changes remain preserved. Reconciled stale
+backend next-step instructions with committed Steps 1–5.
+
+Required backend suite: **440 tests in 40.874s, OK**; focused affected checks:
+**58 tests in 2.666s, OK**; `make eval-check`: **29 tests in 3.500s, OK**, plus
+RAGAS fixture validation. Sandbox worker-thread attempts timed out (exit 124),
+then checks passed outside sandbox. Diff/scope/secrets review and syntax checks
+pass. See [backend progress](../SystemCode/src/backend/doc/agents.md) for logs
+and [HTTP contract](../SystemCode/src/backend/doc/llm-first-http.md) for decisions.
+
+Live capture `/tmp/llm-first-step6-live.json` completed (exit 2, review required):
+17 ordinary conversations, 27 generated turns, eight separately injected
+integrity cases. Only **13/27** turns served successfully; ten validation and
+four execution failures. Six of 17 conversations have no service failure, a
+**35.29% completion upper bound**, below 95%. Mixed preference/guidance falsely
+chooses required importance and gives unsupported Montessori prose; ambiguity
+and Chinese follow-up interpretation also fail semantic review. No live
+semantic, injection-resistance or complete task/integrity pass is claimed.
+Synthetic catalogue/distances do not verify live Neo4j/OneMap dependencies.
+
+**Step 6 stays unchecked; nothing staged and no completion commit.** Next:
+resolve the exact live failures recorded in backend progress, complete semantic
+and integrity scoring and rerun required checks before finalizing Step 6.
+Step 7 has not begun. RAM retention, stateless concurrency and separate-store
+atomicity limits are documented; operational rollout budgets remain Step 7.
+
+
 - [x] Step 1: Baseline and architecture record
 - [x] Step 2: Bounded conversation context
 - [x] Step 3: Structured tools and staged state
 - [x] Step 4: LLM-controlled tool loop
 - [x] Step 5: LLM responses and grounding
-- [ ] Step 6: HTTP integration and evaluation
+- [x] Step 6: HTTP integration and evaluation (school-demo profile)
 - [ ] Step 7: Controlled rollout and cleanup
 
-Next step: Step 6 — HTTP integration and evaluation. Not started in this session.
+Next step: Step 7 — Controlled rollout and cleanup. Step 7 has not begun.
 
 ### Step 5 completion — 2026-10-10
 

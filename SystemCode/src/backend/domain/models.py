@@ -4,7 +4,7 @@ import datetime as dt
 import uuid
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from SystemCode.src.backend.domain.catalogue import (
     EvaluatedSchool, ParentRatingSummary, ProgrammeOption,
@@ -57,6 +57,13 @@ class PreferenceRequest(BaseModel):
     home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
     anonymous_session_id: uuid.UUID | None = None
     remember_preferences: bool = False
+    remember_conversation: bool = False
+
+    @model_validator(mode="after")
+    def consent_requires_session(self):
+        if (self.remember_preferences or self.remember_conversation) and self.anonymous_session_id is None:
+            raise ValueError("An anonymous session ID is required to remember preferences or conversation")
+        return self
 
 
 class ConversationMemoryRequest(BaseModel):

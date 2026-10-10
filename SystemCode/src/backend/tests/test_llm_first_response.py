@@ -55,6 +55,31 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 service.export_validated_state(response_validated=True)
 
+    def test_pending_acknowledgement_is_supported_but_missing_input_data_is_not(self):
+        service = self.service()
+        result = service.invoke("update_preferences", {"set": [
+            {"attribute": "language", "value": "Chinese"}]})
+        answer = "Chinese is pending. Should it be required or preferred?"
+        supported = claim("Chinese is pending.", "Chinese",
+                          path="/data/staged_profile/pending/value", school=None)
+        self.assertEqual(validate_response(final(answer, [supported]).content,
+                         (result,), service.initial_context).answer, answer)
+        result = result.model_copy(update={"tool_name": "find_nearby_schools"})
+        self.check_invalid(service, result, final(answer, [supported]), "unsupported_result_status")
+
+    async def test_missing_pending_question_repairs_without_replaying_mutation(self):
+        service = self.service("I want Chinese")
+        answer = "Chinese is pending."
+        supported = claim(answer, "Chinese", path="/data/staged_profile/pending/value", school=None)
+        repaired = answer + " Should it be required or preferred?"
+        response = await self.run_response(service, ScriptedModel(
+            AIMessage(content="", tool_calls=[call("update_preferences", {
+                "set": [{"attribute": "language", "value": "Chinese"}]})]),
+            final(answer, [supported]), final(repaired, [supported])))
+        self.assertEqual(response.status, "ok")
+        self.assertEqual(response.answer, repaired)
+        self.assertEqual(response.tool_calls, 1)
+
     async def test_numeric_value_and_school_attribution_checks_allow_paraphrases(self):
         service = self.service()
         result = self.facts(service)
@@ -77,6 +102,36 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         for message, category in cases:
             with self.subTest(category=category):
                 self.check_invalid(service, result, message, category)
+
+    def test_shared_sentence_requires_support_for_each_reported_number(self):
+        service = self.service()
+        result = self.facts(service)
+        result = result.model_copy(update={"data": {"records": [{"school_id": "CENTRE:A",
+            "name": "School A", "facts": {"base_fee": 900, "net_fee": 160}}]}})
+        answer = "School A has a base fee of $900 and an estimated net fee of $160."
+        claims = [claim(answer, 900), claim(answer, 160, path="/data/records/0/facts/net_fee")]
+        self.assertEqual(validate_response(final(answer, claims).content,
+                         (result,), service.initial_context).answer, answer)
+        self.check_invalid(service, result, final(answer, claims[:1]), "wrong_reported_number")
+
+    def test_current_state_support_cannot_forge_school_facts_or_unblock_a_decision(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}})
+        answer = "I’ll keep the 1 km limit."
+        supported = claim(answer, 1, path="/data/profile/hard_constraints/max_distance_km",
+                          result="context:current", school=None)
+        self.assertEqual(validate_response(final(answer, [supported]).content, (),
+                         service.initial_context).answer, answer)
+        supported["path"] = "/data/records/0/facts/base_fee"
+        with self.assertRaisesRegex(ResponseValidationError, "invalid_support_path"):
+            validate_response(final(answer, [supported]).content, (), service.initial_context)
+        forged_context = service.initial_context.model_copy(update={"profile": {
+            "hard_constraints": {"max_distance_km": 1}, "school_fee": 999}})
+        supported.update(path="/data/profile/school_fee", value=999, span="Fee is $999.")
+        with self.assertRaisesRegex(ResponseValidationError, "invalid_support_path"):
+            validate_response(final("Fee is $999.", [supported]).content, (), forged_context)
+        service = self.service(profile={"pending_contradiction": {"existing": "Chinese", "incoming": "Malay"}})
+        with self.assertRaisesRegex(ResponseValidationError, "missing_pending_question"):
+            validate_response(final("Chinese remains required.").content, (), service.initial_context)
 
     def evidence(self):
         return StructuredToolResult(

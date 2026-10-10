@@ -155,6 +155,31 @@ class LlmFirstLoopTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(candidate.results[0].status, "needs_input")
         self.assertIn("postal code", candidate.answer)
 
+    async def test_invalid_scenario_arguments_can_clarify_without_tool_execution(self):
+        service = self.service("Would this school suit us if my income drops?")
+        def clarify(messages):
+            feedback = json.loads(messages[-1].content)
+            self.assertEqual(feedback["status"], "needs_input")
+            self.assertNotIn("SECRET", json.dumps(feedback))
+            return AIMessage(content="What hypothetical income should I use?")
+        with patch.object(service, "invoke", side_effect=AssertionError("must not execute")):
+            candidate = await self.run_loop(service, ScriptedModel(AIMessage(content="", tool_calls=[
+                call("calculate_fees_scenario", {"school_ids": ["CENTRE:A"],
+                                               "overrides": {"gross_household_income": None}})]), clarify))
+        self.assertEqual(candidate.tool_calls, 0)
+        self.assertEqual(candidate.model_calls, 2)
+
+    async def test_argument_correction_has_one_attempt_and_counts_against_tool_budget(self):
+        bad = {"school_ids": ["CENTRE:A"], "overrides": {"gross_household_income": None}}
+        await self.rejected(self.service(), ScriptedModel(
+            AIMessage(content="", tool_calls=[call("calculate_fees_scenario", bad)]),
+            AIMessage(content="", tool_calls=[call("calculate_fees_scenario", bad, "call:2")]),
+        ), "invalid_tool_arguments")
+        await self.rejected(self.service(), ScriptedModel(
+            AIMessage(content="", tool_calls=[call("calculate_fees_scenario", bad)]),
+            AIMessage(content="", tool_calls=[call("find_nearby_schools", id="call:2")]),
+        ), "tool_limit", limits=LoopLimits(tool_calls=1))
+
     async def test_access_scope_invalid_arguments_and_duplicate_call_ids_fail_closed(self):
         invalid = [
             [call("unknown")],

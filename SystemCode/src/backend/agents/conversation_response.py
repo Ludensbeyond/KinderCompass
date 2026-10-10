@@ -31,6 +31,35 @@ not round numbers: report the supplied numeric value. Claims for school records
 must use the school_id of that record and explicitly name that school in the
 span. Claims for retrieved passages must cite that passage's chunk_id. During
 repair, return corrected final JSON using existing results; do not call tools.
+Use actual result IDs and scalar paths exactly as returned, not schematic examples.
+A reply combining guidance with a preference question uses kind grounded and
+retains its guidance claims and [citation_id] markers. Do not remove claims or
+citations by relabeling domain guidance as conversation during repair.
+Claims should have short spans for individual facts; a span reporting two amounts
+cannot be supported by one amount. Numeric questions (including postal-code length)
+must avoid unsupported numbers: ask for 'your home postal code'. For needs_input,
+clarify missing input without claiming a completed change. Use /status to support
+an evidence gap, with school_id null since status belongs to the whole result.
+Never explain unsupported domain facts even with a disclaimer. If guidance is
+unavailable, acknowledge that gap and continue any supported preference work.
+Each school fact MUST be its own short sentence repeating the FULL repository
+school name. Set span to that exact full sentence, including any citation marker.
+Never use 'its', 'both', shortened names, or a shared subject across claims.
+Do not include extra numeric facts in that sentence. For example, given a fee
+result for Example School, write 'Example School has a base fee of $900.' with
+span exactly that sentence, value 900, path /data/records/0/facts/base_fee.
+For a second fact repeat 'Example School' in a separate sentence with its own
+claim. A passage sentence must include [chunk_id] INSIDE its claim span.
+If you revise an answer, revise every span to an EXACT substring of the revised
+answer, not a hypothetical sentence. Use numeric JSON values for numeric facts.
+For comparison, report each school's facts separately; no combined 'both' claim.
+Do not report age, scenario income or limits without their own scalar support.
+Ask the pending required/preferred question in mixed guidance/preference replies.
+For acknowledgements of UNCHANGED current preferences, use result_id context:current,
+path /data/profile/... and the exact scalar from initial context. This supports
+remembered state only, never school facts or proposed mutations. A changed state
+must reference a successful mutation tool result. If a pending contradiction is
+resolved, actually call reset_continue_preferences; wording alone does not resolve it.
 """
 
 
@@ -53,6 +82,21 @@ class ModelResponse(BaseModel):
 
 class ResponseValidationError(ValueError):
     """Feedback consists only of fixed categories, never source or provider text."""
+
+
+REPAIR_GUIDANCE = {
+    "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict. Include this question alongside supported guidance.",
+    "wrong_reported_number": "Split claims into shorter exact spans so each span contains only its supported number. Remove other numbers from that span and support them separately.",
+    "invalid_response_kind": "Use grounded when claims are present; conversation and clarification require an empty claims list.",
+    "support_must_be_scalar": "Index list values, e.g. /data/records/0/facts/care_levels/0, not /data/records/0/facts/care_levels.",
+    "invalid_response_structure": "Return valid JSON; claim value must be a scalar, never an array/object.",
+    "missing_school_attribution": "Repeat the full school name inside every school claim span, including estimate warnings. Rewrite both answer and spans.",
+    "cross_school_attribution": "Use school_id null for result-level status or missing_evidence_school_ids scalars. Do not cite another school's passage for a gap.",
+    "missing_citation_marker": "Include the [citation_id] marker inside the exact claim span.",
+    "unknown_claim_support": "Use actual result IDs and exact answer substrings. Never use profile or context as result_id.",
+    "unsupported_reported_number": "Remove unsupported numbers, even in refusals, questions and acknowledgements. You can acknowledge keeping the limit without repeating its number.",
+    "unsupported_result_status": "Use /status for missing-input/evidence gaps; staged_profile scalars are allowed only for mutation results.",
+}
 
 
 _NUMBER = re.compile(r"(?<![\w])[-+]?\d+(?:,\d{3})*(?:\.\d+)?(?![\w])")
@@ -91,6 +135,19 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     except Exception:
         raise ResponseValidationError("invalid_response_structure") from None
     by_id = {r.result_id: r for r in results}
+    from ..pipeline.stage1.preference_schema import sync_preference_schema
+    current = sync_preference_schema(context.profile)
+    # The public profile can contain legacy conversational metadata; expose only
+    # validated preference values here, never arbitrary client-supplied facts.
+    preference_snapshot = {
+        "hard_constraints": {k: v for k, v in current.get("hard_constraints", {}).items()
+                             if k in {"language", "level", "max_distance_km"}},
+        "preference_items": current.get("preference_items", []),
+        "unsupported_preferences": current.get("unsupported_preferences", []),
+    }
+    by_id["context:current"] = StructuredToolResult(
+        result_id="context:current", tool_name="update_preferences", status="ok",
+        data={"profile": preference_snapshot}, catalogue_version=context.catalogue_version, state_revision=0)
     citations = {}
     names = {s.school_id: s.name for s in context.selected_schools}
     for result in results:
@@ -107,6 +164,11 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             citations[citation.citation_id] = citation
     if response.kind == "grounded" and not response.claims:
         raise ResponseValidationError("missing_claim_support")
+    staged = next((r.data.get("staged_profile") for r in reversed(results)
+                   if "staged_profile" in r.data), current)
+    if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")):
+        if "?" not in response.answer:
+            raise ResponseValidationError("missing_pending_question")
     if response.kind in {"conversation", "clarification"} and response.claims:
         raise ResponseValidationError("invalid_response_kind")
     if response.kind == "evidence_gap" and not any(
@@ -117,6 +179,7 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     answer_markers = _CITATION.findall(response.answer)
     supported_markers: set[str] = set()
     covered_numbers: list[Decimal] = []
+    span_numbers: dict[str, tuple[list[Decimal], list[Decimal]]] = {}
     latest_revision = max((r.state_revision for r in results), default=0)
     for claim in response.claims:
         if claim.span not in response.answer or claim.result_id not in by_id:
@@ -131,7 +194,10 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             if not (type(value) in (int, float) and type(claim.value) in (int, float)
                     and Decimal(str(value)) == Decimal(str(claim.value))):
                 raise ResponseValidationError("wrong_claim_value")
-        if result.status != "ok" and claim.path != "/status":
+        staged_support = (result.status == "needs_input" and result.tool_name in {
+            "update_preferences", "reset_continue_preferences"} and
+            claim.path.startswith(("/data/staged_profile/", "/data/unresolved_decisions/")))
+        if result.status != "ok" and claim.path != "/status" and not staged_support:
             raise ResponseValidationError("unsupported_result_status")
         if result.tool_name in {"update_preferences", "reset_continue_preferences",
                                 "search_rank_compare_schools", "calculate_fees_scenario"} and result.state_revision != latest_revision:
@@ -161,6 +227,11 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             clean_span = clean_span.replace(name, "")
         numbers = _numbers(clean_span)
         expected = _numbers(str(value)) if type(value) in (str, int, float) else []
+        # Several scalar claims may support one natural sentence. Validate its
+        # numbers against their combined values after every claim is validated.
+        group = span_numbers.setdefault(claim.span, (numbers, []))
+        group[1].extend(expected)
+    for numbers, expected in span_numbers.values():
         if any(number not in expected for number in numbers):
             raise ResponseValidationError("wrong_reported_number")
         covered_numbers.extend(numbers)

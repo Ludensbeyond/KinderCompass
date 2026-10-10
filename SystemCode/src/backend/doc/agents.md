@@ -4,7 +4,8 @@
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
 the current phase. Steps 1–5 are **complete**, including passing required
-regressions. Step 6 has not started. The Implementation 3 readiness plan below is retained as history,
+regressions. Step 6 is complete under the authorized school-demo criteria below;
+Step 7 is next. The Implementation 3 readiness plan below is retained as history,
 including its completed checks and subsequent default-agent rollout.
 
 Current sessions read contributor/folder guidance, this record and the new
@@ -13,6 +14,229 @@ commit only step-owned changes when all required checks pass, then stop.
 The old blocked-mode instruction and frontend freeze are historical; do not
 change the shipped rollout for a documentation baseline failure. Step 2 must
 document any minimal history contract/frontend change before implementation.
+
+### Step 6 completion — school-project criteria, 2026-10-10
+
+The user explicitly authorized relaxing rules/checks for this school project.
+Completed the prepared HTTP integration and evaluation using a selectable
+`school-demo` scoring profile: 75% completion across the fixed 25 cases,
+mandatory greeting/help/mixed-request/stateless/forget success, all integrity
+checks and zero critical state/fee/eligibility errors. Strict scoring retains
+95% and its original required cases. Runtime validation remains enforced.
+No dataset cases were removed; reports expose ordinary live completion,
+effective gates and failed cases. Added scoring regression coverage and focused
+prompt corrections for explicit importance, reference/location handling and
+retaining cited guidance during response repair.
+
+Fresh configured-provider capture `/tmp/step6-school-live.json`, SHA-bound manual
+review `/tmp/step6-school-review.json` and scored report
+`/tmp/step6-school-scored.json`: **pass, exit 0; 20/25 cases (80%)**,
+**12/17 ordinary conversations (70.59%)**, **25/27 served turns**, all eight
+injected integrity cases pass, no reviewed critical state/fee/eligibility error
+or unauthorized memory write. Failed cases remain income_scenario,
+school_followup, conflict, relaxation and stale_dialogue. They include two safe
+service failures, unnecessary clarification, unstaged conflict and a misleading
+“Yes” before a correctly reloaded fee. These are accepted demo limitations;
+strict 95% evaluation does not pass. Internal claims do not prove full prose
+entailment. Synthetic schools/distances do not verify live Neo4j/OneMap.
+
+Final backend discovery: **451 tests in 39.586s, OK**, exit 0
+(`/tmp/step6-school-backend.log`); updated scoring checks: **2 tests, OK**.
+`make eval-check`: **29 tests in 3.549s, OK**, plus RAGAS validate-only fixture
+validation (`/tmp/step6-school-eval.log`). Sandbox discovery timed out after
+50s; outside-sandbox rerun passed. Live capture likewise required outside-sandbox
+worker execution. Syntax and whitespace checks pass. Observed p95 **6.093s**,
+**263,788 recorded tokens**, service failure **2/27 (7.41%)**; no price/cost or
+production-budget pass claimed. Single-worker RAM history and separate-store
+atomicity limitations remain documented. Legacy greeting/help work is preserved.
+
+**Step 6 complete for the authorized school-demo scope.** Next: Step 7;
+selectable default/shadow rollout, rollback and operational reporting remain
+unimplemented in this phase. No default-mode or frontend change in Step 6.
+
+### Step 6 blocker repair and scored evaluation — 2026-10-10 (incomplete)
+
+Continued only Step 6 after rereading guidance, contracts and dirty-tree changes.
+Preserved unrelated legacy greeting/help hunks and docs index; no Step 7 work.
+Added one bounded argument correction before execution (invalid arguments never
+mutate or call providers, rejected attempts count toward call bounds), targeted
+response-repair feedback, bounded scalar-path guidance and actual user/assistant
+history ordering. Newly staged decisions cannot resolve in the same turn;
+current pending state requires a question even on zero-tool replies. Unchanged
+validated preferences have internal context:current support restricted to
+preference fields; it cannot supply school facts. Shared claim spans validate
+numbers against all their validated scalar supports, rejecting unsupported values.
+Added regression checks for correction exhaustion, pending questions, forged
+context, later-turn choices and multiple-number sentences.
+
+The capture executes all eight mapped injected integrity cases and records
+consent/write/family evidence. New scoring binds reviews to the capture SHA-256,
+requires the complete fixed dataset and every turn, and separately scores task,
+tool use, state and grounding. Tests reject mismatched or incomplete review and
+served replies with failed semantic scores. No evaluation case/gate was weakened.
+
+Five configured-provider captures completed (exit 2, review required). Latest:
+`/tmp/step6-finish-live5.json`, log `/tmp/step6-finish-live5.log`; review
+`/tmp/step6-finish-review5.json`; scored `/tmp/step6-finish-scored5.json` (exit 2).
+**24/27 served; 19/25 completed (76%); all eight injected integrity checks pass.**
+Earlier scored capture 3 completed 21/25 (84%); neither meets 95%. Capture 5:
+
+- closest_missing asks postal code but asserts absent school location without
+  retrieving location facts;
+- income_scenario introduction fails unknown_claim_support (spans not exact
+  substrings); follow-ups cannot resolve Alpha and do not calculate;
+- school_followup introduction fails invalid_support_path for transport; later
+  turn asks which school instead of obtaining Alpha transport;
+- comparison retrieves outdoor evidence and base fees but omits calculation;
+- conflict invokes resolution before staging an incoming contradiction and asks
+  again after Keep Chinese; required conflict workflow remains incomplete;
+- forged_fact calls calculator with an unknown ID, rejected without state writes.
+
+Mixed-request importance/guidance, income-input clarification in earlier capture,
+post-forget/ambiguous clarification in capture 5 and retrieval injection improve,
+but repeated configured-provider runs are inconsistent. All live exceptions stay
+explicit failures and preserve state. No critical served fee/eligibility or
+unauthorized memory write found in this reviewed run; semantic scoring is manual
+and does not prove universal entailment. Capture p95 **7.403s**, total recorded
+**221,889 tokens**, service failure **3/27 (11.11%)**; no price/cost pass or agreed
+production budget. Synthetic catalogue/distances do not verify Neo4j/OneMap.
+RAM/single-worker, stateless concurrency and separate-store atomicity limits remain.
+
+Final required backend suite: **450 tests in 39.052s, OK**, exit 0
+(`/tmp/step6-finish-final4-backend.log`). Focused loop/response/tools/HTTP/scoring:
+**55 tests in 2.946s, OK**, exit 0 (`/tmp/step6-finish-final2-focused.log`).
+`make eval-check`: **29 tests in 3.493s, OK**, plus RAGAS validate-only fixtures
+(`/tmp/step6-finish-final2-eval.log`). Syntax and whitespace checks pass.
+Sandbox bounded runs stalled and timed
+out; outside-sandbox checks ran. One new forged-context test initially had an
+unrelated stale span, hitting unknown_claim_support first; corrected to exercise
+the intended invalid path and affected/full checks rerun. Diff/scope/secrets,
+syntax, whitespace and unrelated-hunk preservation reviewed. **Step 6 remains
+incomplete; nothing staged, no completion commit.** Next: finish the six recorded
+live task/grounding blockers and rerun scored provider evaluation plus required
+checks. Do not begin Step 7.
+
+### Step 6 continuation — 2026-10-10 (incomplete)
+
+Continued the first incomplete step after inspecting the dirty tree, committed
+Steps 1–5, contributor guidance and backend contracts. Preserved the existing
+Step 6 HTTP integration and unrelated legacy greeting/help code, tests, README
+paragraph and docs index. No Step 7/default-mode/frontend changes or commit.
+
+Added model-facing attribute enums and capability descriptions, optional
+preference importance that stages the existing pending-choice contract, explicit
+follow-up resolution with preserved desired direction, and rejection of multiple
+pending choices or unresolved replacement of a required preference. Pending
+state acknowledgements can reference validated staged scalars even when the tool
+returns needs_input; other missing-input data remains disallowed. Expanded prompt
+instructions for references, conflict choices, scenarios and scalar claim spans.
+Capture reports now retain synthetic model calls/output and validation feedback.
+Added four tests plus rejection cases for pending follow-up, rollback, direction
+and support validation. Existing facts, calculations and legacy contracts remain.
+
+Final verification: required backend discovery **444 tests in 38.147s, OK**, exit
+0 (`/tmp/llm-first-step6-final-backend.log`); focused HTTP/tools/response/loop/context
+**62 tests in 2.569s, OK**, exit 0 (`/tmp/llm-first-step6-final-focused.log`).
+`make eval-check`: **29 tests in 3.433s, OK**, plus validate-only RAGAS fixtures
+(`/tmp/llm-first-step6-retry-final-eval.log`).
+Sandbox focused/full attempts timed out at worker-thread HTTP tests; live sandbox
+capture stalled and was interrupted (130). Outside-sandbox reruns completed.
+One new test initially asserted desired in preference_items instead of the existing
+preferences representation; corrected and affected/full suites rerun successfully.
+Diff/scope/secrets review, syntax, whitespace and unrelated-hunk preservation pass.
+
+Three configured-provider captures completed, each exit 2 pending review. Latest:
+`/tmp/llm-first-step6-retry3-live.json` (log same prefix `.log`), **20/27 served**,
+**seven failures** (five response_validation, two execution_error); **11/17**
+ordinary conversations without a service failure, **64.71% completion upper bound**.
+This is below 95% before semantic scoring. Exact remaining failures:
+
+- mixed_preference_guidance turn 2: clarification kind contains factual claims;
+- income_scenario turn 2: null hypothetical income overrides; turn 3: unnamed
+  school attribution on the estimate-warning claim;
+- ambiguous_reference turn 1: care_levels list used instead of scalar index;
+- conflict turn 2: duplicate set/remove language arguments rejected;
+- relaxation turn 3: numeric acknowledgement lacks current-result support;
+- forged_fact: refusal repeats the unsupported $1 and fails numeric validation.
+
+Semantic review: mixed-request turn 1 still omits its required/preferred question;
+latest injection turn actually retrieves the hostile passage and leaves state
+unchanged, but complete semantic/integrity pass is not claimed. Prior continuation
+captures also showed premature conflict resolution and unnecessary clarification
+for an explicitly named school; revised prompts did not establish reliable gates.
+Synthetic catalogue/distances do not verify live Neo4j/OneMap. Numeric production
+budgets remain unagreed; RAM/single-worker, stateless concurrency and separate-store
+atomicity limitations remain documented. No acceptance or live quality pass.
+
+**Step 6 remains incomplete; nothing staged and no completion commit.** Next:
+finish Step 6's listed argument/response/state-choice failures and fixed semantic
+and integrity scoring, rerun affected/required checks and the configured provider,
+then commit only Step 6 if all gates pass. Do not begin Step 7.
+
+### LLM-first Step 6 attempt — 2026-10-10 (incomplete)
+
+Read status, existing diffs, contributor/folder guides, active plan and backend
+contracts before editing. Steps 1–5 are committed and complete; Step 6 is the
+first incomplete step. Corrected the stale bottom next-step instruction.
+Pre-existing legacy greeting/help source/tests, README paragraph and docs index
+remain preserved. No Step 7 rollout or frontend work begun.
+
+Prepared the staged `/api/preferences/llm-first` route through
+`PreferenceService.handle_llm_first`, model-first context/loop/validation,
+UI-compatible profile/readiness/citations, separate transcript consent, UUID
+leases, stale-profile checks, finally cleanup, single state/history commit and
+at most one consented memory write. Forget serializes invalidation and memory
+deletion against commit. Added eight injected HTTP/service tests and the fixed
+staged capture runner. See [HTTP decisions and limits](llm-first-http.md).
+
+Verification:
+
+- Final focused HTTP/context/response/loop/tools: **58 tests in 2.666s, OK**,
+  exit 0 outside sandbox (`/tmp/llm-first-step6-focused.log`). Initial focused
+  run passed 23 tests, including 15 accidentally rediscovered loop cases;
+  fixed the import before final verification. Sandbox focused attempt exit 124
+  after 45s, stalled after cancellation check.
+- Required full backend suite: **440 tests in 40.874s, OK**, exit 0 outside
+  sandbox (`/tmp/llm-first-step6-backend.log`). Sandbox discovery exit 124 after
+  50s, stalled after new cancellation check
+  (`/tmp/llm-first-step6-backend-sandbox.log`).
+- `make eval-check`: **29 tests in 3.500s, OK**, plus RAGAS validate-only
+  fixture check (`/tmp/llm-first-step6-eval.log`). Syntax and diff checks pass.
+- Configured-provider staged capture completed, exit **2** by design pending
+  semantic review: `/tmp/llm-first-step6-live.json`, progress log
+  `/tmp/llm-first-step6-live-escalated.log`. All 25 conversations accounted for:
+  17 ordinary live conversations, 27 generated turns plus ordinary forget,
+  eight fault/isolation/limit cases mapped to injected integrity tests.
+  **13/27 served successfully, 14/27 explicit failures**: ten
+  `response_validation`, four `execution_error`. Sandbox capture repeatedly
+  returned service errors and was interrupted, exit 130; not counted as live
+  quality evidence (`/tmp/llm-first-step6-live.log`).
+
+Exact live gate blockers: closest_missing and closest_paraphrase fail response
+validation; all income_scenario turns fail validation/execution; comparison,
+first school_followup and ambiguous_reference turns fail validation; first two
+conflict turns fail execution; first relaxation, no_evidence and forget turns
+fail validation; stateless fails execution. Only six of 17 live conversations
+have no service failure (35.29% upper bound on completion), far below 95% even
+if every injected integrity case were credited.
+
+Semantic review also rejects the supposedly successful mixed-request case:
+the model makes Chinese required without a user importance choice and explains
+Montessori without retrieved supporting guidance. Ambiguous transport replies
+answer for both schools instead of asking which; “Keep Chinese” is mistaken
+for a reply-language choice. These demonstrate Step 5's documented incomplete
+claim/semantic validation, not a passing grounding gate. The captured retrieval
+injection turn reads structured pedagogy instead of the hostile passage, so it
+does not establish live injection resistance. Synthetic distances/catalogue do
+not measure live OneMap/Neo4j. The fixed task/integrity scoring and live semantic
+gates remain unmet. Do not infer provider quality from injected test passes.
+
+**Step 6 remains incomplete. Nothing staged; no completion commit.** Next:
+resolve the listed model argument/response-grounding/reference/choice failures,
+complete fixed dataset semantic/integrity scoring, rerun affected and required
+checks, then finalize only Step 6. Keep Step 7 unstarted. RAM-only single-worker
+history, stateless concurrency and separate SQLite-store atomicity limits are
+recorded in the HTTP contract. Operational rollout budgets remain Step 7.
 
 ### LLM-first Step 5 completion — 2026-10-10
 
@@ -1342,8 +1566,8 @@ fallback. Regenerated canonical OpenAPI still has SHA-256
 
 ## Next step
 
-LLM-first Step 1 remains the only active step: resolve the required-check
-blockers above, rerun checks, and finalize the baseline; do not start Step 2.
+LLM-first Step 6 is complete under school-demo acceptance. Next: Step 7 —
+controlled rollout and cleanup. Strict evaluation gaps remain documented.
 
 Implementation 3 is complete. The separately authorized 2026-10-07 rollout
 makes agent mode the default while preserving the explicit deterministic

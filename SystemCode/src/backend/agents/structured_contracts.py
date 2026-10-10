@@ -13,9 +13,13 @@ class ToolArguments(AgentContract):
 
 
 class PreferenceChoice(ToolArguments):
-    attribute: str
+    attribute: Literal["care_level", "language", "spark_certified", "transport", "full_day",
+                       "operator_scheme", "food", "pedagogy", "max_distance_km",
+                       "hands_on_learning", "child_led_learning", "low_worksheet_use",
+                       "primary_school_readiness", "atmosphere"]
     value: str | bool | float | int
-    importance: Literal["required", "high_priority", "preferred", "nice_to_have"]
+    importance: Literal["required", "high_priority", "preferred", "nice_to_have"] | None = Field(
+        default=None, description="Explicit user strength only. Omit when unspecified to stage a pending choice.")
     desired: bool = True
 
     @model_validator(mode="after")
@@ -24,7 +28,7 @@ class PreferenceChoice(ToolArguments):
         allowed = ALLOWED_VALUES.get(self.attribute, set())
         if allowed and all(type(v) is bool for v in allowed) and type(self.value) is not bool:
             raise ValueError("boolean preferences require a boolean value")
-        make_preference_item(self.attribute, self.value, self.importance)
+        make_preference_item(self.attribute, self.value, self.importance or "preferred")
         if self.attribute in {"care_level", "max_distance_km"} and (
             self.importance != "required" or not self.desired
         ):
@@ -42,6 +46,8 @@ class PreferencePatch(ToolArguments):
         fields = [c.attribute for c in self.set] + self.remove
         if not fields or len(fields) != len(set(fields)):
             raise ValueError("patch must contain unique attributes")
+        if sum(c.importance is None for c in self.set) > 1:
+            raise ValueError("only one unresolved importance choice can be staged")
         if any(field not in ATTRIBUTE_CATALOG for field in fields):
             raise ValueError("unsupported preference attribute")
         return self
