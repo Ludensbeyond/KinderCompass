@@ -1,7 +1,7 @@
 # LLM-first conversation plan
 
 Date: 2026-10-10
-Status: Step 1 complete; Step 2 next
+Status: Steps 1–2 complete; Step 3 next
 
 ## Objective
 
@@ -308,14 +308,14 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline .venv/bin/pyth
 ## Progress
 
 - [x] Step 1: Baseline and architecture record
-- [ ] Step 2: Bounded conversation context
+- [x] Step 2: Bounded conversation context
 - [ ] Step 3: Structured tools and staged state
 - [ ] Step 4: LLM-controlled tool loop
 - [ ] Step 5: LLM responses and grounding
 - [ ] Step 6: HTTP integration and evaluation
 - [ ] Step 7: Controlled rollout and cleanup
 
-Next step: Step 2 — bounded conversation context. Not started in this session.
+Next step: Step 3 — structured tools and staged state. Not started in this session.
 
 ### Step 1 completion — 2026-10-10
 
@@ -526,3 +526,37 @@ verification and finalize its commit. Step 2 is bounded conversation context,
 including documented session/history and any minimal contract change; it has
 not begun. Live-provider quality and numeric latency/token/cost budgets remain
 unmeasured, and target-dataset execution belongs to Step 6.
+
+### Step 2 completion — 2026-10-10
+
+Implemented strict bounded initial context, typed pending decisions and current
+repository-resolved school identities in `agents/contracts.py` and
+`services/conversation_context_service.py`. Added explicitly opted-in ephemeral
+history in `services/conversation_history_service.py`: six complete exchanges,
+8,000 dialogue characters, 30-minute idle expiry, 1,000-session capacity and
+exclusive commit leases. Forget clears both preference memory and history.
+The full initial context is limited to 24,000 UTF-8 bytes.
+
+[The backend context contract](../SystemCode/src/backend/doc/llm-first-context.md)
+records the session/history and minimal future HTTP-consent extension before
+implementation. No public schema or frontend change yet: HTTP wiring is Step 6.
+Legacy evaluation/geocoding remains until Step 3 tools replace its dependencies;
+the new initial builder performs neither operation. No model loop or routing
+change. History has no generated summary, disk persistence or cross-worker
+sharing; omitted turns are explicit, expiry cleanup is on access, and worker
+restart/eviction loses history. Current state and facts override dialogue.
+
+Verification: required backend discovery **395 tests in 39.648s, OK, exit 0**
+outside the sandbox (`/tmp/llm-first-step2-backend.log`). Sandbox attempt timed
+out after 45s at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+(exit 124; `/tmp/llm-first-step2-backend-sandbox.log`). Focused history/context,
+legacy context, memory, supervisor and validation checks: **37 tests in 2.541s,
+OK** (`/tmp/llm-first-step2-focused.log`). `make eval-check`: **29 tests in
+3.785s, OK**, plus RAGAS validate-only fixture check
+(`/tmp/llm-first-step2-eval.log`). Diff/links/secrets review and
+`git diff --check` pass; unrelated greeting/help changes preserved and excluded.
+Injected consumers verify the context boundary, not live reference resolution
+or served LLM-first control flow, which are later-step checks.
+
+Acceptance met for the Step 2 foundation. Next: Step 3 — typed structured tool
+results, model-selected inputs and request-local staged state. Not begun.

@@ -402,5 +402,7 @@ service injection, runtime opt-in and deterministic fallbacks.
 
 The active [LLM-first phase](../../../docs/llm-first-conversation-plan.md) and
 [Step 1 baseline](doc/llm-first-baseline.md) record the next architecture phase.
-See [backend progress](doc/agents.md) for Step 1 completion evidence and the
+The [Step 2 context contract](doc/llm-first-context.md) describes bounded opt-in
+ephemeral history and minimal context preparation for the forthcoming new flow.
+See [backend progress](doc/agents.md) for completed-step verification and the
 historical supervisor rollout evidence.

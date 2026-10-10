@@ -3,9 +3,8 @@
 ## Active phase — LLM-first conversation, 2026-10-10
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
-the current phase. Step 1 is **complete**, including passing required
-regressions after authorized test-fixture repairs. Step 2 has not
-started. The Implementation 3 readiness plan below is retained as history,
+the current phase. Steps 1–2 are **complete**, including passing required
+regressions. Step 3 has not started. The Implementation 3 readiness plan below is retained as history,
 including its completed checks and subsequent default-agent rollout.
 
 Current sessions read contributor/folder guidance, this record and the new
@@ -14,6 +13,41 @@ commit only step-owned changes when all required checks pass, then stop.
 The old blocked-mode instruction and frontend freeze are historical; do not
 change the shipped rollout for a documentation baseline failure. Step 2 must
 document any minimal history contract/frontend change before implementation.
+
+### LLM-first Step 2 completion — 2026-10-10
+
+Implemented the bounded context/history foundation documented in
+[the context contract](llm-first-context.md), with strict initial context and
+pending-decision models, repository-resolved selected/active school identities,
+and an independent ephemeral history service. Exclusive leases reject concurrent
+turns, forgotten/expired leases and duplicate commits; failed turns abort.
+`/api/memory/forget` invalidates history as well as opt-in preference memory.
+
+Acceptance covered by 13 new tests: follow-up preference and school context,
+ambiguous references, absent/expired history, separate sessions, forget through
+HTTP, aborted/stale/duplicate turns, capacity/window limits, current authoritative
+state over stale dialogue, explicit omissions, context overflow and greeting
+context passed to an injected model consumer without ranking/geocoding.
+
+Required backend command: **395 tests in 39.648s, OK, exit 0**, outside
+the sandbox; `/tmp/llm-first-step2-backend.log`. Sandbox attempt: exit 124
+after 45s at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`;
+`/tmp/llm-first-step2-backend-sandbox.log`. Five focused modules: **37 tests
+in 2.541s, OK**; `/tmp/llm-first-step2-focused.log`. `make eval-check`: **29
+tests in 3.785s, OK**, plus validate-only RAGAS fixture validation;
+`/tmp/llm-first-step2-eval.log`. Scope/diff/secrets and local-link review,
+`git diff --check`, and unrelated-work preservation checks pass.
+
+Limitations: history requires explicit opt-in and single-worker/sticky routing;
+RAM-only retention expires on access, has no generated summary, and is lost on
+restart/eviction. The documented future `remember_conversation` consent field
+and new-flow HTTP integration belong to Step 6. The current controller still
+needs eager domain context until Step 3 replacements land. No frontend/public
+schema, deterministic algorithms, served routing or rollout changes. Existing
+greeting/help code/tests and matching README/docs-index changes are excluded.
+
+**Next step: Step 3 — structured tools and staged state.** Not begun. Model
+reference interpretation/control-flow and live quality remain later-step checks.
 
 ### LLM-first Step 1 completion — 2026-10-10
 
@@ -55,7 +89,8 @@ Verification from the repository root:
 - Diff/scope/secrets review, `git diff --check` and unrelated-work preservation
   hashes pass; initial hashes: `/tmp/llm-first-step1-finalize-start.json`.
 
-**Next step: Step 2 — bounded conversation context.** It has not begun.
+**Historical Step 1 next step: Step 2 — bounded conversation context.**
+Superseded by the Step 2 completion above.
 Decide/document session/history semantics and any minimal contract change
 before implementation. Live-provider quality, numeric budgets and execution
 of the fixed target dataset remain unmeasured and belong to later steps.

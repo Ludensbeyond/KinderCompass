@@ -50,6 +50,7 @@ from SystemCode.src.backend.services.feedback_service import (  # noqa: E402
     FeedbackSchoolMismatchError, FeedbackService, FeedbackSnapshotNotFoundError,
 )
 from SystemCode.src.backend.services.conversation_memory_service import ConversationMemoryService  # noqa: E402
+from SystemCode.src.backend.services.conversation_history_service import ConversationHistoryService  # noqa: E402
 from SystemCode.src.backend.services.chat_feedback_service import ChatAnswerNotFoundError, ChatFeedbackService  # noqa: E402
 from SystemCode.src.backend.services.school_rating_service import SchoolRatingService  # noqa: E402
 from SystemCode.src.backend.agents.observability import configure_runtime_logging  # noqa: E402
@@ -81,6 +82,7 @@ FEEDBACK_SERVICE = FeedbackService(
 CONVERSATION_MEMORY_SERVICE = ConversationMemoryService(
     REPO_ROOT / "SystemCode/src/backend/output/conversation_memory.sqlite3"
 )
+CONVERSATION_HISTORY_SERVICE = ConversationHistoryService()
 CHAT_FEEDBACK_SERVICE = ChatFeedbackService(
     REPO_ROOT / "SystemCode/src/backend/output/chat_answer_feedback.sqlite3"
 )
@@ -168,6 +170,7 @@ def save_conversation_memory(request: SaveConversationMemoryRequest) -> dict[str
 @app.post("/api/memory/forget", response_model=ForgetConversationMemoryResponse)
 def forget_conversation_memory(request: ConversationMemoryRequest) -> dict[str, str]:
     CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id)
+    CONVERSATION_HISTORY_SERVICE.forget(request.anonymous_session_id)
     return {"status": "forgotten"}
 
 
