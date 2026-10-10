@@ -147,6 +147,13 @@ on selected schools, retain deterministic precedence. Retrieval, ranking,
 eligibility, fees, and distance remain grounded or deterministic regardless of
 the routing method.
 
+Standalone greetings and help questions such as “what can you do?”, “how can
+you help me?”, and “who are you?” receive a direct introduction and supported
+preschool tasks with example prompts in every conversation mode. These turns
+preserve saved preferences, active school context, and pending decisions without
+school, location, or model calls. Messages that also request a specific task
+continue through normal conversation routing.
+
 A nearest-school chat request does not require an existing recommendation list.
 With the saved postal code, the backend loads the full grounded Neo4j school
 catalogue, geocodes the home through OneMap, calculates distances against ECDA

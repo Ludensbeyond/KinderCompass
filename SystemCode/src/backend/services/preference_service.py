@@ -471,9 +471,24 @@ class PreferenceService:
         selected_school_ids: list[str], eligible_school_ids: list[str],
         excluded_school_ids: list[str], family: FamilyDetails | None, home_postal_code: str | None,
     ) -> dict[str, Any]:
-        # Social turns need no school lookup, geocoding, or model call. Keep
+        # Social and help turns need no school lookup, geocoding, or model call. Keep
         # saved preferences and any unresolved decision intact.
-        if re.fullmatch(r"(?:hi|hello|hey|good morning|good afternoon|good evening)[\s!.]*", message.strip(), re.IGNORECASE):
+        greeting = re.fullmatch(
+            r"(?:hi|hello|hey|good morning|good afternoon|good evening)[\s!.]*",
+            message.strip(), re.IGNORECASE,
+        )
+        help_request = re.fullmatch(
+            r"(?:(?:hi|hello|hey)[\s,!.]+)?(?:please\s+)?(?:"
+            r"what (?:can|do) you do(?: for me)?|"
+            r"what can you help(?: me)? with|how can you help(?: me)?|"
+            r"(?:can|could) you (?:help me|tell me what you (?:can|do) do)|"
+            r"(?:what are|tell me about) your (?:capabilities|features)|"
+            r"who are you|what is kindercompass|what's kindercompass|"
+            r"how (?:do i use|does) (?:kindercompass|this (?:app|chat))(?: work)?|"
+            r"help(?: me)?)(?:,?\s+please)?[\s?!.]*",
+            message.strip(), re.IGNORECASE,
+        )
+        if greeting or help_request:
             saved = deepcopy(profile or {})
             pending_question = next((
                 saved[key].get("question")
@@ -490,6 +505,22 @@ class PreferenceService:
                 question = "Hi! Would you like your last preference to be required or preferred?"
             elif ready:
                 question = "Hi! Add another preschool preference or click Show recommendations to use your saved preferences."
+            if help_request:
+                question = (
+                    "I'm KinderCompass, your guide to choosing a preschool in Singapore. "
+                    "I can help you set preferences such as language, teaching approach, budget, "
+                    "and distance; find nearby preschools; compare selected schools and explain "
+                    "recommendations; estimate fees and subsidies using your family details; "
+                    "and answer questions about preschool approaches, enrolment, and available school information. "
+                    "Try asking 'What is Montessori?' or 'Which preschool is closest to me?', "
+                    "or tell me 'I want a preschool that teaches Chinese.'"
+                )
+                if pending_question:
+                    question += f" To continue your saved preferences: {pending_question}"
+                elif saved.get("pending"):
+                    question += " To continue your last preference, tell me whether it is required or preferred."
+                elif ready:
+                    question += " Click Show recommendations to use your saved preferences."
             return {
                 "profile": saved, "understood": summarize_profile(saved),
                 "ready_to_search": ready, "question": question,
