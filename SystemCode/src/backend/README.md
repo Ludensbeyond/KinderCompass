@@ -411,3 +411,6 @@ historical supervisor rollout evidence.
 
 The [Step 4 model loop](doc/llm-first-loop.md) records LLM-controlled action
 selection, dependent tools and bounded execution for the new flow.
+
+The [Step 5 response contract](doc/llm-first-responses.md) records model-authored
+wording, claim/value/citation checks, bounded repair and failure rollback.

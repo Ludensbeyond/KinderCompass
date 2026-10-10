@@ -3,8 +3,8 @@
 ## Active phase — LLM-first conversation, 2026-10-10
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
-the current phase. Steps 1–4 are **complete**, including passing required
-regressions. Step 5 has not started. The Implementation 3 readiness plan below is retained as history,
+the current phase. Steps 1–5 are **complete**, including passing required
+regressions. Step 6 has not started. The Implementation 3 readiness plan below is retained as history,
 including its completed checks and subsequent default-agent rollout.
 
 Current sessions read contributor/folder guidance, this record and the new
@@ -13,6 +13,48 @@ commit only step-owned changes when all required checks pass, then stop.
 The old blocked-mode instruction and frontend freeze are historical; do not
 change the shipped rollout for a documentation baseline failure. Step 2 must
 document any minimal history contract/frontend change before implementation.
+
+### LLM-first Step 5 completion — 2026-10-10
+
+Implemented `agents/conversation_response.py` and bounded final-response repair
+in `agents/conversation_loop.py`. Successful wording is model-authored: direct
+conversation, clarifications, preference acknowledgements and evidence-gap
+explanations. Strict internal claims reference server result IDs, scalar paths,
+values, schools and citations. Mechanical checks reject mismatched values and
+reported numbers, fabricated citations/support, cross-school attribution and
+stale state-dependent results. Retrieved school passages now include repository
+names for attribution. No answer copying, vocabulary allowlist, substitution or
+legacy fallback runs in the validated new path. Validation authorizes one
+profile export; failures discard state and return a fixed service error.
+Repair uses existing evidence only, at most twice within the original budgets,
+and cannot replay tools or mutations. See
+[the response contract](llm-first-responses.md).
+
+Acceptance covered by 11 new injected-model tests plus existing loop/tool
+regressions: **37 tests in 0.873s, OK, exit 0** outside the sandbox
+(`/tmp/llm-first-step5-focused-escalated.log`). Initial sandbox focused attempt
+stalled in worker-thread loop cases; the first outside-sandbox run passed 35
+checks before two additional adversarial cases were added. Required backend
+command: **432 tests in 40.809s, OK**, exit 0, outside the sandbox
+(`/tmp/llm-first-step5-backend.log`). Sandbox discovery timed out **exit 124
+at 50s** after `test_llm_first_loop.LlmFirstLoopTests.test_access_scope_invalid_arguments_and_duplicate_call_ids_fail_closed`
+(`/tmp/llm-first-step5-backend-sandbox.log`). `make eval-check`: **29 tests in
+3.412s, OK**, plus RAGAS validate-only fixture check
+(`/tmp/llm-first-step5-eval.log`). Diff/scope/secrets/local links and
+`git diff --check` reviewed; pre-existing greeting/help source/tests, README
+paragraph and docs-index changes preserved and excluded from the commit.
+
+Limitations: mechanical validation does not prove semantic entailment or complete
+claim annotation, including unsupported nonnumeric prose mislabeled as dialogue.
+Units/periods and boolean/status wording need semantic evaluation. Exact numeric
+values are supported; rounding/unit conversion is not. School-name checks may
+reject overlapping names. Injected models establish control flow, not live
+quality. HTTP/history/memory integration and staged provider evaluation remain
+Step 6; mode rollout and operational budgets remain Step 7. No public/frontend
+contract, authoritative facts, deterministic algorithm or served rollout change.
+
+Acceptance met for Step 5. Next: Step 6 — HTTP integration and evaluation.
+Not begun in this session.
 
 ### LLM-first Step 4 completion — 2026-10-10
 

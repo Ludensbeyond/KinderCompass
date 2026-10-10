@@ -17,10 +17,11 @@ No deterministic semantic routing, nested answer wrapper or answer substitution
 runs in this loop. Dialogue and application context use data messages, not
 system instructions; retrieved passages remain tool data.
 
-The returned `ConversationLoopCandidate` contains bounded model wording,
-detached structured results and execution counts. It is **not** a validated
-response or a committed profile. Step 5 must validate wording, values,
-attribution and citation references, add bounded repair, and only then authorize
+Without a final validator, the returned `ConversationLoopCandidate` contains
+bounded model wording, detached structured results and execution counts. It is **not** a validated
+response or a committed profile. The
+[Step 5 validated entry point](llm-first-responses.md) validates wording, values,
+attribution and citation references, adds bounded repair, and only then authorizes
 state export. Step 6 coordinates the HTTP response/history/memory commit.
 The legacy served supervisor and all current HTTP/frontend contracts remain
 unchanged; Step 6 integrates this foundation and Step 7 selects rollout modes.

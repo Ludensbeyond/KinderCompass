@@ -42,6 +42,7 @@ class LoopLimits(BaseModel):
     elapsed_seconds: float = Field(default=30.0, gt=0, le=120)
     context_bytes: int = Field(default=128_000, ge=1, le=256_000)
     model_output_bytes: int = Field(default=16_000, ge=1, le=32_000)
+    repair_calls: int = Field(default=2, ge=0, le=2)
 
 
 class ModelToolCall(BaseModel):
@@ -79,6 +80,8 @@ async def run_conversation_loop(
     model: Any,
     limits: LoopLimits | None = None,
     clock: Callable[[], float] = monotonic,
+    final_validator: Callable | None = None,
+    final_prompt: str = "",
 ) -> ConversationLoopCandidate:
     """Every valid turn invokes the model before any semantic decision or tool.
 
@@ -110,11 +113,12 @@ async def run_conversation_loop(
         names = {tool.name for tool in registry}
         schemas = [{"name": tool.name, "description": tool.description,
                     "parameters": tool.args_schema.model_json_schema()} for tool in registry]
-        messages = [SystemMessage(content=SYSTEM_PROMPT),
+        messages = [SystemMessage(content=SYSTEM_PROMPT + final_prompt),
                     HumanMessage(content=context.model_dump_json()),
                     HumanMessage(content=context.message)]
         results: list[StructuredToolResult] = []
         used_ids: set[str] = set()
+        repairs = 0
         selected_model = await bounded(model.bind_tools, registry) if registry else model
         for iteration in range(1, limits.model_calls + 1):
             if _json_bytes({"tools": schemas, "messages": [m.model_dump(mode="json") for m in messages]}) > limits.context_bytes:
@@ -127,9 +131,26 @@ async def run_conversation_loop(
             if response.invalid_tool_calls:
                 raise ConversationLoopError("invalid_tool_call")
             if not response.tool_calls:
-                if not isinstance(response.content, str) or not 1 <= len(response.content.strip()) <= 800:
+                if not isinstance(response.content, str) or not response.content.strip():
+                    raise ConversationLoopError("invalid_answer")
+                if final_validator:
+                    # Imported here to keep the raw Step 4 candidate API independent.
+                    from .conversation_response import ResponseValidationError
+                    try:
+                        await bounded(final_validator, response.content.strip(), tuple(results))
+                    except ResponseValidationError as error:
+                        if repairs >= limits.repair_calls or iteration == limits.model_calls:
+                            raise ConversationLoopError("response_validation") from None
+                        repairs += 1
+                        messages.extend([response, HumanMessage(content=
+                            "Response validation failed: " + str(error) +
+                            ". Repair final JSON using existing results only. Do not call tools.")])
+                        continue
+                elif len(response.content.strip()) > 800:
                     raise ConversationLoopError("invalid_answer")
                 return ConversationLoopCandidate(response.content.strip(), tuple(results), iteration, len(results))
+            if repairs:
+                raise ConversationLoopError("repair_tool_call")
             calls = [ModelToolCall.model_validate(c) for c in response.tool_calls]
             if any(c.name not in names or c.id in used_ids for c in calls) or len({c.id for c in calls}) != len(calls):
                 raise ConversationLoopError("invalid_tool_call")

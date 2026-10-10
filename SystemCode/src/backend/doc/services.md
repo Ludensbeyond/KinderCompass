@@ -25,4 +25,6 @@ see [tool contracts and transaction boundaries](llm-first-tools.md).
 
 The Step 4 [LLM-controlled loop](llm-first-loop.md) orchestrates these new-flow
 capabilities with model-selected actions and bounded execution. It returns a
-candidate for later response validation and HTTP integration.
+candidate. The [Step 5 response layer](llm-first-responses.md) validates model
+wording and support, repairs within the turn budget and exports state only
+after acceptance; HTTP/history/memory integration remains Step 6.

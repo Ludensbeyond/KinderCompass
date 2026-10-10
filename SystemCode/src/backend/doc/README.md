@@ -26,6 +26,8 @@ history, session leases and the minimal new-flow model context. The
 request-local staged state. The
 [Step 4 model loop](llm-first-loop.md) documents model-first action selection,
 dependent calls and execution/failure bounds. The
+[Step 5 response contract](llm-first-responses.md) documents model-authored
+wording, mechanical grounding, bounded repair and state rollback. The
 [Implementation 2 archive](impl2-agent-step2.md) preserves the completed
 full-conversation supervisor migration, and the
 [Implementation 1 archive](impl1-agent-step1.md) preserves the completed

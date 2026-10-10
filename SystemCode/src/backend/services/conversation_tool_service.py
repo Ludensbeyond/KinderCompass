@@ -300,7 +300,7 @@ class ConversationToolService:
         }, [], [])
 
     def _school_evidence(self, request: SchoolEvidenceArguments):
-        self.schools.get_many(request.school_ids)
+        school_names = {r.school_id: r.name for r in self.schools.get_many(request.school_ids)}
         index = self._school_index_loader() if self._school_index_loader else None
         if index is None:
             return "unavailable", {}, [], []
@@ -312,7 +312,8 @@ class ConversationToolService:
                     citation_id=match["chunk_id"], evidence_scope="school", school_id=school_id,
                     url=citation["url"], title=citation["title"], retrieved_at=citation["retrieved_at"],
                 ))
-                passages.append({"school_id": school_id, "chunk_id": match["chunk_id"],
+                passages.append({"school_id": school_id, "school_name": school_names[school_id],
+                                 "chunk_id": match["chunk_id"],
                                  "text": match["text"], "evidence_category": "school_published_claim"})
         return "ok" if passages else "no_evidence", {
             "passages": passages,
