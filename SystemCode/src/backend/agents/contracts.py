@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from datetime import date, datetime
 from typing import Annotated, Any, Literal
@@ -252,6 +253,57 @@ class ConversationRequestContext(AgentContract):
         return self
 
 
+class ConversationExchange(AgentContract):
+    """Untrusted dialogue, never school or policy evidence."""
+
+    user: QuestionText
+    assistant: AnswerText
+
+
+class PendingConversationDecision(AgentContract):
+    kind: Literal["preference_strength", "contradiction", "relaxation"]
+    details: dict[str, Any]
+
+    @field_validator("details")
+    @classmethod
+    def bounded_details(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _validate_bounded_json(value, name="pending decision")
+
+
+class SchoolIdentityContext(AgentContract):
+    school_id: Identifier
+    name: SchoolName
+
+
+class InitialConversationContext(AgentContract):
+    """Small new-flow input; facts are loaded later through capabilities."""
+
+    message: QuestionText
+    recent_exchanges: list[ConversationExchange] = Field(default_factory=list, max_length=6)
+    older_turns_omitted: bool = False
+    profile: dict[str, Any] = Field(default_factory=dict)
+    pending_decisions: list[PendingConversationDecision] = Field(default_factory=list, max_length=3)
+    family: ConversationFamilyContext | None = None
+    home_postal_code: str | None = Field(default=None, pattern=r"^\d{6}$")
+    selected_schools: list[SchoolIdentityContext] = Field(default_factory=list, max_length=50)
+    catalogue_version: ShortText
+    capabilities: list[ToolName] = Field(min_length=1, max_length=20)
+
+    @field_validator("profile")
+    @classmethod
+    def bounded_profile(cls, value: dict[str, Any]) -> dict[str, Any]:
+        return _validate_bounded_json(value, name="initial profile")
+
+    @model_validator(mode="after")
+    def total_context_is_bounded(self) -> "InitialConversationContext":
+        if sum(len(e.user) + len(e.assistant) for e in self.recent_exchanges) > 8000:
+            raise ValueError("Dialogue exceeds the 8000 character limit")
+        if len(json.dumps(self.model_dump(mode="json"), ensure_ascii=False).encode("utf-8")) > 24000:
+            raise ValueError("Initial conversation context exceeds 24000 bytes")
+        _validate_bounded_json(self.model_dump(mode="json"), name="initial context")
+        return self
+
+
 class PreferenceStateToolRequest(AgentContract):
     """Arguments for tools bound to one server-built conversation turn.
 
@@ -338,6 +390,7 @@ class GeneralKnowledgeEvidence(AgentContract):
     chunk_id: Identifier
     text: BoundedText
     citation: PublicCitation
+    evidence_category: Literal["authoritative_fact", "unknown"] = "authoritative_fact"
 
     @model_validator(mode="after")
     def citation_matches_passage(self) -> "GeneralKnowledgeEvidence":
@@ -433,6 +486,7 @@ class ConversationExecutionMetadata(AgentContract):
         "mutation_limit", "iteration_limit", "timeout", "validation_failed", "error",
     ]
     fallback_reason: Literal[
+        "clarification_required",
         "invalid_routing", "unknown_tool", "invalid_arguments", "missing_context",
         "conflicting_results", "multiple_mutations", "malformed_output",
         "unsupported_citation", "timeout", "execution_limit", "model_unavailable",

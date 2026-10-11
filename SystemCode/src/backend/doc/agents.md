@@ -1,11 +1,858 @@
-# Implementation 3 — conversational-readiness plan
+# Backend conversation progress
 
-This document is the active source of truth for taking the backend-only
+## Active phase — LLM-first conversation, 2026-10-10
+
+The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
+the current phase. Steps 1–5 are **complete**, including passing required
+regressions. Step 6 is complete under the authorized school-demo criteria below;
+Step 7 is complete; rollout observation is next. The Implementation 3 readiness plan below is retained as history,
+including its completed checks and subsequent default-agent rollout.
+
+Current sessions read contributor/folder guidance, this record and the new
+plan; implement only the recorded next step, verify, update both records,
+commit only step-owned changes when all required checks pass, then stop.
+The old blocked-mode instruction and frontend freeze are historical; do not
+change the shipped rollout for a documentation baseline failure. Step 2 must
+document any minimal history contract/frontend change before implementation.
+
+### Step 7 completion — controlled school-demo rollout, 2026-10-10
+
+Identified Step 7 as the first incomplete step from committed Steps 1–6 and the
+active records. Added backend `CONVERSATION_FLOW_MODE=llm-first|shadow|legacy`:
+new flow is the missing/blank default for `/api/preferences`, invalid modes are
+visible 503s, and the explicit evaluation endpoint remains. Legacy rollback
+retains its old supervisor settings/contracts. Shadow serves one legacy response,
+stages independently without shared history access/leases, and never writes
+history, memory or feedback. Comparisons contain only profile/readiness/citation
+booleans. Existing authoritative facts, calculations and validation are preserved.
+
+Added scalar-only new-flow telemetry for elapsed time, registered attempted tool
+names, executed count, model calls, validation/failure categories and usage.
+Official OpenAI documentation verifies GPT-4o mini and configured GPT-5.4 mini
+standard token rates; cost is null for unknown prices/incomplete usage. Updated
+architecture, service/HTTP docs and [rollout decisions](llm-first-rollout.md) with a minimum
+seven-day observation period (earliest repository review 2026-10-17). Legacy
+wrappers remain required by active rollback/shadow callers; retirement needs a
+later reviewed maintenance decision. No observation-period completion or
+production budget/readiness pass is claimed. School-demo gates from Step 6
+justify enablement; strict evaluation and its five failed cases remain visible.
+
+Verification:
+
+- Required backend discovery: **462 tests in 42.252s, OK, exit 0**,
+  `/tmp/step7-backend-final.log`, outside sandbox. Earlier full run failed one
+  new assertion expecting an unnormalized empty shadow profile; corrected to
+  verify absence of staged preferences. Intermediate rerun: 460 tests, OK.
+- Focused HTTP/rollout: **21 tests in 1.995s, OK**,
+  `/tmp/step7-focused.log`; final full suite also covers the last comparison fix.
+  Default model-first zero-tool/tool turns, explicit rollback, successful/failed
+  shadow, consented no-write mutation isolation, failure without fallback,
+  telemetry redaction and both model prices are covered.
+- `make eval-check`: **29 tests in 4.323s, OK**, RAGAS validate-only fixture
+  passes; `/tmp/step7-eval-final.log`. Syntax, documentation links,
+  whitespace and diff/scope/secrets review pass.
+- Fresh configured GPT-5.4 mini default HTTP traces: **2/2 validated responses**,
+  `/tmp/step7-live.log`. Greeting: one model call, no tools, **2.667s**,
+  estimated **$0.00059535**. Chinese-required request: two model calls,
+  `update_preferences` once, committed required Chinese, **2.003s**,
+  estimated **$0.00173745**. Synthetic schools and mocked persistence establish
+  default behavior, not production Neo4j/OneMap or general live quality.
+- Sandbox focused/full worker-thread runs timed out at 45/50 seconds; sandbox
+  live trace returned a safe execution failure. Outside-sandbox reruns passed.
+  Official pricing fetch also required outside-sandbox network access.
+
+The Step 6 capture's recorded token split estimates **$0.08954235** at configured
+GPT-5.4 mini standard rates; observed p95 remains **6.093s**. Estimates exclude
+missing usage, embeddings and other providers; no production cost gate claimed.
+Single-worker RAM history, stateless concurrency, separate-store atomicity,
+semantic grounding limits and absent frontend transcript consent remain.
+
+Acceptance met for Step 7 controlled school-demo rollout. All seven implementation
+steps are complete. Next: observe deployment for at least seven days and review
+before legacy retirement; no further implementation step begun. Preserved and
+excluded pre-existing greeting/help source/tests, backend README paragraph and
+docs index from this step's commit. Legacy HTTP tests now explicitly select
+rollback while new tests verify the default route.
+
+### Step 6 completion — school-project criteria, 2026-10-10
+
+The user explicitly authorized relaxing rules/checks for this school project.
+Completed the prepared HTTP integration and evaluation using a selectable
+`school-demo` scoring profile: 75% completion across the fixed 25 cases,
+mandatory greeting/help/mixed-request/stateless/forget success, all integrity
+checks and zero critical state/fee/eligibility errors. Strict scoring retains
+95% and its original required cases. Runtime validation remains enforced.
+No dataset cases were removed; reports expose ordinary live completion,
+effective gates and failed cases. Added scoring regression coverage and focused
+prompt corrections for explicit importance, reference/location handling and
+retaining cited guidance during response repair.
+
+Fresh configured-provider capture `/tmp/step6-school-live.json`, SHA-bound manual
+review `/tmp/step6-school-review.json` and scored report
+`/tmp/step6-school-scored.json`: **pass, exit 0; 20/25 cases (80%)**,
+**12/17 ordinary conversations (70.59%)**, **25/27 served turns**, all eight
+injected integrity cases pass, no reviewed critical state/fee/eligibility error
+or unauthorized memory write. Failed cases remain income_scenario,
+school_followup, conflict, relaxation and stale_dialogue. They include two safe
+service failures, unnecessary clarification, unstaged conflict and a misleading
+“Yes” before a correctly reloaded fee. These are accepted demo limitations;
+strict 95% evaluation does not pass. Internal claims do not prove full prose
+entailment. Synthetic schools/distances do not verify live Neo4j/OneMap.
+
+Final backend discovery: **451 tests in 39.586s, OK**, exit 0
+(`/tmp/step6-school-backend.log`); updated scoring checks: **2 tests, OK**.
+`make eval-check`: **29 tests in 3.549s, OK**, plus RAGAS validate-only fixture
+validation (`/tmp/step6-school-eval.log`). Sandbox discovery timed out after
+50s; outside-sandbox rerun passed. Live capture likewise required outside-sandbox
+worker execution. Syntax and whitespace checks pass. Observed p95 **6.093s**,
+**263,788 recorded tokens**, service failure **2/27 (7.41%)**; no price/cost or
+production-budget pass claimed. Single-worker RAM history and separate-store
+atomicity limitations remain documented. Legacy greeting/help work is preserved.
+
+**Step 6 complete for the authorized school-demo scope.** Next: Step 7;
+selectable default/shadow rollout, rollback and operational reporting remain
+unimplemented in this phase. No default-mode or frontend change in Step 6.
+
+### Step 6 blocker repair and scored evaluation — 2026-10-10 (incomplete)
+
+Continued only Step 6 after rereading guidance, contracts and dirty-tree changes.
+Preserved unrelated legacy greeting/help hunks and docs index; no Step 7 work.
+Added one bounded argument correction before execution (invalid arguments never
+mutate or call providers, rejected attempts count toward call bounds), targeted
+response-repair feedback, bounded scalar-path guidance and actual user/assistant
+history ordering. Newly staged decisions cannot resolve in the same turn;
+current pending state requires a question even on zero-tool replies. Unchanged
+validated preferences have internal context:current support restricted to
+preference fields; it cannot supply school facts. Shared claim spans validate
+numbers against all their validated scalar supports, rejecting unsupported values.
+Added regression checks for correction exhaustion, pending questions, forged
+context, later-turn choices and multiple-number sentences.
+
+The capture executes all eight mapped injected integrity cases and records
+consent/write/family evidence. New scoring binds reviews to the capture SHA-256,
+requires the complete fixed dataset and every turn, and separately scores task,
+tool use, state and grounding. Tests reject mismatched or incomplete review and
+served replies with failed semantic scores. No evaluation case/gate was weakened.
+
+Five configured-provider captures completed (exit 2, review required). Latest:
+`/tmp/step6-finish-live5.json`, log `/tmp/step6-finish-live5.log`; review
+`/tmp/step6-finish-review5.json`; scored `/tmp/step6-finish-scored5.json` (exit 2).
+**24/27 served; 19/25 completed (76%); all eight injected integrity checks pass.**
+Earlier scored capture 3 completed 21/25 (84%); neither meets 95%. Capture 5:
+
+- closest_missing asks postal code but asserts absent school location without
+  retrieving location facts;
+- income_scenario introduction fails unknown_claim_support (spans not exact
+  substrings); follow-ups cannot resolve Alpha and do not calculate;
+- school_followup introduction fails invalid_support_path for transport; later
+  turn asks which school instead of obtaining Alpha transport;
+- comparison retrieves outdoor evidence and base fees but omits calculation;
+- conflict invokes resolution before staging an incoming contradiction and asks
+  again after Keep Chinese; required conflict workflow remains incomplete;
+- forged_fact calls calculator with an unknown ID, rejected without state writes.
+
+Mixed-request importance/guidance, income-input clarification in earlier capture,
+post-forget/ambiguous clarification in capture 5 and retrieval injection improve,
+but repeated configured-provider runs are inconsistent. All live exceptions stay
+explicit failures and preserve state. No critical served fee/eligibility or
+unauthorized memory write found in this reviewed run; semantic scoring is manual
+and does not prove universal entailment. Capture p95 **7.403s**, total recorded
+**221,889 tokens**, service failure **3/27 (11.11%)**; no price/cost pass or agreed
+production budget. Synthetic catalogue/distances do not verify Neo4j/OneMap.
+RAM/single-worker, stateless concurrency and separate-store atomicity limits remain.
+
+Final required backend suite: **450 tests in 39.052s, OK**, exit 0
+(`/tmp/step6-finish-final4-backend.log`). Focused loop/response/tools/HTTP/scoring:
+**55 tests in 2.946s, OK**, exit 0 (`/tmp/step6-finish-final2-focused.log`).
+`make eval-check`: **29 tests in 3.493s, OK**, plus RAGAS validate-only fixtures
+(`/tmp/step6-finish-final2-eval.log`). Syntax and whitespace checks pass.
+Sandbox bounded runs stalled and timed
+out; outside-sandbox checks ran. One new forged-context test initially had an
+unrelated stale span, hitting unknown_claim_support first; corrected to exercise
+the intended invalid path and affected/full checks rerun. Diff/scope/secrets,
+syntax, whitespace and unrelated-hunk preservation reviewed. **Step 6 remains
+incomplete; nothing staged, no completion commit.** Next: finish the six recorded
+live task/grounding blockers and rerun scored provider evaluation plus required
+checks. Do not begin Step 7.
+
+### Step 6 continuation — 2026-10-10 (incomplete)
+
+Continued the first incomplete step after inspecting the dirty tree, committed
+Steps 1–5, contributor guidance and backend contracts. Preserved the existing
+Step 6 HTTP integration and unrelated legacy greeting/help code, tests, README
+paragraph and docs index. No Step 7/default-mode/frontend changes or commit.
+
+Added model-facing attribute enums and capability descriptions, optional
+preference importance that stages the existing pending-choice contract, explicit
+follow-up resolution with preserved desired direction, and rejection of multiple
+pending choices or unresolved replacement of a required preference. Pending
+state acknowledgements can reference validated staged scalars even when the tool
+returns needs_input; other missing-input data remains disallowed. Expanded prompt
+instructions for references, conflict choices, scenarios and scalar claim spans.
+Capture reports now retain synthetic model calls/output and validation feedback.
+Added four tests plus rejection cases for pending follow-up, rollback, direction
+and support validation. Existing facts, calculations and legacy contracts remain.
+
+Final verification: required backend discovery **444 tests in 38.147s, OK**, exit
+0 (`/tmp/llm-first-step6-final-backend.log`); focused HTTP/tools/response/loop/context
+**62 tests in 2.569s, OK**, exit 0 (`/tmp/llm-first-step6-final-focused.log`).
+`make eval-check`: **29 tests in 3.433s, OK**, plus validate-only RAGAS fixtures
+(`/tmp/llm-first-step6-retry-final-eval.log`).
+Sandbox focused/full attempts timed out at worker-thread HTTP tests; live sandbox
+capture stalled and was interrupted (130). Outside-sandbox reruns completed.
+One new test initially asserted desired in preference_items instead of the existing
+preferences representation; corrected and affected/full suites rerun successfully.
+Diff/scope/secrets review, syntax, whitespace and unrelated-hunk preservation pass.
+
+Three configured-provider captures completed, each exit 2 pending review. Latest:
+`/tmp/llm-first-step6-retry3-live.json` (log same prefix `.log`), **20/27 served**,
+**seven failures** (five response_validation, two execution_error); **11/17**
+ordinary conversations without a service failure, **64.71% completion upper bound**.
+This is below 95% before semantic scoring. Exact remaining failures:
+
+- mixed_preference_guidance turn 2: clarification kind contains factual claims;
+- income_scenario turn 2: null hypothetical income overrides; turn 3: unnamed
+  school attribution on the estimate-warning claim;
+- ambiguous_reference turn 1: care_levels list used instead of scalar index;
+- conflict turn 2: duplicate set/remove language arguments rejected;
+- relaxation turn 3: numeric acknowledgement lacks current-result support;
+- forged_fact: refusal repeats the unsupported $1 and fails numeric validation.
+
+Semantic review: mixed-request turn 1 still omits its required/preferred question;
+latest injection turn actually retrieves the hostile passage and leaves state
+unchanged, but complete semantic/integrity pass is not claimed. Prior continuation
+captures also showed premature conflict resolution and unnecessary clarification
+for an explicitly named school; revised prompts did not establish reliable gates.
+Synthetic catalogue/distances do not verify live Neo4j/OneMap. Numeric production
+budgets remain unagreed; RAM/single-worker, stateless concurrency and separate-store
+atomicity limitations remain documented. No acceptance or live quality pass.
+
+**Step 6 remains incomplete; nothing staged and no completion commit.** Next:
+finish Step 6's listed argument/response/state-choice failures and fixed semantic
+and integrity scoring, rerun affected/required checks and the configured provider,
+then commit only Step 6 if all gates pass. Do not begin Step 7.
+
+### LLM-first Step 6 attempt — 2026-10-10 (incomplete)
+
+Read status, existing diffs, contributor/folder guides, active plan and backend
+contracts before editing. Steps 1–5 are committed and complete; Step 6 is the
+first incomplete step. Corrected the stale bottom next-step instruction.
+Pre-existing legacy greeting/help source/tests, README paragraph and docs index
+remain preserved. No Step 7 rollout or frontend work begun.
+
+Prepared the staged `/api/preferences/llm-first` route through
+`PreferenceService.handle_llm_first`, model-first context/loop/validation,
+UI-compatible profile/readiness/citations, separate transcript consent, UUID
+leases, stale-profile checks, finally cleanup, single state/history commit and
+at most one consented memory write. Forget serializes invalidation and memory
+deletion against commit. Added eight injected HTTP/service tests and the fixed
+staged capture runner. See [HTTP decisions and limits](llm-first-http.md).
+
+Verification:
+
+- Final focused HTTP/context/response/loop/tools: **58 tests in 2.666s, OK**,
+  exit 0 outside sandbox (`/tmp/llm-first-step6-focused.log`). Initial focused
+  run passed 23 tests, including 15 accidentally rediscovered loop cases;
+  fixed the import before final verification. Sandbox focused attempt exit 124
+  after 45s, stalled after cancellation check.
+- Required full backend suite: **440 tests in 40.874s, OK**, exit 0 outside
+  sandbox (`/tmp/llm-first-step6-backend.log`). Sandbox discovery exit 124 after
+  50s, stalled after new cancellation check
+  (`/tmp/llm-first-step6-backend-sandbox.log`).
+- `make eval-check`: **29 tests in 3.500s, OK**, plus RAGAS validate-only
+  fixture check (`/tmp/llm-first-step6-eval.log`). Syntax and diff checks pass.
+- Configured-provider staged capture completed, exit **2** by design pending
+  semantic review: `/tmp/llm-first-step6-live.json`, progress log
+  `/tmp/llm-first-step6-live-escalated.log`. All 25 conversations accounted for:
+  17 ordinary live conversations, 27 generated turns plus ordinary forget,
+  eight fault/isolation/limit cases mapped to injected integrity tests.
+  **13/27 served successfully, 14/27 explicit failures**: ten
+  `response_validation`, four `execution_error`. Sandbox capture repeatedly
+  returned service errors and was interrupted, exit 130; not counted as live
+  quality evidence (`/tmp/llm-first-step6-live.log`).
+
+Exact live gate blockers: closest_missing and closest_paraphrase fail response
+validation; all income_scenario turns fail validation/execution; comparison,
+first school_followup and ambiguous_reference turns fail validation; first two
+conflict turns fail execution; first relaxation, no_evidence and forget turns
+fail validation; stateless fails execution. Only six of 17 live conversations
+have no service failure (35.29% upper bound on completion), far below 95% even
+if every injected integrity case were credited.
+
+Semantic review also rejects the supposedly successful mixed-request case:
+the model makes Chinese required without a user importance choice and explains
+Montessori without retrieved supporting guidance. Ambiguous transport replies
+answer for both schools instead of asking which; “Keep Chinese” is mistaken
+for a reply-language choice. These demonstrate Step 5's documented incomplete
+claim/semantic validation, not a passing grounding gate. The captured retrieval
+injection turn reads structured pedagogy instead of the hostile passage, so it
+does not establish live injection resistance. Synthetic distances/catalogue do
+not measure live OneMap/Neo4j. The fixed task/integrity scoring and live semantic
+gates remain unmet. Do not infer provider quality from injected test passes.
+
+**Step 6 remains incomplete. Nothing staged; no completion commit.** Next:
+resolve the listed model argument/response-grounding/reference/choice failures,
+complete fixed dataset semantic/integrity scoring, rerun affected and required
+checks, then finalize only Step 6. Keep Step 7 unstarted. RAM-only single-worker
+history, stateless concurrency and separate SQLite-store atomicity limits are
+recorded in the HTTP contract. Operational rollout budgets remain Step 7.
+
+### LLM-first Step 5 completion — 2026-10-10
+
+Implemented `agents/conversation_response.py` and bounded final-response repair
+in `agents/conversation_loop.py`. Successful wording is model-authored: direct
+conversation, clarifications, preference acknowledgements and evidence-gap
+explanations. Strict internal claims reference server result IDs, scalar paths,
+values, schools and citations. Mechanical checks reject mismatched values and
+reported numbers, fabricated citations/support, cross-school attribution and
+stale state-dependent results. Retrieved school passages now include repository
+names for attribution. No answer copying, vocabulary allowlist, substitution or
+legacy fallback runs in the validated new path. Validation authorizes one
+profile export; failures discard state and return a fixed service error.
+Repair uses existing evidence only, at most twice within the original budgets,
+and cannot replay tools or mutations. See
+[the response contract](llm-first-responses.md).
+
+Acceptance covered by 11 new injected-model tests plus existing loop/tool
+regressions: **37 tests in 0.873s, OK, exit 0** outside the sandbox
+(`/tmp/llm-first-step5-focused-escalated.log`). Initial sandbox focused attempt
+stalled in worker-thread loop cases; the first outside-sandbox run passed 35
+checks before two additional adversarial cases were added. Required backend
+command: **432 tests in 40.809s, OK**, exit 0, outside the sandbox
+(`/tmp/llm-first-step5-backend.log`). Sandbox discovery timed out **exit 124
+at 50s** after `test_llm_first_loop.LlmFirstLoopTests.test_access_scope_invalid_arguments_and_duplicate_call_ids_fail_closed`
+(`/tmp/llm-first-step5-backend-sandbox.log`). `make eval-check`: **29 tests in
+3.412s, OK**, plus RAGAS validate-only fixture check
+(`/tmp/llm-first-step5-eval.log`). Diff/scope/secrets/local links and
+`git diff --check` reviewed; pre-existing greeting/help source/tests, README
+paragraph and docs-index changes preserved and excluded from the commit.
+
+Limitations: mechanical validation does not prove semantic entailment or complete
+claim annotation, including unsupported nonnumeric prose mislabeled as dialogue.
+Units/periods and boolean/status wording need semantic evaluation. Exact numeric
+values are supported; rounding/unit conversion is not. School-name checks may
+reject overlapping names. Injected models establish control flow, not live
+quality. HTTP/history/memory integration and staged provider evaluation remain
+Step 6; mode rollout and operational budgets remain Step 7. No public/frontend
+contract, authoritative facts, deterministic algorithm or served rollout change.
+
+Acceptance met for Step 5. Next: Step 6 — HTTP integration and evaluation.
+Not begun in this session.
+
+### LLM-first Step 4 completion — 2026-10-10
+
+Implemented `agents/conversation_loop.py`: every valid new-flow invocation
+calls the injected model before semantic decisions or tools, exposes all
+server-permitted capabilities without intent/keyword filtering, permits direct
+replies and clarifications, and executes combined/dependent calls sequentially
+against current staged state. Structured missing-input and unavailable results
+return to the model. Invalid calls, duplicate IDs, provider failures, timeout,
+cancellation and execution/context/output overflow abort the transaction.
+Added transaction closure locking so late synchronous workers cannot stage or
+export discarded state. The loop returns an unvalidated candidate and never
+exports state or writes history/memory.
+
+Acceptance covered by 15 new injected-model tests, including varied mixed
+requests, ambiguous references, zero-tool turns, dependent calls, missing-input
+recovery, access and argument rejection, rollback and resource bounds. See
+[the durable loop contract](llm-first-loop.md).
+
+Verification: required backend command **421 tests in 40.533s, OK, exit 0**
+outside the sandbox (`/tmp/llm-first-step4-backend.log`). Sandbox attempt
+**exit 124 after 50s**, stalled after the first `test_llm_first_loop` case
+(`/tmp/llm-first-step4-backend-sandbox.log`). Final focused loop/tools checks:
+**26 tests in 0.667s, OK** (`/tmp/llm-first-step4-focused-escalated.log`).
+The first focused run exposed an invalid empty-capability fixture; corrected
+and rerun. `make eval-check`: **29 tests in 3.463s, OK**, plus validate-only
+RAGAS fixture validation (`/tmp/llm-first-step4-eval.log`). Diff/scope/secrets,
+local links, `git diff --check` and unrelated-work preservation review pass.
+
+Limitations: injected models establish control flow, not live conversational
+quality. Candidates require Step 5 factual/citation validation and bounded
+repair; HTTP/history/memory integration remains Step 6. Synchronous external
+reads may finish after timeout, but cannot restore staged state. Accepted-byte
+bounds do not cap provider generation cost. No frontend/public contract,
+authoritative facts, deterministic algorithm or served rollout change.
+Pre-existing greeting/help code/tests and documentation hunks remain excluded.
+
+Acceptance met. Next: Step 5 — LLM responses and grounding. Not begun.
+
+### LLM-first Step 3 completion — 2026-10-10
+
+Implemented the [structured capability and staged-state contract](llm-first-tools.md)
+in `agents/structured_contracts.py` and `services/conversation_tool_service.py`.
+Eight registered tools accept typed patches, operations, IDs, focused queries
+and scenario overrides. Results contain explicit statuses, data, result IDs,
+state revisions and provenance without answer generation. Existing repositories,
+scorer, evaluator, distance and retrieval algorithms remain authoritative.
+Later tools read updated working state; hypothetical family inputs are isolated.
+Failures discard staged changes, invalidate export and never write memory.
+Pending choices have typed resolutions; conflicting requirements remain staged
+until resolved. Shadow exports return the original state.
+
+Acceptance covered by 11 new tests: invalid IDs, forged facts, unsupported
+fields/patches, update-then-search, current-profile calculation, deterministic
+scenario equality, family isolation, typed pending resolution, detached results,
+single export, failures/limits/overflow rollback, lazy providers and citations.
+
+Required backend discovery: **406 tests in 39.781s, OK, exit 0**, outside the
+sandbox (`/tmp/llm-first-step3-backend.log`). Sandbox attempt: **exit 124** after
+50s at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+(`/tmp/llm-first-step3-backend-sandbox.log`). Five focused modules: **45 tests
+in 1.806s, OK** (`/tmp/llm-first-step3-focused.log`), after correcting a nonexistent
+history module in the first command. `make eval-check`: **29 tests in 3.381s,
+OK**, plus RAGAS validate-only fixture validation (`/tmp/llm-first-step3-eval.log`).
+Diff/scope/secrets/local links, `git diff --check` and preservation review pass.
+
+Limitations: capabilities remain separate from the served legacy supervisor;
+HTTP/session commit wiring is Step 6, model loop/overall time/context bounds
+are Step 4 and final grounding validation is Step 5. No frontend, public schema,
+deterministic algorithm or rollout change. Live-provider quality remains
+unmeasured. Pre-existing greeting/help implementation/tests and documentation
+hunks are preserved and excluded from this step's commit.
+
+**Historical Step 3 next step: Step 4 — LLM-controlled tool loop.**
+Superseded by the Step 4 completion above.
+
+### LLM-first Step 2 completion — 2026-10-10
+
+Implemented the bounded context/history foundation documented in
+[the context contract](llm-first-context.md), with strict initial context and
+pending-decision models, repository-resolved selected/active school identities,
+and an independent ephemeral history service. Exclusive leases reject concurrent
+turns, forgotten/expired leases and duplicate commits; failed turns abort.
+`/api/memory/forget` invalidates history as well as opt-in preference memory.
+
+Acceptance covered by 13 new tests: follow-up preference and school context,
+ambiguous references, absent/expired history, separate sessions, forget through
+HTTP, aborted/stale/duplicate turns, capacity/window limits, current authoritative
+state over stale dialogue, explicit omissions, context overflow and greeting
+context passed to an injected model consumer without ranking/geocoding.
+
+Required backend command: **395 tests in 39.648s, OK, exit 0**, outside
+the sandbox; `/tmp/llm-first-step2-backend.log`. Sandbox attempt: exit 124
+after 45s at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`;
+`/tmp/llm-first-step2-backend-sandbox.log`. Five focused modules: **37 tests
+in 2.541s, OK**; `/tmp/llm-first-step2-focused.log`. `make eval-check`: **29
+tests in 3.785s, OK**, plus validate-only RAGAS fixture validation;
+`/tmp/llm-first-step2-eval.log`. Scope/diff/secrets and local-link review,
+`git diff --check`, and unrelated-work preservation checks pass.
+
+Limitations: history requires explicit opt-in and single-worker/sticky routing;
+RAM-only retention expires on access, has no generated summary, and is lost on
+restart/eviction. The documented future `remember_conversation` consent field
+and new-flow HTTP integration belong to Step 6. The current controller still
+needs eager domain context until Step 3 replacements land. No frontend/public
+schema, deterministic algorithms, served routing or rollout changes. Existing
+greeting/help code/tests and matching README/docs-index changes are excluded.
+
+**Historical Step 2 next step: Step 3 — structured tools and staged state.**
+Superseded by the Step 3 completion above. Model
+reference interpretation/control-flow and live quality remain later-step checks.
+
+### LLM-first Step 1 completion — 2026-10-10
+
+Acceptance met: reviewed chat entry/routing/substitution/nested-model/state/tool
+dependency map and target contract in [the baseline](llm-first-baseline.md),
+fixed 25-conversation / 36-turn dataset, reproducible captured traces, and phase
+reconciliation in contributor guidance. Existing greeting/help code and tests,
+the matching README paragraph and repository docs-index change are preserved
+and excluded from the Step 1 commit. Prior baseline changes clearly belonging
+to Step 1 are included. No frontend, public schema, runtime algorithm, provider
+configuration, persistence or rollout change.
+
+The user explicitly authorized resolving the recorded regression blockers.
+`tests/test_general_knowledge_rag.py` and `tests/test_stage_flow.py` now disable
+optional generation in deterministic fixtures, restoring the environment with
+cleanup. Model-specific cases still explicitly enable and inject models; their
+assertions pass. `tests/test_web_rag.py` gives the checkpoint-reuse case a clock
+matching its 2026-08-10 retrieval fixture. Separate expired-page refresh tests
+still pass. Production routing and the 30-day refresh rule are unchanged.
+
+Verification from the repository root:
+
+- Exact `AGENTS.md` backend command: **382 tests in 37.548s**, **OK**, exit 0,
+  outside the sandbox. Log: `/tmp/llm-first-step1-finalize-backend.log`.
+  Sandbox attempt with `timeout 40s` exited 124 at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`;
+  log: `/tmp/llm-first-step1-finalize-backend-sandbox.log`.
+- `PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline
+  .venv/bin/python -m unittest -v
+  SystemCode.src.backend.tests.test_general_knowledge_rag
+  SystemCode.src.backend.tests.test_stage_flow
+  SystemCode.src.backend.tests.test_web_rag`: **143 pass in 0.916s**.
+  Log: `/tmp/llm-first-step1-finalize-affected.log`.
+- `make eval-check`: **29 pass in 4.046s**, plus validate-only RAGAS fixture
+  validation. Log: `/tmp/llm-first-step1-finalize-eval.log`.
+- Two documented captures to `/tmp/llm-first-step1-finalize-baseline-a.json`
+  and `-b.json` match the stored output byte-for-byte. Syntax, dataset
+  uniqueness/turn bounds/checks, local links and synthetic scope validate.
+- Diff/scope/secrets review, `git diff --check` and unrelated-work preservation
+  hashes pass; initial hashes: `/tmp/llm-first-step1-finalize-start.json`.
+
+**Historical Step 1 next step: Step 2 — bounded conversation context.**
+Superseded by the Step 2 completion above.
+Decide/document session/history semantics and any minimal contract change
+before implementation. Live-provider quality, numeric budgets and execution
+of the fixed target dataset remain unmeasured and belong to later steps.
+
+### Earlier Step 1 verification attempts (historical)
+
+The incomplete/blocked statuses below describe earlier attempts and are
+superseded by the completion evidence above.
+
+#### Latest session verification — 2026-10-10
+
+Step 1 remains the first incomplete step. Reviewed the plan, applicable
+contributor instructions, relevant backend guides and existing diffs before
+editing. The prepared behavior map, fixed cases, target contract and phase
+reconciliation match the inspected implementation. This session changes only
+this record, the plan and baseline record; all other pre-existing work is
+preserved, including greeting/help implementation and tests.
+
+- Required backend discovery command from `AGENTS.md`, bounded with
+  `timeout 50s` in the sandbox: exit **124**, stalled at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`.
+  Log: `/tmp/llm-first-step1-session-backend-sandbox.log`.
+- Exact required command outside the sandbox: **382 tests in 63.124s**,
+  exit **1**, **three failures / one error**. Log:
+  `/tmp/llm-first-step1-session-backend-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` instead of `combined_evidence`);
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_montessori_and_spark_are_explained_as_different_concepts`
+  (`comparison` instead of `general_knowledge`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 instead of 0). Source review confirms optional live
+  intent routing in the first three cases and a fixed 2026-08-10 retrieval
+  fixture older than the production 30-day refresh interval in the last.
+  These are pre-existing blockers; no runtime/test repair outside Step 1
+  scope was made, and prior diagnostics do not replace required verification.
+- Documented four-module focused command below: **30 pass in 3.002s**.
+  Log: `/tmp/llm-first-step1-session-focused.log`.
+- `make eval-check`: **29 pass in 4.533s**, plus validate-only RAGAS fixture
+  validation. Log: `/tmp/llm-first-step1-session-eval.log`.
+- Two documented captures, `/tmp/llm-first-step1-session-baseline-a.json`
+  and `-b.json`, match the stored artifact byte-for-byte. Capture syntax,
+  25 unique conversations / 36 sequential bounded turns with nonempty checks,
+  local links, and zero recorded provider calls/persistent writes validate.
+- `git diff --check`, scope/correctness/secrets review and preservation hashes
+  pass. Hash record: `/tmp/llm-first-step1-session-start-hashes.json`.
+
+**Step 1 remains incomplete; nothing staged and no completion commit.** Next:
+resolve the four required regression blockers, then finalize only Step 1.
+Step 2 has not begun. Live-provider quality, numeric operational budgets and
+target-dataset execution remain later-step work.
+
+#### Step 1 scope review and required checks — 2026-10-10
+
+Inspected status/diffs before editing: nine modified tracked files and five
+untracked artifacts. Step 1 is still the first incomplete step. Re-read the
+plan, contributor instructions and relevant backend folder guides; reviewed
+the prepared entry-point/routing/substitution/model/state/dependency map,
+fixed evaluation dataset and target contract against the implementation.
+Existing phase reconciliation is applicable; Implementation 3 remains history.
+This session updates only this progress record, the plan and baseline record.
+
+- Required backend discovery command from `AGENTS.md`, bounded by `timeout
+  75s` in the sandbox: exit **124** at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`.
+  Log: `/tmp/llm-first-step1-review-backend.log`.
+- Exact required command rerun outside the sandbox: **382 tests in 63.621s**,
+  exit **1**, **two failures / one error**. Log:
+  `/tmp/llm-first-step1-review-backend-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` instead of `combined_evidence`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 instead of 0). The HTTP test and Montessori/SPARK pass.
+  The affected runtime/tests were not changed by the baseline step. Source
+  review reconfirms unisolated optional-provider routing and the checkpoint's
+  fixed 2026-08-10 retrieval date versus the production 30-day refresh interval;
+  prior diagnostic passes below do not establish a passing required suite.
+- Documented four-module focused command: **30 pass in 2.284s**. Log:
+  `/tmp/llm-first-step1-review-focused.log`.
+- `make eval-check`: **29 pass in 4.278s**, plus validate-only RAGAS fixture
+  validation. Log: `/tmp/llm-first-step1-review-eval.log`.
+- Two documented captures, `/tmp/llm-first-step1-review-baseline-a.json` and
+  `-b.json`, match the stored artifact byte-for-byte. Validation confirms
+  25 unique conversations / 36 sequential bounded turns with nonempty checks,
+  capture Python syntax and baseline/plan local links. Captured provider calls
+  and persistent writes are zero; injected traces do not measure live quality.
+- `git diff --check` passes. Diff reviewed for scope, correctness, accidental
+  changes and secrets. Initial hashes verify every other pre-existing changed
+  file is unchanged; greeting/help code, tests and README additions preserved.
+
+**Step 1 remains incomplete; nothing staged and no completion commit.** The
+baseline artifacts meet the map/dataset/target-contract requirements, but the
+required regression check remains unmet. Resolve the exact blockers before
+finalizing Step 1. No runtime repair outside baseline scope was made. Step 2
+has not begun; live-provider quality, operational budgets and target-dataset
+execution remain later-step work.
+
+#### Verification rerun — 2026-10-10
+
+Inspected git status and existing diffs before editing. Re-read applicable
+guidance and relevant backend documentation; checked the prepared map against
+HTTP/service entry points, routing, answer substitution, nested models, tool
+dependencies, state writes and contracts. The map, dataset and target contract
+are prepared; required regression verification remains unmet. Only this record,
+the repository plan and baseline record changed in this session.
+
+- Required backend command in `AGENTS.md`, bounded with `timeout 90s` inside
+  the sandbox: exit **124**, stalled at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`.
+  Log: `/tmp/llm-first-step1-final-audit-backend.log`.
+- Same required command outside the sandbox: **382 tests in 63.038 seconds**,
+  exit **1**, **two failures / one error**. Log:
+  `/tmp/llm-first-step1-final-audit-backend-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` instead of `combined_evidence`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 instead of 0). Montessori/SPARK passes. Prior diagnoses
+  below explain optional-provider and fixture-date dependencies; these failures
+  were not caused by baseline changes. No affected runtime or test file changed.
+- Documented four-module focused command below: **30 pass in 2.122 seconds**.
+  Log: `/tmp/llm-first-step1-final-audit-focused.log`.
+- `make eval-check`: **29 pass in 3.609 seconds**, plus validate-only RAGAS
+  fixture validation. Log: `/tmp/llm-first-step1-final-audit-eval.log`.
+- Two documented captures, `/tmp/llm-first-step1-final-audit-baseline-a.json`
+  and `-b.json`, match each other and the stored artifact byte-for-byte.
+  Validation confirms 25 unique cases / 36 sequential bounded turns with
+  nonempty checks, Python syntax, local links, and zero captured provider
+  calls/persistent writes.
+- `git diff --check` passes. Reviewed diffs for correctness, scope, accidental
+  changes and secrets. Initial/final file hashes confirm every other pre-existing
+  changed file is preserved. No credentials or real family/transcript data added.
+
+**Step 1 remains incomplete; nothing staged and no completion commit.** Resolve
+the three required regression blockers before finalizing Step 1. No runtime/test
+repair outside baseline scope was made. Step 2 has not begun. Live-provider
+quality, numeric budgets and target-dataset execution remain later-step work.
+
+#### Current audit — 2026-10-10
+
+Re-read the active plan, applicable contributor guidance and backend folder
+guides; reviewed the existing map against request guards, intent routing,
+supervisor tool selection/composition, fresh-copy preference tools, memory
+writes and domain contracts. Step 1 remains the first incomplete step. Its
+map, fixed dataset and target contract are prepared, but required regression
+verification still fails. This session changes only this record, the plan and
+baseline record; all other pre-existing work is preserved.
+
+- Exact required backend command from `AGENTS.md`: sandbox run stalled at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+  and was interrupted (exit 130). Log:
+  `/tmp/llm-first-step1-audit-backend.log`.
+- Same command outside the sandbox: **382 tests in 67.420 seconds**, exit 1,
+  **2 failures / 1 error**. Log:
+  `/tmp/llm-first-step1-audit-backend-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` instead of `combined_evidence`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 instead of 0). The previously failing Montessori/SPARK
+  case passed. The routing/extraction cases depend on optional provider
+  behavior; the checkpoint fixture is older than the refresh interval, as
+  diagnosed below. No affected runtime or test file was changed by Step 1.
+- Documented four-module focused command: **30 pass in 2.066 seconds**.
+  Log: `/tmp/llm-first-step1-audit-focused.log`.
+- `make eval-check`: **29 pass in 4.592 seconds**, plus validate-only RAGAS
+  fixture validation. Log: `/tmp/llm-first-step1-audit-eval.log`.
+- Two documented captures, `/tmp/llm-first-step1-audit-baseline-a.json` and
+  `-b.json`, match the stored artifact byte-for-byte. Python syntax, 25 unique
+  conversations / 36 sequential bounded turns with checks, zero captured
+  provider calls/persistent writes and baseline/plan local links validate.
+- `git diff --check` passes. Diff reviewed for correctness, scope and secrets;
+  file hashes confirm unrelated existing changes are unchanged.
+
+**Step 1 remains incomplete; nothing staged and no completion commit.** Next:
+resolve the three required regression blockers, then finalize Step 1. Step 2
+has not started. Live-provider performance, numeric operational budgets and
+target-dataset execution remain deferred to the later documented steps.
+
+#### Latest verification — 2026-10-10
+
+Inspected the nine modified tracked files and five untracked Step 1 artifacts
+before editing. Reviewed the behavior map against HTTP/service entry points,
+supervisor composition and routing, tool state copies, memory and feedback
+writes, and optional model defaults. The existing map, target contract and
+fixed dataset satisfy the baseline artifact requirements; required regressions
+still prevent completion. Only this record, the repository plan and baseline
+record were edited in this session. All other existing changes are preserved,
+including the unrelated greeting/help implementation and tests.
+
+- Required backend command from `AGENTS.md`, bounded in the sandbox with
+  `timeout 90s`: exit **124**, stalled at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`.
+  Log: `/tmp/llm-first-step1-current-tests.log`.
+- Outside-sandbox rerun of the exact required command: **382 tests in
+  67.692 seconds**, exit **1**, **3 failures / 1 error**. Log:
+  `/tmp/llm-first-step1-current-tests-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` instead of `combined_evidence`);
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_montessori_and_spark_are_explained_as_different_concepts`
+  (`comparison` instead of `general_knowledge`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 instead of 0). These are the previously diagnosed
+  provider-dependent routing/extraction and date-dependent checkpoint cases;
+  no affected runtime or test file was changed by the baseline step.
+- The same four-module focused command below: **30 pass in 1.967 seconds**.
+  Log: `/tmp/llm-first-step1-current-focused.log`.
+- `make eval-check`: **29 pass in 3.606 seconds**, plus validate-only RAGAS
+  fixture validation. Log: `/tmp/llm-first-step1-current-eval.log`.
+- Two documented captures, `/tmp/llm-first-step1-current-baseline-a.json` and
+  `-b.json`, match each other and the stored artifact byte-for-byte. Python
+  syntax, 25 unique conversations / 36 sequential bounded turns with checks,
+  zero captured provider calls/persistent writes, and baseline/plan local links
+  validate. `git diff --check` passes; diff reviewed for scope and secrets.
+
+**Step 1 remains incomplete; nothing staged and no completion commit.** The
+next action is to resolve the four required regression blockers before
+finalizing Step 1. Step 2 has not begun. Live-provider performance and numeric
+operational budgets remain unmeasured; target-dataset execution is Step 6 work.
+
+#### Resumed verification — 2026-10-10
+
+Reviewed all existing Step 1 artifacts against contributor/folder guidance and
+the backend implementation. No runtime, test, provider, public-contract or
+rollout change. The pre-existing greeting/help work remains untouched.
+
+- Required command (exact command remains in `AGENTS.md`): sandbox run again
+  stalled at
+  `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+  and was interrupted, exit 130. Log:
+  `/tmp/llm-first-step1-resume-tests.log`.
+- Outside-sandbox rerun of that same command: **382 tests in 59.700 seconds**,
+  exit 1, **2 failures / 1 error**. Log:
+  `/tmp/llm-first-step1-resume-tests-escalated.log`. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` versus `combined_evidence`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 versus 0). The Montessori/SPARK case passes this time.
+- Diagnostic only: run the three routing/extraction cases listed in the prior
+  attempt with `OPENAI_INTENT_CLASSIFICATION_ENABLED=false`,
+  `OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false`, and
+  `OPENAI_WEB_RAG_ANSWERS_ENABLED=false`, using the documented `PYTHONPATH` and
+  `.venv/bin/python -m unittest -v` with their fully qualified test IDs:
+  **3 pass in 0.009 seconds**. The extraction test itself enables its injected
+  extractor. Unisolated optional routing can bypass extraction or change intent;
+  these diagnostic passes are not a passing unchanged required command.
+- Diagnostic only: run the checkpoint case via `unittest.TextTestRunner`,
+  wrapping its imported `run_incremental` to pass
+  `now=datetime(2026, 8, 10, tzinfo=timezone.utc)`: **1 pass in 0.004 seconds**.
+  The fixture's `retrieved_at` is 2026-08-10; the current date exceeds the
+  production 30-day refresh interval, correctly triggering a refresh.
+  This diagnosis leaves the existing regression test and refresh rules intact.
+- Two runs of the documented capture command to
+  `/tmp/llm-first-step1-resume-baseline-a.json` and `-b.json` compare
+  byte-for-byte with each other and `output/llm_first_step1_baseline.json`.
+  JSON validation confirms 25 unique cases, 36 sequential valid turns, nonempty
+  checks and synthetic-only scope; capture Python syntax parses successfully.
+- Same four-module focused command recorded below: **30 pass in 1.877 seconds**.
+  Log: `/tmp/llm-first-step1-resume-focused.log`.
+- `make eval-check`: **29 pass in 4.111 seconds**, plus validate-only RAGAS
+  fixture check. `git diff --check`: pass. Step diff reviewed for scope and
+  secrets; no credentials or real family/chat data added.
+
+Required regressions remain unmet in unchanged runtime/tests. This baseline
+step does not authorize changing conversation routing or ingestion behavior,
+and no such repair was made. **Step 1 stays incomplete; nothing staged and no
+completion commit.** Resolve the required-check blockers before finalizing
+Step 1; Step 2 has not begun. Live-provider quality and operational budgets
+remain unmeasured.
+
+#### Prior attempt — 2026-10-10
+
+[Architecture record](llm-first-baseline.md) inventories chat entry points,
+semantic short circuits, substitutions, nested model calls, dependencies and
+state writes; specifies the target contract and reconciles pre-existing
+greeting/help work without modifying it. Fixed curated input:
+`resources/llm_first_conversation_evaluation.json` (25 conversations / 36 turns).
+Reproducible injected capture: `output/llm_first_step1_baseline.json`, generated
+by `scripts/capture_llm_first_baseline.py`. Two captures compare byte-for-byte;
+JSON uniqueness/turn/check validation and Python syntax parsing pass.
+
+Verification from repository root:
+
+- Required unchanged backend command in `AGENTS.md`: sandbox attempt stalled
+  at `test_school_rating_service.SchoolRatingApiTests.test_missing_consent_is_422`
+  and was interrupted (130). Outside-sandbox rerun completed **382 tests in
+  67.103 seconds**, exit 1, **3 failures / 1 error**. Exact blockers:
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_combined_answer_keeps_school_and_general_sources_distinct`
+  (`general_knowledge` versus `combined_evidence`);
+  `test_general_knowledge_rag.GeneralKnowledgeRagTests.test_montessori_and_spark_are_explained_as_different_concepts`
+  (`comparison` versus `general_knowledge`);
+  `test_stage_flow.PipelineTests.test_stage1_rejects_invalid_llm_value_and_falls_back`
+  (`KeyError: extraction_method`);
+  `test_web_rag.WebRagPilotTests.test_incremental_run_checkpoints_and_skips_completed_pages`
+  (`school_attempts` 1 versus 0). Log: `/tmp/llm-first-step1-backend-tests-escalated.log`.
+  These tests/runtime files were not edited by this step; no broad regression
+  repair was attempted. Their causes remain unclassified.
+- Bounded outside-sandbox single school-rating reproduction passed 1 test in
+  0.010 seconds; the initial stall was not reproduced there.
+- `PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline
+  .venv/bin/python -m unittest -v
+  SystemCode.src.backend.tests.test_chat_greetings
+  SystemCode.src.backend.tests.test_conversation_context
+  SystemCode.src.backend.tests.test_conversation_supervisor
+  SystemCode.src.backend.tests.test_conversation_validation`: **30 pass**,
+  1.862 seconds. Includes pre-existing greeting/help assertions.
+- `make eval-check`: **29 pass**, plus validate-only RAGAS fixture check.
+- `git diff --check`: pass; reviewed step files for scope/secrets; frontend
+  untouched. No credentials, real family data or transcripts added.
+
+No live-provider run or latency/token/cost measurement is required/claimed for
+this architecture baseline. Target dataset execution is deferred to Step 6.
+Optional Ruff is not installed (`No module named ruff`); syntax validation
+passed and repository instructions mandate no Ruff check.
+
+**Step 1 remains incomplete. No staging or completion commit.** Required next
+action: obtain a passing required backend regression run, classifying/resolving
+the four listed failures within authorized scope before marking Step 1 complete.
+Then update evidence and commit only this step. Next implementation step after
+completion is Step 2, bounded conversation context.
+
+# Implementation 3 — conversational-readiness plan (historical)
+
+## Current rollout configuration — 2026-10-07
+
+Following the completed readiness review and the user's confirmation that the
+code works, the user authorized making the full-conversation supervisor the
+default. `CONVERSATION_AGENT_MODE` now resolves missing, blank, and invalid
+values to `agent`. An explicit `deterministic` value restores the existing
+controller; `shadow` retains its existing behavior. Restart the backend after
+changing deployment configuration. Removing the variable now enables agent
+mode and is no longer a rollback operation.
+
+The context-local fallback override still forces both graph entry points to
+deterministic mode, so rejected or unavailable agent execution retains the
+existing controller fallback without recursive graph entry. No frontend or
+public-contract change is part of this rollout. The Implementation 3 steps and
+decision records below describe the earlier opt-in rollout and remain historical.
+
+Rollout verification: 24 configuration, model-factory, selected-school endpoint,
+and conversation-mode tests pass, including unset-mode dispatch and exactly-once
+fallback with both graph entries disabled. Another 21 supervisor, validation,
+and operational tests pass. `git diff --check` passes. Full-suite attempts did
+not complete in this environment; the bounded run exited after 120 seconds.
+This change does not claim a fresh complete-suite or live-provider evaluation.
+
+This historical plan was the source of truth for taking the backend-only
 full-conversation supervisor from implemented-but-no-go to a tested, grounded,
 operationally ready agent. It follows the completed
 [Implementation 2 archive](impl2-agent-step2.md).
 
-## Session protocol
+## Session protocol (historical Implementation 3)
 
 Every implementation session must read `src/AGENTS.md`, `backend/AGENTS.md`,
 this document, and any backend folder guide relevant to the step. Complete only
@@ -694,11 +1541,11 @@ restart the backend process. Do not expose this variable to the browser and do
 not change `WEB_RAG_ANSWER_MODE`; the full-conversation supervisor owns model
 orchestration for the request.
 
-For immediate rollback, set `CONVERSATION_AGENT_MODE=deterministic` (or remove
-the variable) and restart the backend process. Missing and invalid values also
-fail closed to deterministic mode, but the explicit value is preferred for an
-auditable rollback. The existing API contract and persisted profile shape do
-not require migration in either direction.
+For immediate rollback, set `CONVERSATION_AGENT_MODE=deterministic` and restart
+the backend process. Under the subsequent 2026-10-07 rollout, removing the
+variable, leaving it blank, or supplying an invalid value enables agent mode.
+The existing API contract and persisted profile shape do not require migration
+in either direction.
 
 The decision-session verification reran the unchanged complete backend command
 and passed all 289 tests in 61.566 seconds. Runs 12, 13, and 14 were parsed
@@ -778,6 +1625,10 @@ fallback. Regenerated canonical OpenAPI still has SHA-256
 
 ## Next step
 
-Implementation 3 is complete. No implementation step remains. Any proposal to
-make agent mode the default is a separate rollout decision and must preserve
-the immediate deterministic rollback path.
+LLM-first Steps 1–7 are complete under school-demo acceptance. Next: observe
+rollout for at least seven days, then review before retiring legacy callers.
+No further implementation step remains; strict evaluation gaps stay documented.
+
+Implementation 3 is complete. The separately authorized 2026-10-07 rollout
+makes agent mode the default while preserving the explicit deterministic
+rollback path. No implementation step remains.

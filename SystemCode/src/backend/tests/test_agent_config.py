@@ -43,12 +43,12 @@ class WebRagAnswerModeTests(unittest.TestCase):
 
 
 class ConversationAgentModeTests(unittest.TestCase):
-    def test_missing_empty_and_invalid_modes_fail_closed(self):
-        for environ in ({}, {"CONVERSATION_AGENT_MODE": ""}, {"CONVERSATION_AGENT_MODE": "other"}):
+    def test_missing_empty_and_invalid_modes_default_to_agent(self):
+        for environ in ({}, {"CONVERSATION_AGENT_MODE": ""}, {"CONVERSATION_AGENT_MODE": "  "}, {"CONVERSATION_AGENT_MODE": "other"}):
             with self.subTest(environ=environ):
                 self.assertEqual(
                     get_conversation_agent_mode(environ),
-                    ConversationAgentMode.DETERMINISTIC,
+                    ConversationAgentMode.AGENT,
                 )
 
     def test_all_supported_modes_are_parsed_case_insensitively(self):

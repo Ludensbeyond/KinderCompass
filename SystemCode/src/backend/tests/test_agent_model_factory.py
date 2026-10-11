@@ -13,7 +13,9 @@ class AgentModelFactoryTests(unittest.TestCase):
     def test_conversation_deterministic_mode_is_lazy(self):
         client_factory = Mock()
 
-        self.assertIsNone(create_conversation_agent_model({}, client_factory=client_factory))
+        self.assertIsNone(create_conversation_agent_model(
+            {"CONVERSATION_AGENT_MODE": "deterministic"}, client_factory=client_factory,
+        ))
         client_factory.assert_not_called()
 
     def test_conversation_shadow_and_agent_modes_use_shared_factory(self):
@@ -30,7 +32,7 @@ class AgentModelFactoryTests(unittest.TestCase):
                 )
                 self.assertIs(result, client)
                 client_factory.assert_called_once_with(
-                    model="gpt-4o-mini", timeout=8.0, api_key="test-api-key",
+                    model="gpt-4o-mini", timeout=8.0, api_key="test-api-key", max_retries=0,
                 )
 
     def test_deterministic_mode_does_not_construct_a_client_or_require_credentials(self):
@@ -58,6 +60,7 @@ class AgentModelFactoryTests(unittest.TestCase):
             model="gpt-test-model",
             timeout=12.5,
             api_key="test-api-key",
+            max_retries=0,
         )
 
     def test_agent_mode_uses_bounded_configuration_defaults(self):

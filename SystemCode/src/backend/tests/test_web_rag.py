@@ -429,6 +429,9 @@ class WebRagPilotTests(unittest.TestCase):
                 "shared_limit": 1,
                 "delay_seconds": 0,
                 "fetcher": fetch,
+                # Match page()'s retrieval fixture so this tests checkpoint
+                # reuse rather than the separate expired-page refresh path.
+                "now": datetime(2026, 8, 10, tzinfo=timezone.utc),
             }
             first = run_incremental(records, **options)
             second = run_incremental(records, **options)

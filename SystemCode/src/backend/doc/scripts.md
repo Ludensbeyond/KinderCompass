@@ -8,6 +8,9 @@ indexes, and prepare human-review packets.
 Scripts may read curated `resources/` and write generated `output/`. Keep them
 safe to run deliberately from the repository root, document required
 environment variables, and avoid importing script modules into the online API.
+
+`build_parent_guide_index.py` explicitly builds/publishes reviewed guide vectors
+or validates an existing build without provider calls. See [index construction](file-vector-index.md).
 Commands that inspect systems should remain read-only unless their purpose and
 write effects are explicit.
 
@@ -35,3 +38,19 @@ PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
   .venv/bin/python -m SystemCode.src.backend.scripts.evaluate_conversation_supervisor \
   --staged --output SystemCode/src/backend/output/conversation_agent_evaluation.json
 ```
+
+`query_parent_guide.py` runs read-only lexical, vector or curated queries without
+a server. See [standalone retrieval](file-vector-retrieval.md).
+
+`evaluate_parent_guide.py` compares fixed manual labels against independent BM25
+and optional real-provider vectors, checks routing/qualifications/citations, and
+reports failed gates. See [evaluation and demo](file-vector-demo.md).
+
+`capture_llm_first_baseline.py` captures reproducible synthetic, injected-model
+control-flow traces without provider calls or persistent writes. See the
+[Step 1 baseline](llm-first-baseline.md) for scope, command and limitations.
+
+`evaluate_llm_first_conversation.py` captures the fixed LLM-first dataset with
+the configured provider and synthetic catalogue/location fixtures. Its report
+requires semantic and separate injected-integrity scoring; capture alone cannot
+pass rollout gates. See [Step 6 HTTP evaluation](llm-first-http.md).

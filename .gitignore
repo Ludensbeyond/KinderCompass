@@ -11,3 +11,6 @@ onemap_access-token.txt
 
 # Local consented feedback store
 SystemCode/src/backend/output/*.sqlite*
+
+# Private evaluation bundles contain actual model messages and captures
+.local/evaluation-baselines/

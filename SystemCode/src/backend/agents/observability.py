@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
+import time
 from typing import Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,6 +14,44 @@ from .contracts import ConversationExecutionMetadata, ToolName
 
 
 LOGGER = logging.getLogger("kindercompass.conversation_agent")
+
+
+def configure_runtime_logging() -> None:
+    """Make application INFO events visible in the backend console."""
+
+    logger = logging.getLogger("kindercompass")
+    logger.setLevel(logging.INFO)
+    if not logger.hasHandlers():
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
+        logger.addHandler(handler)
+
+
+@contextmanager
+def observe_tool_execution(tool_name: str):
+    """Trace a registered tool without logging its inputs, outputs or errors."""
+
+    execution_id = uuid4().hex
+    started = time.monotonic()
+
+    def emit(event: str) -> None:
+        try:
+            LOGGER.info(
+                "tool_execution event=%s tool=%s execution_id=%s elapsed_ms=%.3f",
+                event, tool_name, execution_id, (time.monotonic() - started) * 1000,
+            )
+        except Exception:
+            # Observability must not change tool execution or fallback behavior.
+            pass
+
+    emit("started")
+    try:
+        yield
+    except BaseException:
+        emit("failed")
+        raise
+    else:
+        emit("completed")
 
 
 class ConversationObservation(BaseModel):
@@ -33,6 +74,7 @@ class ConversationObservation(BaseModel):
     ]
     validation_succeeded: bool
     fallback_reason: Literal[
+        "clarification_required",
         "invalid_routing", "unknown_tool", "invalid_arguments", "missing_context",
         "conflicting_results", "multiple_mutations", "malformed_output",
         "unsupported_citation", "timeout", "execution_limit", "model_unavailable",
