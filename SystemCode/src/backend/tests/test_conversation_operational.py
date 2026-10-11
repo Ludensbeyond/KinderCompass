@@ -85,6 +85,11 @@ class _RaisingGraphFactory:
 
 
 class ConversationOperationalTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        rollout = patch.dict(os.environ, {"CONVERSATION_FLOW_MODE": "legacy"})
+        rollout.start()
+        self.addCleanup(rollout.stop)
+
     def setUp(self) -> None:
         self.service = PreferenceService(Mock(), Mock(), Mock(), Path("."))
         self.service.build_conversation_context = Mock(

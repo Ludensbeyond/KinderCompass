@@ -8,6 +8,11 @@ from SystemCode.src.backend.tests.asgi_test_client import ASGITestClient
 
 
 class ApiStartupTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        rollout = patch.dict(os.environ, {"CONVERSATION_FLOW_MODE": "legacy"})
+        rollout.start()
+        self.addCleanup(rollout.stop)
+
     def test_backend_resolves_repository_paths_after_import(self) -> None:
         expected_root = Path(__file__).resolve().parents[4]
         self.assertEqual(main.REPO_ROOT, expected_root)

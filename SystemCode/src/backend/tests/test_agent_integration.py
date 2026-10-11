@@ -46,6 +46,11 @@ def citation():
 
 class SelectedSchoolAgentEndpointTests(unittest.TestCase):
     def setUp(self):
+        # These cases exercise the independently configurable selected-school
+        # graph through the existing controller, not the default supervisor.
+        mode = patch.dict(os.environ, {"CONVERSATION_AGENT_MODE": "deterministic"})
+        mode.start()
+        self.addCleanup(mode.stop)
         self.request = {
             "message": "What curriculum does this preschool use?",
             "selected_school_ids": [SCHOOL_ID],

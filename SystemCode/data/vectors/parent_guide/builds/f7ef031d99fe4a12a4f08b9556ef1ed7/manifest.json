@@ -1,0 +1,26 @@
+{
+  "artifact_sha256": {
+    "chunks.json": "8af0c3b46251562ff69f2bab875dbffb2cc7482befb517c225909143029c71c3",
+    "embeddings.npy": "6298b8f7b49fb1120efbb6b0412ffe5f163a365c13e3e9de1c295a641cfa8abd",
+    "summary.json": "782a76a1133b01a1292daf6fea70aa877e1b3d44db57329fa232bb056d86f2cd"
+  },
+  "build_id": "f7ef031d99fe4a12a4f08b9556ef1ed7",
+  "chunk_count": 23,
+  "chunking": {
+    "max_passage_characters": 5000,
+    "target_characters": 1800,
+    "version": "parent-guide-markdown-v1"
+  },
+  "dtype": "float32",
+  "embedding": {
+    "dimensions": 1536,
+    "model": "text-embedding-3-small",
+    "model_version": null,
+    "provider": "openai"
+  },
+  "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+  "normalisation": "l2",
+  "provenance_sha256": "f07b60bf97b9ff6e337da0ff4f6b6bc89d5827310ab7bc61e1bcd6f6ff4d7161",
+  "schema_version": 1,
+  "source_sha256": "b4e7a962468b959ef9c109cced25d19e2c39f45b8327653909540b150789c56e"
+}

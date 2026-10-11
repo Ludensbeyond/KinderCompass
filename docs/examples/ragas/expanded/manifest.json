@@ -1,0 +1,101 @@
+{
+  "dataset_id": "kindercompass-ragas-expanded",
+  "dataset_version": "2.0.0",
+  "status": "frozen",
+  "case_count": 24,
+  "evaluation_counts": {
+    "ragas": 16,
+    "behaviour": 8
+  },
+  "review": {
+    "reviewer_id": "codex",
+    "reviewer_name": "Codex",
+    "reviewer_type": "ai_assistant",
+    "reviewed_at": "2026-10-09",
+    "basis": "repository_snapshot",
+    "human_review_status": "not_performed",
+    "external_source_review": {
+      "status": "not_required_for_snapshot_labels",
+      "reviewed_at": null,
+      "reason": "All reference claims are supported by the cited curated repository passages; no current fees, school offerings or new external facts are required. External websites were not reverified."
+    },
+    "notes_file": "review.md"
+  },
+  "files": {
+    "cases.jsonl": {
+      "sha256": "ac847d32d40e96445c117ad42329cfd44bb866f718b88263e0d61bdc360ad3b6"
+    },
+    "inputs.jsonl": {
+      "sha256": "4ed8cdeff2a48d292d446773fa4038d1e9ac7ddbcd9bc4068ee54235c9f2219b"
+    }
+  },
+  "evidence_snapshot": {
+    "path": "SystemCode/src/backend/resources/web_rag/general_knowledge_index.json",
+    "git_revision": "d2735f67fdf18a732e570f4bc1f044efb5e2374e",
+    "sha256": "9abf0de536ca0dc11e11455b0a5258a7e848a0ffed7132ab18a7e4ffd5afb6f6",
+    "retrieved_at": "2026-08-14",
+    "scope": "general"
+  },
+  "execution_contract": {
+    "agent_input_file": "inputs.jsonl",
+    "agent_input_fields": [
+      "user_input",
+      "setup"
+    ],
+    "case_id_use": "Capture correlation only; do not include in the agent prompt.",
+    "state": "Replay conversation_history user turns in order with returned profile carried forward; fresh service per case. Only final answer receives RAGAS scoring.",
+    "label_visibility": "cases.jsonl, manifest.json and review.md are evaluation-only. Never supply references, reference passages, sources, checks or expected behaviour to the answering agent. Load cases.jsonl only for scoring/review.",
+    "behaviour_scoring": "Review each explicit check for pass/fail with a reason; no RAGAS pass thresholds.",
+    "held_out": "Reserve held_out for reporting after tuning; do not use its outputs to tune prompts or labels."
+  },
+  "version_policy": "Change the dataset version and refresh file hashes whenever a question, setup, label or evidence snapshot changes. Retain this version for compatible baseline comparisons.",
+  "execution_schema": "conversation_adapter_v1",
+  "splits": {
+    "tuning": [
+      "montessori",
+      "play_based",
+      "nel_age",
+      "eydf_age",
+      "reggio",
+      "spark_limits",
+      "outdoor",
+      "quality_teaching",
+      "compare_frameworks",
+      "compare_pedagogies",
+      "no_selected_school",
+      "request_invented_claim",
+      "woodlands_curriculum",
+      "pebble_curriculum",
+      "pebble_transport_unknown",
+      "wrong_school_transport",
+      "pebble_play_combined",
+      "language_confirmed_change",
+      "language_pending_confirmation",
+      "fee_income_explanation"
+    ],
+    "held_out": [
+      "soka_approach",
+      "sparkletots_web_unknown",
+      "soka_play_combined",
+      "language_change_then_general"
+    ]
+  },
+  "supporting_snapshots": [
+    {
+      "path": "SystemCode/src/backend/output/web_rag_pilot_index.json",
+      "sha256": "000b5ddd13d42be56292d284016a86825e580830ac5015f06fa28b05d8678361"
+    },
+    {
+      "path": "SystemCode/data/processed/kindercompass_master.json",
+      "sha256": "1017d16b7b293f0daf0d133e093ad35cb1213d132b7c27e4c823f1a5365a052e"
+    },
+    {
+      "path": "SystemCode/data/raw/PreSchoolsLocation.geojson",
+      "sha256": "56539ec2f0a5d57e42babe29960dcc6708222ba09c046c59a26cb64f805436bb"
+    },
+    {
+      "path": "SystemCode/src/backend/resources/policy/ecda_preschool_subsidies_2025-01-01.json",
+      "sha256": "e9f0c6ad063bbefa05438dc8a8865beba539a89412f8af2c551bfa0b70c55e3c"
+    }
+  ]
+}

@@ -55,6 +55,7 @@ class ConversationSupervisorRunResult:
 
 
 _FALLBACK_REASONS = frozenset({
+    "clarification_required",
     "invalid_routing", "unknown_tool", "invalid_arguments", "missing_context",
     "conflicting_results", "multiple_mutations", "malformed_output",
     "unsupported_citation", "timeout", "execution_limit", "model_unavailable",
@@ -220,7 +221,7 @@ def validate_conversation_supervisor_state(
     if termination in {"tool_call_limit", "iteration_limit"}:
         _fail("execution_limit")
     if termination == "clarification":
-        _fail("invalid_routing")
+        _fail("clarification_required")
     if termination != "completed":
         _fail("validation_error")
 

@@ -1,0 +1,4 @@
+# Isolated evaluation environment: this example uses the RAGAS 0.2 API.
+ragas==0.2.15
+langchain-openai>=0.2,<0.4
+pandas>=2,<3

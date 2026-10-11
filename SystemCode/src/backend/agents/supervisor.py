@@ -24,6 +24,7 @@ from .contracts import (
     RoutingDecision,
 )
 from .model_factory import create_conversation_agent_model
+from .observability import observe_tool_execution
 from .tools import (
     ASSESS_SELECTED_SCHOOL_TOOL_NAME,
     COMPARE_SELECTED_SCHOOLS_TOOL_NAME,
@@ -600,8 +601,9 @@ def create_conversation_supervisor_graph(
                 )
             arguments = _authoritative_arguments(name, call.get("args"), context)
             try:
-                raw_result = registry[name].invoke(arguments)
-                result = CapabilityToolResult.model_validate(raw_result)
+                with observe_tool_execution(name):
+                    raw_result = registry[name].invoke(arguments)
+                    result = CapabilityToolResult.model_validate(raw_result)
             except TimeoutError:
                 raise ConversationSupervisorError(
                     "timeout", "capability tool timed out",

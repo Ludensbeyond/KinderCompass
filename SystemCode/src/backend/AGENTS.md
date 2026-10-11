@@ -15,8 +15,8 @@ Read the relevant folder guide before changing backend code or data:
 - [`doc/resources.md`](doc/resources.md) for curated runtime inputs;
 - [`doc/tests.md`](doc/tests.md) for the backend test suite; and
 - [`doc/output.md`](doc/output.md) for generated artifacts.
-- [`doc/agents.md`](doc/agents.md) for the active backend-only conversational-
-  readiness plan, safety gates, decisions, and step-by-step progress;
+- [`doc/agents.md`](doc/agents.md) for active LLM-first phase progress and
+  historical conversational-readiness safety gates and rollout evidence;
 - [`doc/impl2-agent-step2.md`](doc/impl2-agent-step2.md) for the completed
   full-conversation supervisor migration record;
 - [`doc/impl1-agent-step1.md`](doc/impl1-agent-step1.md) for the closed first
@@ -25,9 +25,12 @@ Read the relevant folder guide before changing backend code or data:
 The [`doc/README.md`](doc/README.md) index summarizes how these directories fit
 together.
 
-Before working on the LangGraph migration, read `doc/agents.md` and complete
-only its single recorded next step. Run that step's tests, update the progress
-record, and stop before beginning another step.
+Before conversation architecture work, read `doc/agents.md` and the active
+[`LLM-first plan`](../../../docs/llm-first-conversation-plan.md). Complete only
+their single recorded next step, run its checks, update both progress records,
+and stop. Implementation 3 is historical; its frontend freeze and blocked-mode
+rule do not override the new phase. Document any minimal history contract change
+in Step 2 before implementing it; preserve authoritative backend boundaries.
 
 ## Architecture boundaries
 

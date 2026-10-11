@@ -1,0 +1,845 @@
+[
+  {
+    "chunk_id": "f8f5c9cfef3cb51cb639eaaf92caa9e95e341f09030a2e32d7ba43a982ad601e",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:05.986609+00:00",
+      "url": "https://www.moe.gov.sg/preschool/overview"
+    },
+    "content_sha256": "03e8a3ed4e6256ac04508c9b01b23887bdf059dfbb82577b631df28b54667b29",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n1 Understand the preschool landscape\n\nIt covers the years before Primary 1 and includes infant care, childcare and kindergarten. The Early Childhood Development Agency (ECDA) oversees the sector; the Ministry of Education (MOE) also runs MOE Kindergartens and develops the Nurturing Early Learners curriculum framework.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "sector-overview",
+    "matrix_row": 0,
+    "policy_dates": {},
+    "primary_source_id": "ef0e2d44abff",
+    "required_qualifications": [],
+    "review_status": "verified",
+    "section_heading": "1 Understand the preschool landscape",
+    "source_links": [
+      "https://www.moe.gov.sg/preschool/overview",
+      "https://www.life.gov.sg/guides/enrolling-in-preschool",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6r9001cptnr5ez88gro"
+    ],
+    "source_verified_at": "2026-10-09T05:52:05.986609+00:00",
+    "subsection_heading": "",
+    "text": "It covers the years before Primary 1 and includes infant care, childcare and kindergarten. The Early Childhood Development Agency (ECDA) oversees the sector; the Ministry of Education (MOE) also runs MOE Kindergartens and develops the Nurturing Early Learners curriculum framework.",
+    "topic": "1 Understand the preschool landscape"
+  },
+  {
+    "chunk_id": "9aeaa029ccf8a034fffe11143176e0589ada7afa2b92ee443e460c13a47090c2",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.074506+00:00",
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop"
+    },
+    "content_sha256": "18a25d043c842ae9e89596ad091cd484e175e679b7ae5cddb38a7e20cc22c131",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n2 Choose the service and operator\nAnchor Operators and Partner Operators\n\nAnchor Operators (AOPs) receive government funding tied to affordability and quality commitments. The five are PCF Sparkletots, My First Skool, M.Y World, Skool4Kidz and E-Bridge.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "anchor-operators",
+    "matrix_row": 1,
+    "policy_dates": {},
+    "primary_source_id": "4ddbb20984fd",
+    "required_qualifications": [],
+    "review_status": "verified",
+    "section_heading": "2 Choose the service and operator",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6tx00muptnrxvi86npu",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/mk-eyc",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/kindergarten-care",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6ty00ngptnr70628lgm"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.074506+00:00",
+    "subsection_heading": "Anchor Operators and Partner Operators",
+    "text": "Anchor Operators (AOPs) receive government funding tied to affordability and quality commitments. The five are PCF Sparkletots, My First Skool, M.Y World, Skool4Kidz and E-Bridge.",
+    "topic": "2 Choose the service and operator"
+  },
+  {
+    "chunk_id": "acc0504ff9ad448f7b37be2e7eabf26d0750f01a512eb3e37f2fc8bcf6add338",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:06.027982+00:00",
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/mk-eyc"
+    },
+    "content_sha256": "f0fea756ebb5e8f4cdf9befbdb07b5b680899e68a8e82362755b5d8b7b306268",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n2 Choose the service and operator\nMOE Kindergarten and Early Years Centres\n\nIn the MK–Early Years Centre partnership, eligible children at participating E-Bridge, My First Skool and PCF EYCs have a guaranteed place at a partner MK. Verify the precise EYC, eligibility and partner MK. The arrangement does not apply automatically to every branch, and a place in MK is distinct from a KCare place.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "mk-eyc-partnership",
+    "matrix_row": 2,
+    "policy_dates": {},
+    "primary_source_id": "711cbd836837",
+    "required_qualifications": [
+      "Keep eligible/participating/partner MK restrictions and distinguish MK from KCare."
+    ],
+    "review_status": "verified",
+    "section_heading": "2 Choose the service and operator",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6tx00muptnrxvi86npu",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/mk-eyc",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/kindergarten-care",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6ty00ngptnr70628lgm"
+    ],
+    "source_verified_at": "2026-10-09T05:52:06.027982+00:00",
+    "subsection_heading": "MOE Kindergarten and Early Years Centres",
+    "text": "In the MK–Early Years Centre partnership, eligible children at participating E-Bridge, My First Skool and PCF EYCs have a guaranteed place at a partner MK. Verify the precise EYC, eligibility and partner MK. The arrangement does not apply automatically to every branch, and a place in MK is distinct from a KCare place.",
+    "topic": "2 Choose the service and operator"
+  },
+  {
+    "chunk_id": "ca4e0074f1bc20f1a8f7d3256eeee00bc6ebfbaff772d536288ba837b95910a4",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.115287+00:00",
+      "url": "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework"
+    },
+    "content_sha256": "3e87174df3101f3a6b118342beabad5dd9b33f3246ac27d5c426a2d6e545e3ff",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n3 Understand learning approaches\nSingapore curriculum frameworks\n\nECDA’s Early Years Development Framework guides work with children from birth to age 3.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "eydf-framework",
+    "matrix_row": 3,
+    "policy_dates": {},
+    "primary_source_id": "f90fdef969dd",
+    "required_qualifications": [
+      "Select first sentence only; do not emit the full mixed-source paragraph."
+    ],
+    "review_status": "verified",
+    "section_heading": "3 Understand learning approaches",
+    "source_links": [
+      "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework",
+      "https://nel.moe.edu.sg/tl/framework-and-guidelines/",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/curriculum-and-learning-environment/curriculum",
+      "https://montessori-ami.org/about-montessori/montessori-environments",
+      "https://www.reggiochildren.it/en/reggio-emilia-approach",
+      "https://ibo.org/globalassets/new-structure/interactive-development-toolkit/pdfs/pypeyheader-ib-brochure.pdf",
+      "https://www.waldorfdupage.org/blog/purposeful-work-in-a-waldorf-kindergarten-why-it-matters"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.115287+00:00",
+    "subsection_heading": "Singapore curriculum frameworks",
+    "text": "ECDA’s Early Years Development Framework guides work with children from birth to age 3.",
+    "topic": "3 Understand learning approaches"
+  },
+  {
+    "chunk_id": "c2d65743e089fc2a7783e7641ce73baf149c75053570072fd239a45b08fe90be",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:06.821748+00:00",
+      "url": "https://montessori-ami.org/about-montessori/montessori-environments"
+    },
+    "content_sha256": "87298296b870db4b2d4336578189b34e46173a99e0befc4d66c165f860994d00",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n3 Understand learning approaches\nSingapore curriculum frameworks\n\n| **Approach** | **Typical emphasis** |\n| ------------------------------ | -------------------------------------------------------------------------------------------------------------- |\n| Montessori | Prepared materials, practical life, independence, observation and self-directed work; mixed ages are common. |",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "montessori-emphasis",
+    "matrix_row": 4,
+    "policy_dates": {},
+    "primary_source_id": "c8f1e8e6c8f3",
+    "required_qualifications": [
+      "Keep table headers; emit Approach and Typical emphasis columns only."
+    ],
+    "review_status": "verified",
+    "section_heading": "3 Understand learning approaches",
+    "source_links": [
+      "https://www.ecda.gov.sg/early-childhood-educators-%28ece%29/curriculum-frameworks/early-years-development-framework",
+      "https://nel.moe.edu.sg/tl/framework-and-guidelines/",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/curriculum-and-learning-environment/curriculum",
+      "https://montessori-ami.org/about-montessori/montessori-environments",
+      "https://www.reggiochildren.it/en/reggio-emilia-approach",
+      "https://ibo.org/globalassets/new-structure/interactive-development-toolkit/pdfs/pypeyheader-ib-brochure.pdf",
+      "https://www.waldorfdupage.org/blog/purposeful-work-in-a-waldorf-kindergarten-why-it-matters"
+    ],
+    "source_verified_at": "2026-10-09T05:52:06.821748+00:00",
+    "subsection_heading": "Singapore curriculum frameworks",
+    "text": "| **Approach** | **Typical emphasis** |\n| ------------------------------ | -------------------------------------------------------------------------------------------------------------- |\n| Montessori | Prepared materials, practical life, independence, observation and self-directed work; mixed ages are common. |",
+    "topic": "3 Understand learning approaches"
+  },
+  {
+    "chunk_id": "b1b1ef07d68a183bb6f202b3efefb1f49a190fc9332f6c0aea3090e8514eed76",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.074506+00:00",
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop"
+    },
+    "content_sha256": "c242ab5368cd7481ebabb11979781ce7c724f6435438f8ede30ede6fe2bf3a11",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n4 Build a realistic preschool budget\n\n| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| AOP full-day childcare | $610 | Before GST and subsidies |\n| AOP full-day infant care | $1,235 | Before GST and subsidies |\n| AOP kindergarten | $150 | Before GST and KiFAS |\n\nThe AOP and POP caps shown apply to Singapore Citizen children.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "aop-2026-fees",
+    "matrix_row": 5,
+    "policy_dates": {
+      "fee_year": 2026
+    },
+    "primary_source_id": "4ddbb20984fd",
+    "required_qualifications": [
+      "AOP caps, before GST and subsidies; kindergarten before KiFAS. Do not generalise to every private centre or citizenship quote."
+    ],
+    "review_status": "verified",
+    "section_heading": "4 Build a realistic preschool budget",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/fees",
+      "https://www.westspringpri.moe.edu.sg/mkws/info-for-parents/mk-fees/",
+      "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/charging-gst-%28output-tax%29/when-to-charge-goods-and-services-tax-%28gst%29/prevailing-rate-of-9",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.074506+00:00",
+    "subsection_heading": "",
+    "text": "| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| AOP full-day childcare | $610 | Before GST and subsidies |\n| AOP full-day infant care | $1,235 | Before GST and subsidies |\n| AOP kindergarten | $150 | Before GST and KiFAS |\n\nThe AOP and POP caps shown apply to Singapore Citizen children.",
+    "topic": "4 Build a realistic preschool budget"
+  },
+  {
+    "chunk_id": "d85d083d5c07a4e81b8d1ea4ad1e967d9fff30e8b17fb30dc3f66c0dddcb457a",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:06.992691+00:00",
+      "url": "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop"
+    },
+    "content_sha256": "e1dc140cd4fb687e309a99e026b9fac189f6d54a05f63c5dcd2c869d7d688147",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n4 Build a realistic preschool budget\n\n| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| POP full-day childcare | $650 | Before GST and subsidies |\n| POP full-day infant care | $1,290 | Before GST and subsidies |\n\nThe AOP and POP caps shown apply to Singapore Citizen children.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "pop-2026-fees",
+    "matrix_row": 6,
+    "policy_dates": {
+      "effective_from": "2026-01-01",
+      "fee_year": 2026
+    },
+    "primary_source_id": "fc29dd93b6fa",
+    "required_qualifications": [
+      "Singapore Citizen children at participating POP centres; excluding GST and subsidies."
+    ],
+    "review_status": "verified",
+    "section_heading": "4 Build a realistic preschool budget",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/fees",
+      "https://www.westspringpri.moe.edu.sg/mkws/info-for-parents/mk-fees/",
+      "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/charging-gst-%28output-tax%29/when-to-charge-goods-and-services-tax-%28gst%29/prevailing-rate-of-9",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child"
+    ],
+    "source_verified_at": "2026-10-09T05:52:06.992691+00:00",
+    "subsection_heading": "",
+    "text": "| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| POP full-day childcare | $650 | Before GST and subsidies |\n| POP full-day infant care | $1,290 | Before GST and subsidies |\n\nThe AOP and POP caps shown apply to Singapore Citizen children.",
+    "topic": "4 Build a realistic preschool budget"
+  },
+  {
+    "chunk_id": "1f471503964ff3abc98c071dc8bb076a9bf4fe81990b054d01fccb485045a84e",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.592859+00:00",
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/fees"
+    },
+    "content_sha256": "cff9d333ed10ef4c25c62cae844547543fcb08fbde9426f2c5d2b9b51de7d493",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n4 Build a realistic preschool budget\n\n| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| MOE Kindergarten | $160 citizen / $320 PR | School fee before KiFAS |\n| KCare at MK | Up to $425 | Separate 2026 fee before KCare subsidies |\n\nMK and KCare fees remain payable during the June and December holidays.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "mk-kcare-2026-fees",
+    "matrix_row": 7,
+    "policy_dates": {
+      "fee_year": 2026
+    },
+    "primary_source_id": "f691056d3e24",
+    "required_qualifications": [
+      "Separate MK and KCare charges; before applicable subsidies; maximum KCare fees may vary in 2027."
+    ],
+    "review_status": "verified",
+    "section_heading": "4 Build a realistic preschool budget",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/aop",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/pop",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/fees",
+      "https://www.westspringpri.moe.edu.sg/mkws/info-for-parents/mk-fees/",
+      "https://www.iras.gov.sg/taxes/goods-services-tax-%28gst%29/charging-gst-%28output-tax%29/when-to-charge-goods-and-services-tax-%28gst%29/prevailing-rate-of-9",
+      "https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.592859+00:00",
+    "subsection_heading": "",
+    "text": "| **2026 programme** | **Monthly fee or cap** | **Basis** |\n| -------------------------- | -------------------------- | ------------------------------------------ |\n| MOE Kindergarten | $160 citizen / $320 PR | School fee before KiFAS |\n| KCare at MK | Up to $425 | Separate 2026 fee before KCare subsidies |\n\nMK and KCare fees remain payable during the June and December holidays.",
+    "topic": "4 Build a realistic preschool budget"
+  },
+  {
+    "chunk_id": "4dfe2115e3d38a4328211a5336ddb8c6446e252e1e2a4bce3b7f0040d17d452f",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.105462+00:00",
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview"
+    },
+    "content_sha256": "1b0cfec4fa2d7c128c98a80b1fc32ba42cf0c8833dbbba23da899e9c3f768180",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n5 Understand infant and childcare subsidies\n\nBasic and Additional Subsidies support Singapore Citizen children in ECDA-licensed infant care and childcare. They can apply at eligible private centres as well as AOP and POP centres. A citizen parent alone does not establish eligibility if the child is not a citizen.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "subsidy-scope",
+    "matrix_row": 8,
+    "policy_dates": {},
+    "primary_source_id": "4abc2d24e8f0",
+    "required_qualifications": [],
+    "review_status": "verified",
+    "section_heading": "5 Understand infant and childcare subsidies",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+    "subsection_heading": "",
+    "text": "Basic and Additional Subsidies support Singapore Citizen children in ECDA-licensed infant care and childcare. They can apply at eligible private centres as well as AOP and POP centres. A citizen parent alone does not establish eligibility if the child is not a citizen.",
+    "topic": "5 Understand infant and childcare subsidies"
+  },
+  {
+    "chunk_id": "fabf97d365821e5ca250bb1108c9e4dfd116d488c1610105b1146ee369ee1077",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.105462+00:00",
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview"
+    },
+    "content_sha256": "79815a69ff7e934da11681848cb0526bbe5cbc37b724e14e2fa39bb11b003ce6",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n5 Understand infant and childcare subsidies\nBasic Subsidy and the working applicant rule\n\nFor full-day care, the working-main-applicant Basic Subsidy is $600 a month for infant care or $300 for childcare. The main applicant is normally the mother, or a single father in the relevant circumstances, working at least 56 hours monthly; part-time and freelance work can count. Do not assume a father’s employment automatically meets this rule for a two-parent household.\n\nThe ordinary non-working rate is $150 monthly. There is an important childcare exception: citizen children in families with household income up to $6,000, or qualifying per capita income up to $1,500, can receive the higher Basic Subsidy and means-tested Additional Subsidy regardless of the main applicant’s employment. This is not a blanket infant-care exemption. Other circumstances can be assessed under Special Approval.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "basic-subsidy-and-exception",
+    "matrix_row": 9,
+    "policy_dates": {
+      "childcare_exception_from": "2024-12-09",
+      "review_as_of": "2026-10-09"
+    },
+    "primary_source_id": "4abc2d24e8f0",
+    "required_qualifications": [
+      "Never separate childcare exception from infant-care qualification and Special Approval sentence."
+    ],
+    "review_status": "verified",
+    "section_heading": "5 Understand infant and childcare subsidies",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+    "subsection_heading": "Basic Subsidy and the working applicant rule",
+    "text": "For full-day care, the working-main-applicant Basic Subsidy is $600 a month for infant care or $300 for childcare. The main applicant is normally the mother, or a single father in the relevant circumstances, working at least 56 hours monthly; part-time and freelance work can count. Do not assume a father’s employment automatically meets this rule for a two-parent household.\n\nThe ordinary non-working rate is $150 monthly. There is an important childcare exception: citizen children in families with household income up to $6,000, or qualifying per capita income up to $1,500, can receive the higher Basic Subsidy and means-tested Additional Subsidy regardless of the main applicant’s employment. This is not a blanket infant-care exemption. Other circumstances can be assessed under Special Approval.",
+    "topic": "5 Understand infant and childcare subsidies"
+  },
+  {
+    "chunk_id": "e17272c54829cec0628d29e2cd0decdd15436234fbeb588ee493951184d1b5a7",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.105462+00:00",
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview"
+    },
+    "content_sha256": "1bd23e6fbb26cfbd8b3304beb56e98405ad0797ad6cd2af235a2214cc18ca79c",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n5 Understand infant and childcare subsidies\nAdditional Subsidy in 2026\n\nThe usual income ceiling is gross monthly household income (HHI) of $12,000, or per capita income (PCI) of $3,000 for eligible households with at least five family members. Approval uses verified income and household composition.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "subsidy-income-ceiling",
+    "matrix_row": 10,
+    "policy_dates": {
+      "policy_year": 2026
+    },
+    "primary_source_id": "4abc2d24e8f0",
+    "required_qualifications": [
+      "Omit sentence about bonuses until income assessment source is verified."
+    ],
+    "review_status": "verified",
+    "section_heading": "5 Understand infant and childcare subsidies",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.105462+00:00",
+    "subsection_heading": "Additional Subsidy in 2026",
+    "text": "The usual income ceiling is gross monthly household income (HHI) of $12,000, or per capita income (PCI) of $3,000 for eligible households with at least five family members. Approval uses verified income and household composition.",
+    "topic": "5 Understand infant and childcare subsidies"
+  },
+  {
+    "chunk_id": "31f1248785cedd71beaf35e9366068137b820e87e5347e15523dacd100f4e465",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.250489+00:00",
+      "url": "https://file.go.gov.sg/ecda-subsidy-table-cc-ifc.pdf"
+    },
+    "content_sha256": "8428a54e66065f9239c0dde130afc1d5fe6eef88816448ac069ac5929b2c4d73",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n5 Understand infant and childcare subsidies\nAdditional Subsidy in 2026\n\n| **Monthly HHI in 2026** | **Childcare maximum AS** | **Infant care maximum AS** |\n| ------------------------- | -------------------------- | ---------------------------- |\n| $3,000 or less | $467 | $710 |\n| $3,001–$4,500 | $440 | $640 |\n| $4,501–$6,000 | $340 | $500 |\n| $6,001–$7,500 | $260 | $380 |\n| $7,501–$9,000 | $190 | $240 |\n| $9,001–$10,500 | $130 | $100 |\n| $10,501–$12,000 | $80 | $40 |\n\nAS means Additional Subsidy. These full-day maximums sit on top of eligible Basic Subsidy. Actual awards depend on the programme fee and required minimum co-payment. Above the HHI ceiling, check PCI eligibility where applicable. Half-day and flexible programmes use different tables.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "additional-subsidy-2026-table",
+    "matrix_row": 11,
+    "policy_dates": {
+      "effective_from": "2026-01-01",
+      "effective_until": "2026-12-31",
+      "source_updated_on": "2026-10-06"
+    },
+    "primary_source_id": "4f9e587a7bdc",
+    "required_qualifications": [
+      "Keep full-day maximum, Basic Subsidy, minimum co-payment, fee dependence and service-type qualifications."
+    ],
+    "review_status": "verified",
+    "section_heading": "5 Understand infant and childcare subsidies",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/overview",
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6u600puptnrol0a931h",
+      "https://ask.gov.sg/ecda/questions/cmq4y1e4700b75l01h28kx996",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.250489+00:00",
+    "subsection_heading": "Additional Subsidy in 2026",
+    "text": "| **Monthly HHI in 2026** | **Childcare maximum AS** | **Infant care maximum AS** |\n| ------------------------- | -------------------------- | ---------------------------- |\n| $3,000 or less | $467 | $710 |\n| $3,001–$4,500 | $440 | $640 |\n| $4,501–$6,000 | $340 | $500 |\n| $6,001–$7,500 | $260 | $380 |\n| $7,501–$9,000 | $190 | $240 |\n| $9,001–$10,500 | $130 | $100 |\n| $10,501–$12,000 | $80 | $40 |\n\nAS means Additional Subsidy. These full-day maximums sit on top of eligible Basic Subsidy. Actual awards depend on the programme fee and required minimum co-payment. Above the HHI ceiling, check PCI eligibility where applicable. Half-day and flexible programmes use different tables.",
+    "topic": "5 Understand infant and childcare subsidies"
+  },
+  {
+    "chunk_id": "0b42dacccc9cff05eb2689218e50d7769b03ed9896519aadb00e149bc7370cd1",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.007481+00:00",
+      "url": "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview"
+    },
+    "content_sha256": "760de3d77d40891b36f0b6163595dd69befee4d0f441766290053533b034da48",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n6 Other grants and financial support\nKindergarten Fee Assistance Scheme\n\nKiFAS is for eligible citizen children in MOE and AOP kindergartens. It is means-tested and does not depend on the parent being employed. The 2026 income ceiling is $12,000 HHI or $3,000 PCI for eligible larger households. It does not apply to private kindergartens. The actual award depends on the fee and minimum co-payment, so a low fee can limit the subsidy paid.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "kifas-2026-scope",
+    "matrix_row": 12,
+    "policy_dates": {
+      "policy_year": 2026
+    },
+    "primary_source_id": "4078b7a1bfb4",
+    "required_qualifications": [],
+    "review_status": "verified",
+    "section_heading": "6 Other grants and financial support",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/other-financial-assistance-for-preschool-fees",
+      "https://kidstart.sg/",
+      "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda",
+      "https://www.msf.gov.sg/article/programmes/Baby-Bonus-Scheme"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.007481+00:00",
+    "subsection_heading": "Kindergarten Fee Assistance Scheme",
+    "text": "KiFAS is for eligible citizen children in MOE and AOP kindergartens. It is means-tested and does not depend on the parent being employed. The 2026 income ceiling is $12,000 HHI or $3,000 PCI for eligible larger households. It does not apply to private kindergartens. The actual award depends on the fee and minimum co-payment, so a low fee can limit the subsidy paid.",
+    "topic": "6 Other grants and financial support"
+  },
+  {
+    "chunk_id": "6fd65a5d0b16abf0689e53439493649f5f24c6267b9538acc4ffb3baa9a3b87f",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.496473+00:00",
+      "url": "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool"
+    },
+    "content_sha256": "80f131c9af59373da0a2f46a61a0ffa3c1b61d1e34edf8652450887e62803a22",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n6 Other grants and financial support\nKCare has a separate subsidy route\n\nA citizen child enrolled in KCare can receive a $150 monthly Basic Subsidy. Eligible families can receive means-tested Additional Subsidy; lower-income families with HHI up to $6,000 can qualify regardless of the applicant’s employment. Ask MK to check your circumstances using the KCare rules. KiFAS reduces the MK education fee, while KCare subsidies reduce the separate care fee; do not apply the ordinary $300 childcare Basic Subsidy to KCare.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "kcare-subsidies",
+    "matrix_row": 13,
+    "policy_dates": {
+      "review_as_of": "2026-10-09"
+    },
+    "primary_source_id": "0b178cbb8f5f",
+    "required_qualifications": [
+      "Do not substitute ordinary $300 childcare Basic Subsidy."
+    ],
+    "review_status": "verified",
+    "section_heading": "6 Other grants and financial support",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/other-financial-assistance-for-preschool-fees",
+      "https://kidstart.sg/",
+      "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda",
+      "https://www.msf.gov.sg/article/programmes/Baby-Bonus-Scheme"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.496473+00:00",
+    "subsection_heading": "KCare has a separate subsidy route",
+    "text": "A citizen child enrolled in KCare can receive a $150 monthly Basic Subsidy. Eligible families can receive means-tested Additional Subsidy; lower-income families with HHI up to $6,000 can qualify regardless of the applicant’s employment. Ask MK to check your circumstances using the KCare rules. KiFAS reduces the MK education fee, while KCare subsidies reduce the separate care fee; do not apply the ordinary $300 childcare Basic Subsidy to KCare.",
+    "topic": "6 Other grants and financial support"
+  },
+  {
+    "chunk_id": "2a522a2c69dd6d47bddb742a7fda9d481036239790c57fc26d41b14df3a69fea",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.681949+00:00",
+      "url": "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda"
+    },
+    "content_sha256": "b3745d4002fae2d81d547275774a6a141fc0f8b07f26672dcb61a762e9516452",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n6 Other grants and financial support\nUsing the Child Development Account\n\nThe Child Development Account (CDA) is a restricted savings account that can pay approved education and healthcare expenses at Baby Bonus Approved Institutions. Confirm the preschool’s status and which charges it accepts.\n\nUnder current Baby Bonus arrangements, the CDA First Step Grant and government co-matching help build the balance. For eligible children born from 18 February 2025, the First Step Grant is $5,000 for the first or second child and $10,000 for the third or subsequent child. Older birth cohorts have different entitlements. Co-matching requires deposits and is capped. Read the 2027 transition in section 7 before making a longer-term savings plan.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "cda-current-benefits",
+    "matrix_row": 14,
+    "policy_dates": {
+      "review_as_of": "2026-10-09",
+      "third_child_grant_from": "2025-02-18"
+    },
+    "primary_source_id": "773691057edc",
+    "required_qualifications": [
+      "Select first two sentences of line 174 plus line 176; retain birth-cohort and co-matching cap qualifications; consult section 7 transition."
+    ],
+    "review_status": "verified",
+    "section_heading": "6 Other grants and financial support",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/kindergarten-fee-assistance-scheme-%28kifas%29/overview",
+      "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "https://www.madeforfamilies.gov.sg/support-measures/child-raising/preschool/subsidies-for-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/infant-and-childcare-subsidy-scheme/other-financial-assistance-for-preschool-fees",
+      "https://kidstart.sg/",
+      "https://www.life.gov.sg/family-parenting/benefits-support/baby-bonus-scheme/cda",
+      "https://www.msf.gov.sg/article/programmes/Baby-Bonus-Scheme"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.681949+00:00",
+    "subsection_heading": "Using the Child Development Account",
+    "text": "The Child Development Account (CDA) is a restricted savings account that can pay approved education and healthcare expenses at Baby Bonus Approved Institutions. Confirm the preschool’s status and which charges it accepts.\n\nUnder current Baby Bonus arrangements, the CDA First Step Grant and government co-matching help build the balance. For eligible children born from 18 February 2025, the First Step Grant is $5,000 for the first or second child and $10,000 for the third or subsequent child. Older birth cohorts have different entitlements. Co-matching requires deposits and is capped. Read the 2027 transition in section 7 before making a longer-term savings plan.",
+    "topic": "6 Other grants and financial support"
+  },
+  {
+    "chunk_id": "aa63e72ed82cd41500f9cb652f6f3fbeea7cab0ed487b352fcbc450fcc25aec3",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.250489+00:00",
+      "url": "https://file.go.gov.sg/ecda-subsidy-table-cc-ifc.pdf"
+    },
+    "content_sha256": "4d9bbe7bb394ecef632ce62b591fe90b65e69718ad73b19cbdfe888b2344666e",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n7 Changes to plan for in 2027\nFrom January 2027 wider subsidy eligibility\n\n| **2027 monthly HHI** | **Full-day childcare maximum AS** | **Full-day infant care maximum AS** |\n| ---------------------- | ----------------------------------- | ------------------------------------- |\n| $3,500 or less | $467 | $710 |\n| $3,501–$5,500 | $440 | $640 |\n| $5,501–$7,500 | $340 | $500 |\n| $7,501–$9,000 | $260 | $380 |\n| $9,001–$11,000 | $190 | $240 |\n| $11,001–$13,000 | $130 | $100 |\n| $13,001–$15,000 | $80 | $40 |\n\nThese are full-day Additional Subsidy maximums, subject to eligibility, actual fees and minimum co-payments. They are not total subsidies or guaranteed payouts. Use the official table for PCI bands and other service types. Confirm how your centre will handle the transition and any required reassessment.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "additional-subsidy-2027-table",
+    "matrix_row": 15,
+    "policy_dates": {
+      "effective_from": "2027-01-01",
+      "source_updated_on": "2026-10-06"
+    },
+    "primary_source_id": "4f9e587a7bdc",
+    "required_qualifications": [
+      "Announced future rates; keep full-day maxima, minimum co-payment, eligibility and actual fee notes."
+    ],
+    "review_status": "verified",
+    "section_heading": "7 Changes to plan for in 2027",
+    "source_links": [
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies",
+      "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "https://www.life.gov.sg/family-parenting/benefits-support/sg-child-support-package"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.250489+00:00",
+    "subsection_heading": "From January 2027 wider subsidy eligibility",
+    "text": "| **2027 monthly HHI** | **Full-day childcare maximum AS** | **Full-day infant care maximum AS** |\n| ---------------------- | ----------------------------------- | ------------------------------------- |\n| $3,500 or less | $467 | $710 |\n| $3,501–$5,500 | $440 | $640 |\n| $5,501–$7,500 | $340 | $500 |\n| $7,501–$9,000 | $260 | $380 |\n| $9,001–$11,000 | $190 | $240 |\n| $11,001–$13,000 | $130 | $100 |\n| $13,001–$15,000 | $80 | $40 |\n\nThese are full-day Additional Subsidy maximums, subject to eligibility, actual fees and minimum co-payments. They are not total subsidies or guaranteed payouts. Use the official table for PCI bands and other service types. Confirm how your centre will handle the transition and any required reassessment.",
+    "topic": "7 Changes to plan for in 2027"
+  },
+  {
+    "chunk_id": "6d3944cfdec22b050eb78d5fc9f26a4f07904bd80f3eb854f6d53030481385db",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.848564+00:00",
+      "url": "https://www.life.gov.sg/family-parenting/benefits-support/sg-child-support-package"
+    },
+    "content_sha256": "5f422eb9fe5f730e987468b8cf30cbda46a43d88e7173d8f3703403abc5e377e",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n7 Changes to plan for in 2027\nFrom April 2027 the SG Child Support Package\n\nThe announced SG Child Support Package replaces Baby Bonus and the Large Families Scheme, with payouts starting in April 2027. Existing Baby Bonus children transition automatically. Eligible children turning 1 to 16 from 2026 onwards receive $2,000 in annual Child Credits, with the first payout from April 2027.\n\nFor citizen children born from 1 April 2027, the package includes a $10,000 Baby Gift, a $5,000 CDA First Step Grant and a $5,000 CDA co-matching cap. Earlier birth cohorts have transition arrangements. Existing CDA co-matching caps can be used until 30 September 2027, with caps adjusted to $5,000 from 1 October 2027. Check your child’s cohort-specific entitlement before depositing.\n\nThe official guidance asks parents to set up an eligible account linked to their child’s PayNow ID before 1 April 2027. The CDA is not that PayNow payout account. These family benefits are separate from monthly preschool subsidies.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "sg-child-support-2027",
+    "matrix_row": 16,
+    "policy_dates": {
+      "birth_cohort_from": "2027-04-01",
+      "new_co_matching_from": "2027-10-01",
+      "old_co_matching_until": "2027-09-30",
+      "payouts_from": "2027-04-01"
+    },
+    "primary_source_id": "8134a4d3fda4",
+    "required_qualifications": [
+      "Retain eligibility, birth-cohort and PayNow/CDA distinctions; announced future package, not current monthly preschool subsidies."
+    ],
+    "review_status": "verified",
+    "section_heading": "7 Changes to plan for in 2027",
+    "source_links": [
+      "https://go.gov.sg/ecda-subsidy-table-cc-ifc",
+      "https://supportgowhere.life.gov.sg/schemes/INFANT-CHILD-CARE/infant-childcare-subsidies",
+      "https://supportgowhere.life.gov.sg/schemes/KIFAS/kindergarten-fee-assistance-scheme-kifas",
+      "https://www.life.gov.sg/family-parenting/benefits-support/sg-child-support-package"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.848564+00:00",
+    "subsection_heading": "From April 2027 the SG Child Support Package",
+    "text": "The announced SG Child Support Package replaces Baby Bonus and the Large Families Scheme, with payouts starting in April 2027. Existing Baby Bonus children transition automatically. Eligible children turning 1 to 16 from 2026 onwards receive $2,000 in annual Child Credits, with the first payout from April 2027.\n\nFor citizen children born from 1 April 2027, the package includes a $10,000 Baby Gift, a $5,000 CDA First Step Grant and a $5,000 CDA co-matching cap. Earlier birth cohorts have transition arrangements. Existing CDA co-matching caps can be used until 30 September 2027, with caps adjusted to $5,000 from 1 October 2027. Check your child’s cohort-specific entitlement before depositing.\n\nThe official guidance asks parents to set up an eligible account linked to their child’s PayNow ID before 1 April 2027. The CDA is not that PayNow payout account. These family benefits are separate from monthly preschool subsidies.",
+    "topic": "7 Changes to plan for in 2027"
+  },
+  {
+    "chunk_id": "286dc1f08b2c3adeee3d97a465aace6c25c540c7d829c8313cbdfaf2e8652182",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.881941+00:00",
+      "url": "https://www.life.gov.sg/services-tools/form-1-preschool"
+    },
+    "content_sha256": "6ffe82bcaa5a78c2d3cd5c41c8cf8c89f4b36826ca2c2ff9f4c0e47ddc643532",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n8 Enrolment from search to first day\nStep 5 Complete the subsidy application\n\nAfter the preschool place is confirmed, complete the enrolment and subsidy form through the centre’s process. LifeSG’s Form 1 is used for preschool enrolment details and subsidy applications. Check both parents’ required information and consents. Ask for the outcome, effective month and net bill.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "form-1-application",
+    "matrix_row": 17,
+    "policy_dates": {},
+    "primary_source_id": "dcf24f7c6ce6",
+    "required_qualifications": [
+      "Split final reassessment sentence into separately sourced mapping."
+    ],
+    "review_status": "verified",
+    "section_heading": "8 Enrolment from search to first day",
+    "source_links": [
+      "https://www.life.gov.sg/services-tools/preschool-search",
+      "https://www.life.gov.sg/services-tools/form-1-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/how-to-apply-or-make-changes-to-subsidies/request-for-subsidy-reassessment",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register",
+      "https://www.horizonpri.moe.edu.sg/moe-kindergarten/register-with-us/",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.881941+00:00",
+    "subsection_heading": "Step 5 Complete the subsidy application",
+    "text": "After the preschool place is confirmed, complete the enrolment and subsidy form through the centre’s process. LifeSG’s Form 1 is used for preschool enrolment details and subsidy applications. Check both parents’ required information and consents. Ask for the outcome, effective month and net bill.",
+    "topic": "8 Enrolment from search to first day"
+  },
+  {
+    "chunk_id": "24f3c9b1dec1d26111bed6f471ea2fd7ce246dfb61ea71e23fca36958ee383cf",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:07.950086+00:00",
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register"
+    },
+    "content_sha256": "f8329f989104ef41db640a07bfa24824a41a8c77dcf92cf6bfa5f94bc9e428c4",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n8 Enrolment from search to first day\nThe separate MOE Kindergarten route\n\nMK runs an annual K1 registration exercise for the following year, with published eligibility, priority and balloting rules. The 2027 K1 online exercise ran from 23 to 31 March 2026. As that window has passed, contact the preferred MK about vacancies or its waitlist.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "mk-registration-dates",
+    "matrix_row": 18,
+    "policy_dates": {
+      "intake_year": 2027,
+      "registration_from": "2026-03-23",
+      "registration_until": "2026-03-31"
+    },
+    "primary_source_id": "b06f0b1405f2",
+    "required_qualifications": [
+      "Select first three sentences only; treat window as past as of review date."
+    ],
+    "review_status": "verified",
+    "section_heading": "8 Enrolment from search to first day",
+    "source_links": [
+      "https://www.life.gov.sg/services-tools/preschool-search",
+      "https://www.life.gov.sg/services-tools/form-1-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/how-to-apply-or-make-changes-to-subsidies/request-for-subsidy-reassessment",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register",
+      "https://www.horizonpri.moe.edu.sg/moe-kindergarten/register-with-us/",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission"
+    ],
+    "source_verified_at": "2026-10-09T05:52:07.950086+00:00",
+    "subsection_heading": "The separate MOE Kindergarten route",
+    "text": "MK runs an annual K1 registration exercise for the following year, with published eligibility, priority and balloting rules. The 2027 K1 online exercise ran from 23 to 31 March 2026. As that window has passed, contact the preferred MK about vacancies or its waitlist.",
+    "topic": "8 Enrolment from search to first day"
+  },
+  {
+    "chunk_id": "b06de5b369968cd9d8ce11ae28523488dbe5dd3fcb8a8479984c3dacafbaaaa0",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.049925+00:00",
+      "url": "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission"
+    },
+    "content_sha256": "9a7f29b1a194c6b56844d047ece84b1907bf6623ed54db23c33dc67713da2358",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n8 Enrolment from search to first day\nThe separate MOE Kindergarten route\n\nAdmission priority involves factors such as citizenship, income, siblings and distance. Check MOE’s current rules and dates for the intended intake; do not assume that being first to submit guarantees admission.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "mk-priority",
+    "matrix_row": 19,
+    "policy_dates": {},
+    "primary_source_id": "76ba401c9f0a",
+    "required_qualifications": [],
+    "review_status": "verified",
+    "section_heading": "8 Enrolment from search to first day",
+    "source_links": [
+      "https://www.life.gov.sg/services-tools/preschool-search",
+      "https://www.life.gov.sg/services-tools/form-1-preschool",
+      "https://www.ecda.gov.sg/parents/preschool-subsidies/how-to-apply-or-make-changes-to-subsidies/request-for-subsidy-reassessment",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register",
+      "https://www.horizonpri.moe.edu.sg/moe-kindergarten/register-with-us/",
+      "https://www.moe.gov.sg/preschool/moe-kindergarten/register/priority-admission"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.049925+00:00",
+    "subsection_heading": "The separate MOE Kindergarten route",
+    "text": "Admission priority involves factors such as citizenship, income, siblings and distance. Check MOE’s current rules and dates for the intended intake; do not assume that being first to submit guarantees admission.",
+    "topic": "8 Enrolment from search to first day"
+  },
+  {
+    "chunk_id": "d68b336a4c4d4c26f52c59382a520a0f8418274e98e9de32ab4b4c28887f73ef",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.558425+00:00",
+      "url": "https://www.ecda.gov.sg/sparkinfo/introduction-spark-2/newframework"
+    },
+    "content_sha256": "99e15b8f9e1c121b2edcb0aa0c34d6b561d8e245116ac46dbd40e1790d3efa37",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n9 Assess quality and safety during a visit\nLicensing and SPARK\n\nSPARK is ECDA’s quality framework, with SPARK 2.0 focusing on self-appraisal and validated quality improvement.",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "spark-quality",
+    "matrix_row": 20,
+    "policy_dates": {},
+    "primary_source_id": "be96d7eb7a44",
+    "required_qualifications": [
+      "Only SPARK framework description in sentence 2 is approved; visit advice is editorial."
+    ],
+    "review_status": "verified",
+    "section_heading": "9 Assess quality and safety during a visit",
+    "source_links": [
+      "https://ask.gov.sg/ecda/questions/cm4mgs6r9001cptnr5ez88gro",
+      "https://www.ecda.gov.sg/beanstalk/parents-portal/parent-guides/choosing-a-preschool",
+      "https://www.ecda.gov.sg/sparkinfo/introduction-spark-2/newframework",
+      "https://ask.gov.sg/ecda/questions/cm4mgs6rs005mptnryvdqoqm6"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.558425+00:00",
+    "subsection_heading": "Licensing and SPARK",
+    "text": "SPARK is ECDA’s quality framework, with SPARK 2.0 focusing on self-appraisal and validated quality improvement.",
+    "topic": "9 Assess quality and safety during a visit"
+  },
+  {
+    "chunk_id": "82f3782328adc2f59dfd1546745cc8b6bc1b04f173cc38818cb26a2001eba561",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.571335+00:00",
+      "url": "https://www.ecda.gov.sg/parents/other-services/early-intervention-services/development-support-and-learning-support-programme-%28ds-ls%29"
+    },
+    "content_sha256": "5e08c5861f74b2fa633018d366e9a0d09f2b09b88bf3686a72f6a61f438594e1",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n10 Support health development and settling in\nWhere developmental support can begin\n\n| **Support** | **General role** |\n| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |\n| DS-LS | Development Support and Learning Support for K1/K2 children needing low levels of early intervention. |",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "ds-ls-role",
+    "matrix_row": 21,
+    "policy_dates": {},
+    "primary_source_id": "d9f372c31b34",
+    "required_qualifications": [
+      "Keep table headers; exclude Parent action column as editorial."
+    ],
+    "review_status": "verified",
+    "section_heading": "10 Support health development and settling in",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/other-services/early-intervention-services/development-support-and-learning-support-programme-%28ds-ls%29",
+      "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/early-intervention-programme-for-infants-children",
+      "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/development-support-and-learning-support",
+      "https://www.cda.gov.sg/public/vaccinations/"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.571335+00:00",
+    "subsection_heading": "Where developmental support can begin",
+    "text": "| **Support** | **General role** |\n| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |\n| DS-LS | Development Support and Learning Support for K1/K2 children needing low levels of early intervention. |",
+    "topic": "10 Support health development and settling in"
+  },
+  {
+    "chunk_id": "b139c874982b8a062c9aef33c167d050f11445f793276227a4b43dddae621fd0",
+    "citation": {
+      "retrieved_at": "2026-10-09T05:52:08.283735+00:00",
+      "url": "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/early-intervention-programme-for-infants-children"
+    },
+    "content_sha256": "fc3c317333b1674019dfa21010ff7bd7de3558c0d23e2a5ab81a6cd106754e5c",
+    "document_checked_on": "2026-10-09",
+    "document_path": "Singapore_Preschool_Parent_Guide.md",
+    "document_title": "Singapore preschool guide for parents",
+    "embedding_text": "Singapore preschool guide for parents\n10 Support health development and settling in\nWhere developmental support can begin\n\n| **Support** | **General role** |\n| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |\n| EIPIC and EIPIC-P | Early intervention services for eligible children with developmental needs; programme suitability is assessed. |",
+    "evidence_category": "authoritative_fact",
+    "evidence_scope": "general",
+    "indexed_at": "2026-10-09T07:32:08.347469+00:00",
+    "mapping_id": "eipic-role",
+    "matrix_row": 22,
+    "policy_dates": {},
+    "primary_source_id": "8751a98d4e2c",
+    "required_qualifications": [
+      "Keep table headers; exclude Parent action column as editorial."
+    ],
+    "review_status": "verified",
+    "section_heading": "10 Support health development and settling in",
+    "source_links": [
+      "https://www.ecda.gov.sg/parents/other-services/early-intervention-services/development-support-and-learning-support-programme-%28ds-ls%29",
+      "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/early-intervention-programme-for-infants-children",
+      "https://www.enablingguide.sg/im-looking-for-disability-support/therapy-intervention/development-support-and-learning-support",
+      "https://www.cda.gov.sg/public/vaccinations/"
+    ],
+    "source_verified_at": "2026-10-09T05:52:08.283735+00:00",
+    "subsection_heading": "Where developmental support can begin",
+    "text": "| **Support** | **General role** |\n| ------------------------- | ---------------------------------------------------------------------------------------------------------------- |\n| EIPIC and EIPIC-P | Early intervention services for eligible children with developmental needs; programme suitability is assessed. |",
+    "topic": "10 Support health development and settling in"
+  }
+]

@@ -57,6 +57,8 @@ type Centre = {
   preferred_programme_available?: boolean;
   programme_options?: ProgrammeOption[];
   warnings?: string[];
+  reason?: string;
+  reasons?: string[];
   policy_source?: { policy_id: string; authority: string; effective_from: string; source_url: string };
   distance_km?: number;
   postal_code?: number | string | null;
@@ -85,8 +87,6 @@ type PreferenceImportance = "required" | "high_priority" | "preferred" | "nice_t
 type PreferenceItem = { attribute: string; value: unknown; importance: PreferenceImportance };
 type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; recognized?: string[] };
 type FamilyDetails = { dob: string; admission_date: string; gross_household_income: number; citizenship: "SC" | "SPR" | "Others"; programme_type: "full_day" | "half_day" | "flexi_care_1" | "flexi_care_2" | "flexi_care_3"; working_hours_per_month: number; household_size: number; non_earning_dependants: number; special_approval: boolean };
-type FeedbackEvent = "selected" | "rejected" | "contacted" | "visited" | "applied" | "rated";
-type FeedbackReason = "good_match" | "fee" | "distance" | "programme" | "evidence" | "other";
 type SchoolRelationship = "enrolled" | "visited" | "applied" | "researching";
 const EXPERIENCE_LABELS: Record<SchoolRelationship, string> = {
   researching: "Researching the school",
@@ -97,6 +97,35 @@ const EXPERIENCE_LABELS: Record<SchoolRelationship, string> = {
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const money = new Intl.NumberFormat("en-SG", { style: "currency", currency: "SGD", maximumFractionDigits: 0 });
+
+function matchSummary(centre: Centre): string {
+  const score = centre.match_score?.toFixed(0) ?? "—";
+  const evidence = ((centre.profile_confidence ?? 0) * 100).toFixed(0);
+  const unknown = centre.match_breakdown?.some((item) => item.status === "unknown");
+  const match = unknown ? `${score}% match, with preferences that have no school evidence` : `${score}% match`;
+  return `${match} · ${evidence}% evidence · Eligible · ${centre.eligible_level}`;
+}
+
+function appliedFilters(profile: PreferenceProfile | null): string[] {
+  const hard = profile?.hard_constraints;
+  if (!hard) return [];
+  const filters: string[] = [];
+  if (hard.language) filters.push(`${hard.language} required`);
+  if (hard.max_distance_km != null) filters.push(`Within ${hard.max_distance_km} km`);
+  if (hard.level) filters.push(String(hard.level));
+  return filters;
+}
+
+function FeeNotes({ centre }: { centre: Centre }) {
+  const parts = [
+    centre.fee_before_subsidy != null ? `Fee before subsidy ${money.format(centre.fee_before_subsidy)}` : null,
+    centre.basic_subsidy != null ? `Basic subsidy ${money.format(centre.basic_subsidy)}` : null,
+    centre.additional_subsidy != null ? `Additional subsidy ${money.format(centre.additional_subsidy)}` : null,
+  ].filter((part): part is string => Boolean(part));
+  const notes = [...(centre.reason ? [centre.reason] : []), ...(centre.reasons ?? []), ...(centre.warnings ?? [])];
+  if (parts.length === 0 && notes.length === 0) return null;
+  return <div className="feeNotes">{parts.length > 0 && <p>{parts.join(" · ")}</p>}{notes.map((note) => <p key={note}>{note}</p>)}</div>;
+}
 function ParentMentionLinks({ centre }: { centre: Centre }) {
   const links = mentionLinksFor(centre);
   return (
@@ -222,19 +251,31 @@ function sourceDateLabel(value?: string | null): string {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail ?? "Something went wrong. Please try again.");
-  return data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const response = await fetch(`${API}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail ?? "Something went wrong. Please try again.");
+    return data;
+  } catch (caught) {
+    if (controller.signal.aborted) {
+      throw new Error("The request took too long. Please try again.");
+    }
+    throw caught;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export default function Home() {
   const [stage, setStage] = useState<"family" | "search" | "choose">("family");
-  const [tab, setTab] = useState<"form" | "results" | "ratings">("form");
+  const [tab, setTab] = useState<"form" | "results" | "map">("form");
   const [preference, setPreference] = useState("");
   const [eligible, setEligible] = useState<Centre[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -255,16 +296,9 @@ export default function Home() {
   const [preferenceProfile, setPreferenceProfile] = useState<PreferenceProfile | null>(null);
   const [understood, setUnderstood] = useState<string[]>([]);
   const [readyToSearch, setReadyToSearch] = useState(false);
-  const [recommendationTrace, setRecommendationTrace] = useState("");
   const [anonymousSessionId, setAnonymousSessionId] = useState("");
   const [rememberPreferences, setRememberPreferences] = useState(false);
   const [memoryStatus, setMemoryStatus] = useState("");
-  const [feedbackSchoolId, setFeedbackSchoolId] = useState("");
-  const [feedbackEvent, setFeedbackEvent] = useState<FeedbackEvent>("selected");
-  const [feedbackReason, setFeedbackReason] = useState<FeedbackReason>("good_match");
-  const [feedbackRating, setFeedbackRating] = useState("5");
-  const [feedbackConsent, setFeedbackConsent] = useState(false);
-  const [feedbackStatus, setFeedbackStatus] = useState("");
 
   const mapPoints = useMemo<MapPoint[]>(() => {
     const comparisons = Object.values(routes);
@@ -409,9 +443,6 @@ export default function Home() {
       const eligibleCentres = evaluationResult.centres.filter((centre) => centre.eligible);
       setEligible(eligibleCentres);
       setExcluded(evaluationResult.centres.filter((centre) => !centre.eligible).map((centre) => centre.school_id));
-      setRecommendationTrace(searchResult.trace.trace_id);
-      setFeedbackSchoolId(eligibleCentres[0]?.school_id ?? "");
-      setFeedbackStatus("");
       setSelected([]); setRoutes({});
       setMessages((items) => [...items, { role: "assistant", text: `I found ${searchResult.centres.length} ranked matches, and ${eligibleCentres.length} match the age and fee criteria. Choose one or more preschools to compare with home.` }]);
       setStage("choose"); setTab("results");
@@ -507,29 +538,6 @@ export default function Home() {
     setError("");
   }
 
-  async function submitFeedback(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!recommendationTrace || !anonymousSessionId || !feedbackSchoolId || !feedbackConsent) return;
-    setBusy(true); setError(""); setFeedbackStatus("");
-    try {
-      await post<{ event_id: string; status: "recorded" }>("/api/feedback", {
-        trace_id: recommendationTrace,
-        anonymous_session_id: anonymousSessionId,
-        school_id: feedbackSchoolId,
-        event_type: feedbackEvent,
-        reason: feedbackReason,
-        rating: feedbackEvent === "rated" ? Number(feedbackRating) : null,
-        consent: true,
-      });
-      setFeedbackStatus("Thank you. Your anonymous feedback was recorded.");
-      setFeedbackConsent(false);
-    } catch (caught) {
-      setError((caught as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   function updateImportance(attribute: string, value: unknown, importance: PreferenceImportance) {
     setPreferenceProfile((profile) => profile ? {
       ...profile,
@@ -570,7 +578,7 @@ export default function Home() {
             <div className="tabs">
               <button className={tab === "form" ? "active" : ""} onClick={() => setTab("form")}>Form</button>
               <button className={tab === "results" ? "active" : ""} onClick={() => setTab("results")}>Results <span>{stage === "choose" ? eligible.length : 0}</span></button>
-              <button className={tab === "ratings" ? "active" : ""} onClick={() => setTab("ratings")}>Feedback</button>
+              <button className={tab === "map" ? "active" : ""} onClick={() => setTab("map")}>Map</button>
               <small>{stage === "family" ? "Family details first" : stage === "search" ? "Chat ready" : `${selected.length} selected`}</small>
             </div>
             {error && <div className="alert">{error}</div>}
@@ -597,29 +605,28 @@ export default function Home() {
               {tab === "form" && stage === "search" && <div className="contentForm"><div className="contentHead"><p>Family details saved</p><h2>Continue in Compass chat</h2><span>Describe your preschool preferences, then click Show recommendations.</span></div><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Edit family details</button></div>}
 
               {tab === "form" && stage === "choose" && <div className="contentForm">
-                <div className="contentHead"><p>Location ready</p><h2>Home to preschools</h2><span>Home postal code: {homePostalCode}. Select any number of preschools in Results and their distances will be calculated independently.</span></div>
+                <div className="contentHead"><p>Location ready</p><h2>Home to preschools</h2><span>Home postal code: {homePostalCode}. Select any number of preschools in Results and their distances will be calculated independently. Change hours, citizenship, programme, or Special Approval here, then show recommendations again.</span></div>
+                <button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Edit family details</button>
               </div>}
 
               {tab === "results" && stage !== "choose" && <div className="emptyState"><span>⌁</span><h2>Recommendations are not ready</h2><p>{stage === "family" ? "Complete Family details first." : "Continue in Compass chat and show recommendations."}</p></div>}
 
               {tab === "results" && stage === "choose" && <>
-                <div className="rankingSummary"><div><strong>Ranked recommendations</strong><p>Ordered by the geometric mean of preference match and evidence completeness.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>
+
+                <div className="rankingSummary"><div><strong>Ranked recommendations</strong><p>Ordered by the geometric mean of preference match and evidence completeness.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>{appliedFilters(preferenceProfile).length > 0 && <p className="appliedFilters">Filters applied: {appliedFilters(preferenceProfile).join(" · ")}</p>}
                 <div className="resultToolbar"><label>Distance from home<select value={distanceFilter} onChange={(event) => setDistanceFilter(event.target.value)}><option value="none">None</option>{distanceFilter !== "none" && !["1", "2", "3", "4", "5"].includes(distanceFilter) && <option value={distanceFilter}>Within {distanceFilter} km</option>}{[1, 2, 3, 4, 5].map((km) => <option value={km} key={km}>Within {km} km</option>)}</select></label><span>Filtering preserves the original rank</span></div>
-                <div className="resultList selectable">{visibleEligible.length === 0 ? <div className="emptyState"><h2>No schools within this distance</h2><p>Increase the distance or select None.</p></div> : visibleEligible.map((centre) => <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}><button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}><span className="selectMark">✓</span><div><span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span><small>{centre.combined_score?.toFixed(0) ?? "—"}% combined · {centre.match_score?.toFixed(0) ?? "—"}% match · {((centre.profile_confidence ?? 0) * 100).toFixed(0)}% evidence · Eligible · {centre.eligible_level}</small><h3>{centre.name}</h3><p>{centre.strengths?.length ? `Strengths: ${centre.strengths.join(", ")}` : "Limited preference evidence"}{centre.tradeoffs?.length ? ` · Trade-offs: ${centre.tradeoffs.join(", ")}` : ""}</p><p>{distances[centre.school_id] != null ? `${distances[centre.school_id].toFixed(2)} km from home` : "Distance unavailable"}</p></div><div className="schoolMetrics"><strong>{money.format(centre.net_monthly_fee ?? 0)}<small>/month</small></strong>{routes[centre.school_id] && <strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>from home</small></strong>}</div></button>{centre.programme_options && centre.programme_options.length > 0 && <div className="programmePicker"><label>Programme<select value={centre.programme_id ?? ""} disabled={programmeBusy === centre.school_id} onChange={(event) => void changeProgramme(centre.school_id, event.target.value as ProgrammeId)}>{centre.programme_options.map((option) => <option value={option.programme_id} key={option.programme_id}>{option.service_label} — {money.format(option.net_monthly_fee)}/month</option>)}</select></label>{centre.preferred_programme_available === false && <small>Your preferred programme is unavailable at this school; the lowest-fee available option is shown.</small>}</div>}<ParentMentionLinks centre={centre} /><SchoolRatingPanel centre={centre} sessionId={anonymousSessionId} onRated={updateParentRating} /><details className="scoreBreakdown"><summary>How this score was calculated</summary><div>{centre.match_breakdown?.length ? centre.match_breakdown.map((item) => <p key={item.attribute}><strong>{item.attribute.split(":")[0].replaceAll("_", " ")}</strong><span className={`evidenceStatus ${item.status}`}>{item.status.replaceAll("_", " ")}</span><small>{item.importance.replaceAll("_", " ")} · {item.contribution} of {item.possible_contribution} verified points</small><small>Source: {item.source} · Evidence: {item.evidence_state} · Last updated: {sourceDateLabel(item.source_date)}</small></p>) : <p>All requested features were applied as required filters. The remaining schools satisfy those verifiable requirements, but no preferred criteria were available to rank them further.</p>}</div></details></article>)}</div>
+                <div className="resultList selectable">{visibleEligible.length === 0 ? <div className="emptyState"><h2>No schools within this distance</h2><p>Increase the distance or select None.</p></div> : visibleEligible.map((centre) => <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}><button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}><span className="selectMark">✓</span><div><span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span><small>{matchSummary(centre)}</small><h3>{centre.name}</h3><p>{centre.strengths?.length ? `Strengths: ${centre.strengths.join(", ")}` : "Limited preference evidence"}{centre.tradeoffs?.length ? ` · Trade-offs: ${centre.tradeoffs.join(", ")}` : ""}</p><p>{distances[centre.school_id] != null ? `${distances[centre.school_id].toFixed(2)} km from home` : "Distance unavailable"}</p></div><div className="schoolMetrics"><strong>{money.format(centre.net_monthly_fee ?? 0)}<small>estimated net / month</small></strong>{routes[centre.school_id] && <strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>from home</small></strong>}</div></button>{centre.programme_options && centre.programme_options.length > 0 && <div className="programmePicker"><label>Programme<select value={centre.programme_id ?? ""} disabled={programmeBusy === centre.school_id} onChange={(event) => void changeProgramme(centre.school_id, event.target.value as ProgrammeId)}>{centre.programme_options.map((option) => <option value={option.programme_id} key={option.programme_id}>{option.service_label} — {money.format(option.net_monthly_fee)}/month</option>)}</select></label>{centre.preferred_programme_available === false && <small>Your preferred programme is unavailable at this school; the lowest-fee available option is shown.</small>}<FeeNotes centre={centre} /></div>}<ParentMentionLinks centre={centre} /><SchoolRatingPanel centre={centre} sessionId={anonymousSessionId} onRated={updateParentRating} /><details className="scoreBreakdown"><summary>How this score was calculated</summary><div>{centre.match_breakdown?.length ? centre.match_breakdown.map((item) => <p key={item.attribute}><strong>{item.attribute.split(":")[0].replaceAll("_", " ")}</strong><span className={`evidenceStatus ${item.status}`}>{item.status.replaceAll("_", " ")}</span><small>{item.importance.replaceAll("_", " ")} · {item.contribution} of {item.possible_contribution} verified points</small><small>Source: {item.source} · Evidence: {item.evidence_state} · Last updated: {sourceDateLabel(item.source_date)}</small></p>) : <p>All requested features were applied as required filters. The remaining schools satisfy those verifiable requirements, but no preferred criteria were available to rank them further.</p>}</div></details></article>)}</div>
                 <div className="rankingHelp"><p><strong>Combined ranking score</strong> is the geometric mean of preference match and evidence completeness.</p><p><strong>Preference match</strong> measures matches against preferences with known evidence; unknown preferences lower evidence completeness instead.</p><p><strong>Evidence completeness</strong> means how much usable preference evidence was available, not source reliability or factual correctness.</p><p><strong>Parent mentions online</strong> are web searches, not verified listings or ranking inputs.</p><p><strong>School Ratings by Other Kinder Compass users</strong> are first-party parent sentiment. They do not change eligibility, fees, or ranking.</p></div>
+
               </>}
 
-              {tab === "ratings" && stage !== "choose" && <div className="emptyState"><span>☆</span><h2>Ratings are not ready</h2><p>Generate recommendations before submitting feedback.</p></div>}
-
-              {tab === "ratings" && stage === "choose" && <form className="feedbackPanel" onSubmit={submitFeedback}><div className="contentHead"><p>Optional feedback</p><h2>Feedback</h2><span>Your anonymous feedback is linked only to this recommendation result. Family details and chat text are not stored.</span></div><div className="feedbackFields"><label>School<select value={feedbackSchoolId} onChange={(event) => setFeedbackSchoolId(event.target.value)}>{eligible.map((centre) => <option value={centre.school_id} key={centre.school_id}>{centre.name}</option>)}</select></label><label>Outcome<select value={feedbackEvent} onChange={(event) => setFeedbackEvent(event.target.value as FeedbackEvent)}><option value="selected">Selected for comparison</option><option value="rejected">Rejected</option><option value="contacted">Contacted centre</option><option value="visited">Visited centre</option><option value="applied">Applied</option><option value="rated">Rate recommendation</option></select></label><label>Main reason<select value={feedbackReason} onChange={(event) => setFeedbackReason(event.target.value as FeedbackReason)}><option value="good_match">Good match</option><option value="fee">Fee</option><option value="distance">Distance</option><option value="programme">Programme</option><option value="evidence">Evidence quality</option><option value="other">Other</option></select></label>{feedbackEvent === "rated" && <label>Usefulness<select value={feedbackRating} onChange={(event) => setFeedbackRating(event.target.value)}>{[5, 4, 3, 2, 1].map((rating) => <option value={rating} key={rating}>{rating} / 5</option>)}</select></label>}</div><label className="feedbackConsent"><input type="checkbox" checked={feedbackConsent} onChange={(event) => setFeedbackConsent(event.target.checked)} /><span>I consent to storing this anonymous feedback for recommendation evaluation.</span></label><button className="primary" disabled={busy || !feedbackConsent || !feedbackSchoolId}>Submit feedback</button>{feedbackStatus && <small className="feedbackSuccess">{feedbackStatus}</small>}</form>}
+              {tab === "map" && <div className="mapPanel mapTab">
+                <div className="mapHead"><div><span>Live map</span><h2>Home to preschools</h2></div><div className="legend"><span><i className="home" />Home</span><span><i className="school" />Preschools</span></div></div>
+                <LiveMap points={mapPoints} />
+                {mapBusy && <div className="mapHint">Updating map…</div>}
+                {!mapBusy && !mapPoints.length && <div className="mapHint">Enter a valid home postal code to display its location.</div>}
+              </div>}
             </div>
-          </div>
-
-          <div className="mapPanel">
-            <div className="mapHead"><div><span>Live map</span><h2>Home to preschools</h2></div><div className="legend"><span><i className="home" />Home</span><span><i className="school" />Preschools</span></div></div>
-            <LiveMap points={mapPoints} />
-            {mapBusy && <div className="mapHint">Updating map…</div>}
-            {!mapBusy && !mapPoints.length && <div className="mapHint">Enter a valid home postal code to display its location.</div>}
           </div>
         </section>
       </div>

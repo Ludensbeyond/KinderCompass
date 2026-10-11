@@ -80,7 +80,7 @@ def _create_configured_model(
         client_factory = ChatOpenAI
 
     try:
-        return client_factory(model=model, timeout=timeout, api_key=api_key)
+        return client_factory(model=model, timeout=timeout, api_key=api_key, max_retries=0)
     except Exception:
         raise ModelFactoryError(ModelFactoryErrorCode.INITIALIZATION_FAILED) from None
 

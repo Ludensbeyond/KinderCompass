@@ -103,6 +103,18 @@ class Stage2Tests(unittest.TestCase):
 
 
 class PipelineTests(unittest.TestCase):
+    def setUp(self):
+        # Keep deterministic stage regressions independent of deployment/.env.
+        # Tests of optional generation enable and mock that feature locally.
+        settings = patch.dict(os.environ, {
+            "OPENAI_INTENT_CLASSIFICATION_ENABLED": "false",
+            "OPENAI_PREFERENCE_EXTRACTION_ENABLED": "false",
+            "OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "false",
+            "OPENAI_WEB_RAG_ANSWERS_ENABLED": "false",
+        })
+        settings.start()
+        self.addCleanup(settings.stop)
+
     def test_web_rag_llm_defaults_to_enabled_outside_agent_mode(self):
         with patch.dict(os.environ, {}, clear=True):
             self.assertTrue(web_rag_answers_enabled())
@@ -827,6 +839,14 @@ class PipelineTests(unittest.TestCase):
         self.assertGreater(ranked[0]["match_score"], ranked[1]["match_score"])
         self.assertIn("pedagogy", ranked[0]["strengths"])
         self.assertIn("spark certified", ranked[1]["tradeoffs"])
+
+    def test_unknown_preference_keeps_match_below_one_hundred(self):
+        profile = map_text_to_filters("Montessori with transport")
+        school = {**SCHOOL, "pedagogy": "Montessori", "provision_of_transport": None}
+        scored = score_school(profile, school)
+        self.assertGreater(scored["match_score"], 0.0)
+        self.assertLess(scored["match_score"], 100.0)
+        self.assertTrue(any(item["status"] == "unknown" for item in scored["match_breakdown"]))
 
     def test_stage1_missing_evidence_reduces_confidence(self):
         profile = map_text_to_filters("SPARK")
