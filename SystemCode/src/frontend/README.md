@@ -21,7 +21,9 @@ For a first-time setup, install both projects' dependencies before starting:
 ```
 
 The launcher opens each service in a separate PowerShell window and creates
-`SystemCode/src/frontend/.env.local` from `.env.local.example` if necessary.
+`SystemCode/src/frontend/.env.local` with the PoC backend URL if necessary; it
+does not require a `.env.local.example` file. It runs FastAPI on port `8000`
+and points Next.js at that port.
 Wait until Next.js reports that it is ready, then open
 `http://localhost:3000`. Press `Ctrl+C` in both service windows to stop the
 application.

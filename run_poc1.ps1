@@ -6,11 +6,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repositoryRoot = $PSScriptRoot
+$backendPort = 8000
 $pythonExecutable = Join-Path $repositoryRoot ".venv\Scripts\python.exe"
 $backendRequirements = Join-Path $repositoryRoot "SystemCode\src\backend\requirements.txt"
 $frontendDirectory = Join-Path $repositoryRoot "SystemCode\src\frontend"
 $frontendEnvironment = Join-Path $frontendDirectory ".env.local"
-$frontendEnvironmentExample = Join-Path $frontendDirectory ".env.local.example"
 $neo4jEnvironment = Join-Path $repositoryRoot ".env"
 
 function Stop-WithMessage {
@@ -42,8 +42,8 @@ if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
 }
 
 if (-not (Test-Path -LiteralPath $frontendEnvironment)) {
-    Copy-Item -LiteralPath $frontendEnvironmentExample -Destination $frontendEnvironment
-    Write-Host "Created frontend .env.local from the example configuration." -ForegroundColor Yellow
+    Set-Content -LiteralPath $frontendEnvironment -Value "NEXT_PUBLIC_API_URL=http://localhost:$backendPort" -Encoding Ascii
+    Write-Host "Created frontend .env.local with the PoC backend URL." -ForegroundColor Yellow
 }
 
 if ($InstallDependencies) {
@@ -74,8 +74,8 @@ if (-not (Test-Path -LiteralPath (Join-Path $frontendDirectory "node_modules")))
     Stop-WithMessage "Frontend packages are missing. Run this script once with -InstallDependencies."
 }
 
-$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.main:app --reload --host 127.0.0.1 --port 8082"
-$frontendCommand = "Set-Location -LiteralPath '$($frontendDirectory.Replace("'", "''"))'; & npm.cmd run dev"
+$backendCommand = "Set-Location -LiteralPath '$($repositoryRoot.Replace("'", "''"))'; & '$($pythonExecutable.Replace("'", "''"))' -m uvicorn SystemCode.src.backend.main:app --reload --host 127.0.0.1 --port $backendPort"
+$frontendCommand = "Set-Location -LiteralPath '$($frontendDirectory.Replace("'", "''"))'; `$env:NEXT_PUBLIC_API_URL = 'http://localhost:$backendPort'; & npm.cmd run dev"
 
 Write-Host "Starting FastAPI backend in a new PowerShell window..." -ForegroundColor Cyan
 Start-Process powershell.exe -WorkingDirectory $repositoryRoot -ArgumentList @(
@@ -95,7 +95,7 @@ Start-Process powershell.exe -WorkingDirectory $frontendDirectory -ArgumentList 
 
 Write-Host "`nPoC 1 is starting:" -ForegroundColor Green
 Write-Host "  Frontend:    http://localhost:3000"
-Write-Host "  Backend API: http://127.0.0.1:8082"
-Write-Host "  API docs:    http://127.0.0.1:8082/docs"
+Write-Host "  Backend API: http://127.0.0.1:$backendPort"
+Write-Host "  API docs:    http://127.0.0.1:$backendPort/docs"
 Write-Host "`nWait until both windows report that their servers are ready, then open the frontend URL."
 Write-Host "Press Ctrl+C in each server window to stop PoC 1."
