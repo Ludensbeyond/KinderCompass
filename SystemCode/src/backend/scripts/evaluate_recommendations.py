@@ -42,7 +42,7 @@ def evaluate() -> dict[str, Any]:
     """Evaluate synthetic scenarios without postal codes, income, dates, or chat logs."""
     scenarios = []
 
-    required_profile = map_text_to_filters("Montessori")
+    required_profile = map_text_to_filters("Montessori is required")
     required_ranked = rank_schools(required_profile, [
         school("MATCH", pedagogy="Montessori"),
         school("FAIL", pedagogy="Play-based"),

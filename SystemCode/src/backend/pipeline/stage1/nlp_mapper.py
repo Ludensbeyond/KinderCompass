@@ -47,6 +47,74 @@ def _preference(value, weight=5, desired=True):
     return {"value": value, "weight": weight, "desired": desired}
 
 
+_IMPORTANCE_CUES = (
+    ("nice_to_have", re.compile(r"\b(?:nice[ -]+to[ -]+have|optional|low[ -]+priority|if possible|bonus)\b")),
+    ("high_priority", re.compile(r"\b(?:high[ -]+priority|very important|top[ -]+priority)\b")),
+    ("preferred", re.compile(r"\b(?:not required|not essential|not needed|preferred|prefer)\b")),
+    ("required", re.compile(r"\b(?:non[ -]?negotiable|must(?: have)?|required|require|essential|need(?:ed)?)\b")),
+)
+
+_PREFERENCE_MENTION_PATTERNS = (
+    ("pedagogy", ("montessori", "play-based", "play based", "bilingual", "reggio", "play")),
+    ("language:Chinese", ("chinese", "mandarin")),
+    ("language:Malay", ("malay",)),
+    ("language:Tamil", ("tamil",)),
+    ("spark_certified", ("spark",)),
+    ("operator_scheme", ("anchor operator", "partner operator")),
+    ("transport", ("transport",)),
+    ("food", ("halal", "no pork")),
+    ("full_day", ("full day", "full-day")),
+)
+
+
+def _explicit_importance(text: str) -> dict[str, str]:
+    """Associate each explicit importance cue with the nearest preference in its clause."""
+    mentions = []
+    occupied = []
+    patterns = sorted(
+        ((phrase, attribute) for attribute, phrases in _PREFERENCE_MENTION_PATTERNS for phrase in phrases),
+        key=lambda item: len(item[0]), reverse=True,
+    )
+    for phrase, attribute in patterns:
+        for match in re.finditer(rf"(?<!\w){re.escape(phrase)}(?!\w)", text, flags=re.IGNORECASE):
+            if any(match.start() < end and match.end() > start for start, end in occupied):
+                continue
+            mentions.append((match.start(), match.end(), attribute))
+            occupied.append((match.start(), match.end()))
+    mentions.sort()
+
+    boundaries = [-1] + [match.start() for match in re.finditer(r"[,;.!?]", text)] + [len(text)]
+    result: dict[str, str] = {}
+    for start, end in zip(boundaries, boundaries[1:]):
+        clause_start, clause_end = start + 1, end
+        clause_mentions = [item for item in mentions if item[0] >= clause_start and item[1] <= clause_end]
+        if not clause_mentions:
+            continue
+        clause = text[clause_start:clause_end]
+        clause_cues = []
+        for importance, pattern in _IMPORTANCE_CUES:
+            for cue in pattern.finditer(clause):
+                if importance == "required" and re.search(
+                    r"\bnot\s+(?:required|essential|needed|need|require)\b",
+                    clause[max(0, cue.start() - 8):cue.end()],
+                ):
+                    continue
+                clause_cues.append((clause_start + cue.start(), clause_start + cue.end(), importance))
+        if len(clause_cues) == 1 and clause_cues[0][1] <= clause_mentions[0][0]:
+            # A leading requirement/preference cue governs the following list
+            # in constructions such as "Need Montessori with Chinese and SPARK".
+            for mention in clause_mentions:
+                result[mention[2]] = clause_cues[0][2]
+            continue
+        for mention in clause_mentions:
+            if clause_cues:
+                result[mention[2]] = min(
+                    clause_cues,
+                    key=lambda cue: min(abs(cue[0] - mention[1]), abs(mention[0] - cue[1])),
+                )[2]
+    return result
+
+
 def map_text_to_filters(text: str) -> dict:
     """Extract hard constraints and weighted preferences from parent text."""
     lowered = (text or "").strip().lower()
@@ -54,6 +122,7 @@ def map_text_to_filters(text: str) -> dict:
     preferences = {}
     recognized = []
     unsupported_preferences = []
+    importance_by_attribute = _explicit_importance(lowered)
 
     for phrase, level in LEVEL_KEYWORDS.items():
         if phrase in lowered:
@@ -64,13 +133,13 @@ def map_text_to_filters(text: str) -> dict:
     for phrase, pedagogy in PEDAGOGY_KEYWORDS.items():
         if phrase in lowered:
             avoids = any(marker in lowered for marker in (f"no {phrase}", f"not {phrase}", f"don't want {phrase}", f"do not want {phrase}"))
-            preferences["pedagogy"] = _preference(pedagogy, desired=not avoids)
+            preferences["pedagogy"] = _preference(pedagogy, weight=4, desired=not avoids)
             recognized.append(phrase)
             break
 
     for phrase, language in LANGUAGE_KEYWORDS.items():
         if phrase in lowered:
-            required = any(marker in lowered for marker in ("must", "need", "required", "require"))
+            required = importance_by_attribute.get(f"language:{language}") == "required"
             if required:
                 hard_constraints["language"] = language
             else:
@@ -109,13 +178,18 @@ def map_text_to_filters(text: str) -> dict:
             recognized.append(phrase)
             seen_unsupported.add(attribute)
 
-    return sync_preference_schema({
+    profile = sync_preference_schema({
         "hard_constraints": hard_constraints,
         "preferences": preferences,
         "unsupported_preferences": unsupported_preferences,
         "recognized": recognized,
         "source_text": text,
     })
+    for item in profile["preference_items"]:
+        key = f"language:{item['value']}" if item["attribute"] == "language" else item["attribute"]
+        if key in importance_by_attribute:
+            item["importance"] = importance_by_attribute[key]
+    return profile
 
 
 def merge_preference_profile(current: dict | None, text: str) -> dict:
@@ -129,10 +203,21 @@ def merge_preference_profile(current: dict | None, text: str) -> dict:
     merged.setdefault("hard_constraints", {})
     merged.setdefault("preferences", {})
 
+    explicit_importance = _explicit_importance(lowered)
+    metadata_by_key = {
+        (item["attribute"], str(item["value"])): item
+        for item in merged.get("preference_items", [])
+    }
+
     for key, value in incoming["hard_constraints"].items():
         merged["hard_constraints"][key] = value
     for key, value in incoming["preferences"].items():
         merged["preferences"][key] = value
+    for item in incoming.get("preference_items", []):
+        attribute_key = f"language:{item['value']}" if item["attribute"] == "language" else item["attribute"]
+        if attribute_key in explicit_importance:
+            metadata_by_key[(item["attribute"], str(item["value"]))] = item
+    merged["preference_items"] = list(metadata_by_key.values())
     unsupported_by_attribute = {
         item["attribute"]: item for item in merged.get("unsupported_preferences", [])
     }
@@ -143,7 +228,8 @@ def merge_preference_profile(current: dict | None, text: str) -> dict:
 
     # A parent can downgrade a previously required language to a preference.
     for phrase, language in LANGUAGE_KEYWORDS.items():
-        if phrase in lowered and any(marker in lowered for marker in ("preferred", "preference", "not required", "optional")):
+        language_importance = explicit_importance.get(f"language:{language}")
+        if phrase in lowered and language_importance in {"high_priority", "preferred", "nice_to_have"}:
             if merged["hard_constraints"].get("language") == language:
                 merged["hard_constraints"].pop("language", None)
             merged["preferences"][f"language:{language}"] = _preference(language, 4)

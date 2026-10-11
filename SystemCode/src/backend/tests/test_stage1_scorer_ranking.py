@@ -89,6 +89,63 @@ class Stage1ScorerRankingTests(unittest.TestCase):
         scored = score_school({"preferences": {}, "preference_items": []}, school("NONE"))
         self.assertEqual((scored["match_score"], scored["profile_confidence"], scored["combined_score"]), (100.0, 1.0, 100.0))
 
+    def test_missing_sentinels_are_unknown_across_supported_evidence_fields(self):
+        cases = (
+            ("spark_certified", True, "spark_certified", " n/a "),
+            ("transport", True, "provision_of_transport", "UNKNOWN"),
+            ("operator_scheme", "Anchor Operator Scheme", "operator_scheme", "null"),
+            ("food", "halal", "food_offered", "not available"),
+            ("full_day", True, "weekday_full_day", "unknown"),
+            ("pedagogy", "Montessori", "pedagogy", " NA "),
+            ("language:Chinese", "Chinese", "second_languages_offered", "n/a"),
+        )
+        for attribute, target, field, value in cases:
+            with self.subTest(field=field, value=value):
+                preference_key = attribute
+                item_attribute = "language" if attribute.startswith("language:") else attribute
+                profile = {
+                    "preferences": {preference_key: {"value": target, "weight": 1}},
+                    "preference_items": [{
+                        "attribute": item_attribute, "value": target, "importance": "preferred",
+                    }],
+                }
+                scored = score_school(profile, {field: value})
+                self.assertEqual(scored["match_breakdown"][0]["status"], "unknown")
+                self.assertEqual(scored["profile_confidence"], 0.0)
+
+    def test_missing_language_tokens_do_not_become_languages_or_mismatches(self):
+        profile = {
+            "preferences": {"language:Chinese": {"value": "Chinese", "weight": 4}},
+            "preference_items": [{"attribute": "language", "value": "Chinese", "importance": "preferred"}],
+        }
+        for value in ("na", "n/a", "unknown", "Chinese|na|unknown"):
+            with self.subTest(value=value):
+                scored = score_school(profile, {"second_languages_offered": value})
+                if value == "Chinese|na|unknown":
+                    self.assertEqual(scored["match_breakdown"][0]["status"], "matched")
+                    self.assertEqual(scored["profile_confidence"], 1.0)
+                else:
+                    self.assertEqual(scored["match_breakdown"][0]["status"], "unknown")
+                    self.assertEqual(scored["profile_confidence"], 0.0)
+
+    def test_full_day_requires_a_known_status_or_structured_hours(self):
+        profile = {
+            "preferences": {"full_day": {"value": True, "weight": 1}},
+            "preference_items": [{"attribute": "full_day", "value": True, "importance": "preferred"}],
+        }
+        for value in ("n/a", "unknown", "some text", ""):
+            with self.subTest(value=value):
+                scored = score_school(profile, {"weekday_full_day": value})
+                self.assertEqual(scored["match_breakdown"][0]["status"], "unknown")
+                self.assertEqual(scored["profile_confidence"], 0.0)
+
+        confirmed_hours = score_school(profile, {"weekday_full_day": "07:00-19:00"})
+        self.assertEqual(confirmed_hours["match_breakdown"][0]["status"], "matched")
+        self.assertEqual(confirmed_hours["profile_confidence"], 1.0)
+        confirmed_no = score_school(profile, {"weekday_full_day": "No"})
+        self.assertEqual(confirmed_no["match_breakdown"][0]["status"], "not_matched")
+        self.assertEqual(confirmed_no["profile_confidence"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

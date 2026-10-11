@@ -586,12 +586,12 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(turn["profile"]["explanation_fallback_reason"], "ValueError")
         self.assertIn("School A", turn["question"])
 
-    def test_stage1_falls_back_when_grounded_explanation_times_out(self):
+    def test_stage1_falls_back_when_grounded_recommendation_explanation_times_out(self):
         selected = [{"school_id": "A", "name": "School A", "match_score": 80}]
         with patch.dict(os.environ, {"OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "true"}), patch(
             "stage1.grounded_explainer._explain_with_openai", side_effect=TimeoutError
         ):
-            turn = update_conversation(None, "Is the selected school suitable for me?", selected)
+            turn = update_conversation(None, "Which selected preschool do you recommend?", selected)
         self.assertEqual(turn["profile"]["explanation_method"], "deterministic_fallback")
         self.assertIn("School A", turn["question"])
 
@@ -599,11 +599,50 @@ class PipelineTests(unittest.TestCase):
         selected = [{
             "name": "School A", "match_score": 85, "net_monthly_fee": 500,
             "distance_km": 1.2, "strengths": ["pedagogy"], "tradeoffs": ["transport"],
+            "eligible": True, "profile_confidence": 0.55, "combined_score": 68.5,
         }]
-        turn = update_conversation(None, "Is the selected school suitable for me?", selected)
+        turn = update_conversation(
+            None, "Is the selected school suitable for me?", selected,
+            family_details_available=True,
+        )
         self.assertEqual(turn["status"], "comparison")
-        self.assertIn("School A appears suitable", turn["question"])
+        self.assertIn("Stage 2 confirms School A is eligible", turn["question"])
+        self.assertIn("55.0% evidence completeness", turn["question"])
+        self.assertIn("does not establish overall suitability", turn["question"])
         self.assertIn("transport", turn["question"])
+
+    def test_stage1_suitability_requires_confirmed_eligibility_and_family_details(self):
+        cases = (
+            ({"name": "School A", "eligible": False, "match_score": 100}, True,
+             "marks School A ineligible"),
+            ({"name": "School A", "eligible": None, "match_score": 100}, True,
+             "eligibility is unverified"),
+            ({"name": "School A", "eligible": True, "match_score": 100}, False,
+             "can't assess School A's eligibility"),
+            ({"name": "School A", "eligible": True, "match_score": 100}, None,
+             "can't assess School A's eligibility"),
+            ({"name": "School A", "match_score": 100}, True,
+             "eligibility is unverified"),
+        )
+        for school, details_available, expected in cases:
+            with self.subTest(expected=expected):
+                turn = update_conversation(
+                    None, "Is the selected school suitable for me?", [school],
+                    family_details_available=details_available,
+                )
+                self.assertIn(expected, turn["question"])
+                self.assertNotIn("appears suitable", turn["question"])
+
+    def test_stage1_suitability_keeps_eligibility_language_deterministic(self):
+        school = {"school_id": "A", "name": "School A", "eligible": True, "match_score": 100}
+        with patch.dict(os.environ, {"OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "true"}), patch(
+            "stage1.grounded_explainer._explain_with_openai"
+        ) as explain:
+            turn = update_conversation(
+                None, "Is this school suitable?", [school], family_details_available=True,
+            )
+        explain.assert_not_called()
+        self.assertIn("does not establish overall suitability", turn["question"])
 
     def test_stage1_chat_requires_one_school_for_suitability(self):
         selected = [{"name": "School A"}, {"name": "School B"}]
@@ -798,7 +837,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(scored["match_breakdown"][0]["possible_contribution"], 0.0)
 
     def test_phase6_required_preference_excludes_proven_mismatch(self):
-        profile = map_text_to_filters("Montessori")
+        profile = map_text_to_filters("Montessori is required")
         matching = {**SCHOOL, "pedagogy": "Montessori"}
         mismatch = {**SCHOOL, "school_id": "B", "pedagogy": "Play-based"}
         unknown = {**SCHOOL, "school_id": "C", "pedagogy": None}

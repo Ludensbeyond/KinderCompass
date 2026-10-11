@@ -347,6 +347,7 @@ class PreferenceService:
             context.general_knowledge_evidence.index,
             intent,
             self.schools.facet_summary(),
+            family_details_available=family is not None,
         )
         if intent.intent == "ask_selected_school_evidence":
             result = self._apply_selected_school_answer_mode(

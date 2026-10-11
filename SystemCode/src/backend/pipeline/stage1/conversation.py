@@ -453,7 +453,9 @@ def _selected_school_rank_key(centre: dict) -> tuple[float, float, float, str]:
     return (-float(combined), -match, -confidence, str(centre.get("school_id") or ""))
 
 
-def _assess_selected(centres: list[dict]) -> str:
+def _assess_selected(
+    centres: list[dict], *, family_details_available: bool | None = None,
+) -> str:
     if not centres:
         return "Please select one preschool in the Results panel, then ask me again."
     if len(centres) > 1:
@@ -461,18 +463,44 @@ def _assess_selected(centres: list[dict]) -> str:
 
     school = centres[0]
     name = school.get("name") or "This preschool"
-    score = float(school.get("match_score") or 0)
-    verdict = "appears suitable" if score >= 70 else "may be suitable" if score >= 50 else "may not be the strongest fit"
-    evidence = [f"an {score:.0f}% preference match"]
+    if family_details_available is not True:
+        return (
+            f"I can't assess {name}'s eligibility or overall suitability yet. Please provide "
+            "the child and family details needed for a Stage 2 eligibility check."
+        )
+    if school.get("eligible") is False:
+        return (
+            f"Stage 2 marks {name} ineligible for the supplied family details, so I can't "
+            "recommend it. A preference match score does not override eligibility."
+        )
+    if school.get("eligible") is not True:
+        return (
+            f"{name}'s Stage 2 eligibility is unverified, so I can't confirm it is eligible "
+            "or assess overall suitability. Run the eligibility check with complete family details."
+        )
+
+    score = school.get("match_score")
+    confidence = school.get("profile_confidence")
+    combined = school.get("combined_score")
+    evidence = []
+    if score is not None:
+        evidence.append(f"a {float(score):.1f}% preference match")
+    if confidence is not None:
+        evidence.append(f"{float(confidence) * 100:.1f}% evidence completeness")
+    if combined is not None:
+        evidence.append(f"a {float(combined):.1f}% combined ranking score")
+    if not evidence:
+        evidence.append("preference scores that are unavailable")
     strengths = school.get("strengths") or []
     tradeoffs = school.get("tradeoffs") or []
     if strengths:
         evidence.append(f"strengths in {', '.join(strengths)}")
-    if school.get("net_monthly_fee") is not None:
-        evidence.append(f"an estimated monthly cost of ${float(school['net_monthly_fee']):,.0f}")
-    if school.get("distance_km") is not None:
-        evidence.append(f"a distance of {float(school['distance_km']):.2f} km from home")
-    answer = f"{name} {verdict} based on " + ", ".join(evidence) + "."
+    answer = (
+        f"Stage 2 confirms {name} is eligible for the supplied family details. Its recorded "
+        "preference fit is described by " + ", ".join(evidence) + ". This does not establish "
+        "overall suitability. Evidence completeness means how much preference evidence is "
+        "available, not factual correctness or source reliability."
+    )
     if tradeoffs:
         answer += f" Consider these trade-offs: {', '.join(tradeoffs)}."
     return answer
@@ -504,7 +532,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None, family_details_available: bool | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -672,20 +700,25 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
         contextual_task = "recommendation"
         decided_school_id = _recommended_school_id(selected_centres or [])
     elif intent.intent == "assess_selected_preschool" or _is_suitability_question(lowered):
-        contextual_answer = _assess_selected(selected_centres or [])
+        contextual_answer = _assess_selected(
+            selected_centres or [], family_details_available=family_details_available,
+        )
         contextual_task = "suitability"
-        if len(selected_centres or []) == 1:
-            decided_school_id = (selected_centres or [])[0].get("school_id")
     if contextual_answer:
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
-        answer, explanation_method, fallback_reason = explain_school_decision(
-            text,
-            contextual_task,
-            selected_centres or [],
-            profile,
-            contextual_answer,
-            decided_school_id,
-        )
+        if contextual_task == "suitability":
+            # Keep eligibility and suitability language deterministic; a model
+            # paraphrase must not turn a score into an eligibility verdict.
+            answer, explanation_method, fallback_reason = contextual_answer, "deterministic", None
+        else:
+            answer, explanation_method, fallback_reason = explain_school_decision(
+                text,
+                contextual_task,
+                selected_centres or [],
+                profile,
+                contextual_answer,
+                decided_school_id,
+            )
         profile["explanation_method"] = explanation_method
         if fallback_reason:
             profile["explanation_fallback_reason"] = fallback_reason
