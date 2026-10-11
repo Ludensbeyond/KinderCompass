@@ -122,7 +122,7 @@ def search(request: SearchRequest) -> dict[str, Any]:
         "centres": centres,
         "profile": profile,
         "understood": summarize_profile(profile),
-        "trace": {"trace_id": trace_id, "ranking_method": "verified_match_then_evidence_confidence", **stage_trace},
+        "trace": {"trace_id": trace_id, "ranking_method": "geometric_mean_match_and_evidence_completeness", **stage_trace},
     }
 
 

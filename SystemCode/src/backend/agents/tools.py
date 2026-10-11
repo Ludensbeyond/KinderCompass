@@ -276,6 +276,7 @@ def create_decision_and_calculation_tools(
             deepcopy(selected),
             deepcopy(eligible),
             classified_intent=IntentResult(intent=intent_name, confidence=1),
+            family_details_available=context.family is not None,
         )
         if intent_name == "find_closest_preschool":
             deterministic["profile"]["intent_method"] = (

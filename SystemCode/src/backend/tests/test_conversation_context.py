@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 from SystemCode.src.backend.domain.catalogue import EvaluatedSchool
 from SystemCode.src.backend.domain.models import FamilyDetails
 from SystemCode.src.backend.services.preference_service import PreferenceService
+from stage1.intent_router import IntentResult
 
 
 def evaluated(school_id: str, name: str) -> EvaluatedSchool:
@@ -20,6 +21,71 @@ def evaluated(school_id: str, name: str) -> EvaluatedSchool:
 
 
 class ConversationContextTests(unittest.TestCase):
+    def _recommendation_service(self, record):
+        schools = Mock()
+        schools.catalogue_version = "catalogue-123"
+        schools.get_many.return_value = [{
+            "school_id": "CENTRE:A",
+            "name": "Authoritative school record",
+            "spark_certified": None,
+        }]
+        evaluation = Mock()
+        evaluation.evaluate.side_effect = lambda ids, *_args, **_kwargs: [
+            record for school_id in ids if school_id == "CENTRE:A"
+        ]
+        service = PreferenceService(schools, evaluation, Mock(), Path("."))
+        return service
+
+    @staticmethod
+    def _family():
+        return FamilyDetails(
+            dob=dt.date(2023, 1, 1),
+            admission_date=dt.date(2026, 1, 1),
+            gross_household_income=4_500,
+        )
+
+    def _recommend(self, record, *, family=True):
+        service = self._recommendation_service(record)
+        with (
+            patch.object(service, "_resources", return_value=(None, None)),
+            patch(
+                "SystemCode.src.backend.services.preference_service.classify_intent",
+                return_value=IntentResult(intent="recommend_selected_preschool", confidence=1),
+            ),
+        ):
+            return service.handle(
+                message="Which selected preschool do you recommend?",
+                profile={"preferences": {"spark_certified": {"value": True}}},
+                selected_school_ids=["CENTRE:A"], eligible_school_ids=[],
+                excluded_school_ids=[], family=self._family() if family else None,
+                home_postal_code=None,
+            )
+
+    def test_selected_recommendation_rejects_ineligible_school(self):
+        result = self._recommend(evaluated("CENTRE:A", "Ineligible").model_copy(update={"eligible": False}))
+        self.assertEqual(result["status"], "needs_information")
+        self.assertIn("confirmed Stage 2 eligibility", result["question"])
+        self.assertIn("are ineligible, or have unverified eligibility", result["question"])
+
+    def test_selected_recommendation_rejects_unknown_eligibility(self):
+        result = self._recommend(evaluated("CENTRE:A", "Unknown").model_copy(update={"eligible": None}))
+        self.assertEqual(result["status"], "needs_information")
+        self.assertIn("unverified eligibility are excluded", result["question"])
+
+    def test_selected_recommendation_rejects_missing_eligibility_result(self):
+        class MissingEligibility:
+            def model_dump(self, **_kwargs):
+                return {"school_id": "CENTRE:A", "name": "Missing status"}
+
+        result = self._recommend(MissingEligibility())
+        self.assertEqual(result["status"], "needs_information")
+        self.assertIn("unverified eligibility are excluded", result["question"])
+
+    def test_selected_recommendation_requires_family_details_for_eligibility(self):
+        result = self._recommend(evaluated("CENTRE:A", "Not evaluated"), family=False)
+        self.assertEqual(result["status"], "needs_information")
+        self.assertIn("family details needed to check Stage 2 eligibility", result["question"])
+
     def test_service_builds_context_from_authoritative_server_sources(self):
         schools = Mock()
         schools.catalogue_version = "catalogue-123"

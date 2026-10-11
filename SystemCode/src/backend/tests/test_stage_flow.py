@@ -380,13 +380,15 @@ class PipelineTests(unittest.TestCase):
 
     def test_phase5_explains_why_first_school_is_top_ranked(self):
         eligible = [
-            {"school_id": "A", "name": "School A", "match_score": 92, "profile_confidence": 0.8, "strengths": ["pedagogy", "language"], "tradeoffs": ["transport"]},
+            {"school_id": "A", "name": "School A", "match_score": 92, "profile_confidence": 0.8, "combined_score": 85.8, "strengths": ["pedagogy", "language"], "tradeoffs": ["transport"]},
             {"school_id": "B", "name": "School B", "match_score": 80, "profile_confidence": 1.0},
         ]
         turn = update_conversation(None, "Why is this preschool ranked first?", [], eligible)
         self.assertIn("School A is ranked first", turn["question"])
         self.assertIn("92% preference match", turn["question"])
-        self.assertIn("cost and distance do not change this ranking", turn["question"])
+        self.assertIn("86% combined ranking score", turn["question"])
+        self.assertIn("geometric mean", turn["question"])
+        self.assertIn("evidence completeness", turn["question"])
 
     def test_phase5_compares_all_selected_preschools(self):
         selected = [
@@ -556,6 +558,15 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("School B", turn["question"])
         self.assertIn("90%", turn["question"])
 
+    def test_stage1_selected_recommendation_uses_combined_score(self):
+        selected = [
+            {"school_id": "A", "name": "School A", "match_score": 100, "profile_confidence": 0.2, "combined_score": 44.7},
+            {"school_id": "B", "name": "School B", "match_score": 70, "profile_confidence": 1.0, "combined_score": 83.7},
+        ]
+        turn = update_conversation(None, "Which of the selected preschool will you recommend to me?", selected)
+        self.assertIn("School B", turn["question"])
+        self.assertIn("84% combined ranking score", turn["question"])
+
     def test_stage1_chat_requests_a_selection_before_comparing(self):
         turn = update_conversation(None, "Which of the selected preschool will you recommend to me?", [])
         self.assertIn("select at least one preschool", turn["question"])
@@ -587,12 +598,12 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(turn["profile"]["explanation_fallback_reason"], "ValueError")
         self.assertIn("School A", turn["question"])
 
-    def test_stage1_falls_back_when_grounded_explanation_times_out(self):
+    def test_stage1_falls_back_when_grounded_recommendation_explanation_times_out(self):
         selected = [{"school_id": "A", "name": "School A", "match_score": 80}]
         with patch.dict(os.environ, {"OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "true"}), patch(
             "stage1.grounded_explainer._explain_with_openai", side_effect=TimeoutError
         ):
-            turn = update_conversation(None, "Is the selected school suitable for me?", selected)
+            turn = update_conversation(None, "Which selected preschool do you recommend?", selected)
         self.assertEqual(turn["profile"]["explanation_method"], "deterministic_fallback")
         self.assertIn("School A", turn["question"])
 
@@ -600,11 +611,50 @@ class PipelineTests(unittest.TestCase):
         selected = [{
             "name": "School A", "match_score": 85, "net_monthly_fee": 500,
             "distance_km": 1.2, "strengths": ["pedagogy"], "tradeoffs": ["transport"],
+            "eligible": True, "profile_confidence": 0.55, "combined_score": 68.5,
         }]
-        turn = update_conversation(None, "Is the selected school suitable for me?", selected)
+        turn = update_conversation(
+            None, "Is the selected school suitable for me?", selected,
+            family_details_available=True,
+        )
         self.assertEqual(turn["status"], "comparison")
-        self.assertIn("School A appears suitable", turn["question"])
+        self.assertIn("Stage 2 confirms School A is eligible", turn["question"])
+        self.assertIn("55.0% evidence completeness", turn["question"])
+        self.assertIn("does not establish overall suitability", turn["question"])
         self.assertIn("transport", turn["question"])
+
+    def test_stage1_suitability_requires_confirmed_eligibility_and_family_details(self):
+        cases = (
+            ({"name": "School A", "eligible": False, "match_score": 100}, True,
+             "marks School A ineligible"),
+            ({"name": "School A", "eligible": None, "match_score": 100}, True,
+             "eligibility is unverified"),
+            ({"name": "School A", "eligible": True, "match_score": 100}, False,
+             "can't assess School A's eligibility"),
+            ({"name": "School A", "eligible": True, "match_score": 100}, None,
+             "can't assess School A's eligibility"),
+            ({"name": "School A", "match_score": 100}, True,
+             "eligibility is unverified"),
+        )
+        for school, details_available, expected in cases:
+            with self.subTest(expected=expected):
+                turn = update_conversation(
+                    None, "Is the selected school suitable for me?", [school],
+                    family_details_available=details_available,
+                )
+                self.assertIn(expected, turn["question"])
+                self.assertNotIn("appears suitable", turn["question"])
+
+    def test_stage1_suitability_keeps_eligibility_language_deterministic(self):
+        school = {"school_id": "A", "name": "School A", "eligible": True, "match_score": 100}
+        with patch.dict(os.environ, {"OPENAI_GROUNDED_EXPLANATIONS_ENABLED": "true"}), patch(
+            "stage1.grounded_explainer._explain_with_openai"
+        ) as explain:
+            turn = update_conversation(
+                None, "Is this school suitable?", [school], family_details_available=True,
+            )
+        explain.assert_not_called()
+        self.assertIn("does not establish overall suitability", turn["question"])
 
     def test_stage1_chat_requires_one_school_for_suitability(self):
         selected = [{"name": "School A"}, {"name": "School B"}]
@@ -807,7 +857,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(scored["match_breakdown"][0]["possible_contribution"], 0.0)
 
     def test_phase6_required_preference_excludes_proven_mismatch(self):
-        profile = map_text_to_filters("Montessori")
+        profile = map_text_to_filters("Montessori is required")
         matching = {**SCHOOL, "pedagogy": "Montessori"}
         mismatch = {**SCHOOL, "school_id": "B", "pedagogy": "Play-based"}
         unknown = {**SCHOOL, "school_id": "C", "pedagogy": None}
@@ -831,6 +881,52 @@ class PipelineTests(unittest.TestCase):
         ranked = rank_schools(profile, [partial, complete])
         self.assertEqual(ranked[0]["school_id"], "A")
         self.assertGreater(ranked[0]["profile_confidence"], ranked[1]["profile_confidence"])
+
+    def test_phase_new_confidence_is_weighted_evidence_completeness(self):
+        profile = map_text_to_filters("SPARK with transport")
+        school = {**SCHOOL, "spark_certified": "No", "provision_of_transport": None}
+        scored = score_school(profile, school)
+        self.assertEqual(scored["match_score"], 0.0)
+        self.assertEqual(scored["profile_confidence"], 0.57)
+        self.assertEqual(scored["combined_score"], 0.0)
+
+        partially_matched = score_school(profile, {
+            **SCHOOL, "spark_certified": "Yes", "provision_of_transport": None,
+        })
+        self.assertEqual(partially_matched["match_score"], 100.0)
+        self.assertEqual(partially_matched["combined_score"], 75.6)
+
+    def test_phase_new_combined_score_can_rank_supported_school_first(self):
+        profile = map_text_to_filters("SPARK with transport")
+        for item in profile["preference_items"]:
+            item["importance"] = "nice_to_have" if item["attribute"] == "spark_certified" else "high_priority"
+        high_match_low_confidence = {
+            **SCHOOL, "school_id": "A", "spark_certified": "Yes", "provision_of_transport": None,
+        }
+        lower_match_complete = {
+            **SCHOOL, "school_id": "B", "spark_certified": "No", "provision_of_transport": "Yes",
+        }
+        ranked = rank_schools(profile, [high_match_low_confidence, lower_match_complete])
+        self.assertEqual(ranked[0]["school_id"], "B")
+        self.assertEqual(ranked[0]["combined_score"], 83.2)
+
+    def test_phase_new_deterministic_tie_break_uses_school_id(self):
+        profile = map_text_to_filters("SPARK")
+        schools = [
+            {**SCHOOL, "school_id": "Z", "name": "Alpha", "spark_certified": "Yes"},
+            {**SCHOOL, "school_id": "A", "name": "Zulu", "spark_certified": "Yes"},
+        ]
+        self.assertEqual([item["school_id"] for item in rank_schools(profile, schools)], ["A", "Z"])
+
+    def test_phase_new_empty_preferences_have_neutral_scores(self):
+        scored = score_school({"preferences": {}, "preference_items": []}, SCHOOL)
+        self.assertEqual((scored["match_score"], scored["profile_confidence"], scored["combined_score"]), (100.0, 1.0, 100.0))
+
+    def test_phase_new_eligibility_and_fee_fields_do_not_change_preference_score(self):
+        profile = map_text_to_filters("SPARK")
+        school = {**SCHOOL, "spark_certified": "Yes"}
+        with_decision = {**school, "eligible": False, "net_monthly_fee": 99999}
+        self.assertEqual(score_school(profile, school)["combined_score"], score_school(profile, with_decision)["combined_score"])
 
     def test_postal_coordinate_maps_to_sengkang_planning_area(self):
         boundary_file = (

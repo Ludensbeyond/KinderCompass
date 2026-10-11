@@ -42,7 +42,7 @@ def evaluate() -> dict[str, Any]:
     """Evaluate synthetic scenarios without postal codes, income, dates, or chat logs."""
     scenarios = []
 
-    required_profile = map_text_to_filters("Montessori")
+    required_profile = map_text_to_filters("Montessori is required")
     required_ranked = rank_schools(required_profile, [
         school("MATCH", pedagogy="Montessori"),
         school("FAIL", pedagogy="Play-based"),
@@ -80,10 +80,11 @@ def evaluate() -> dict[str, Any]:
         school("COMPLETE", spark_certified="Yes", provision_of_transport="Yes"),
         school("PARTIAL", spark_certified="Yes"),
     ])
-    scenarios.append(_result("evidence_confidence_breaks_match_tie", tie_ranked[0]["school_id"] == "COMPLETE", {
+    scenarios.append(_result("combined_score_rewards_complete_evidence", tie_ranked[0]["school_id"] == "COMPLETE", {
         "ordered_ids": [item["school_id"] for item in tie_ranked],
         "match_scores": [item["match_score"] for item in tie_ranked],
         "evidence_confidence": [item["profile_confidence"] for item in tie_ranked],
+        "combined_scores": [item["combined_score"] for item in tie_ranked],
     }))
 
     hard_only = map_text_to_filters("I need Chinese")

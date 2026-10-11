@@ -1,0 +1,47 @@
+{
+  "dataset_kind": "synthetic_test_fixture",
+  "description": "Invented IDs and labels used only to verify metric arithmetic; not preschool data or human evaluation.",
+  "ranking_cases": [
+    {
+      "case_id": "synthetic_ordering",
+      "reference_case_id": "synthetic_ordering",
+      "profile": {
+        "preferences": {
+          "pedagogy": {"value": "Montessori", "weight": 3},
+          "spark_certified": {"value": true, "weight": 3},
+          "transport": {"value": true, "weight": 3},
+          "operator_scheme": {"value": "A", "weight": 3}
+        }
+      },
+      "schools": [
+        {"school_id": "S1", "name": "School One", "pedagogy": "Montessori", "spark_certified": "na", "provision_of_transport": "na", "operator_scheme": "na"},
+        {"school_id": "S2", "name": "School Two", "pedagogy": "Montessori", "spark_certified": "yes", "provision_of_transport": "yes", "operator_scheme": "B"},
+        {"school_id": "S3", "name": "School Three", "pedagogy": "na", "spark_certified": "no", "provision_of_transport": "no", "operator_scheme": "C"}
+      ],
+      "reference_ids": ["S1", "S2", "S3"],
+      "labels_complete": true,
+      "relevance": {"S1": 0, "S2": 3, "S3": 0},
+      "eligibility": {"S1": "eligible", "S2": "eligible", "S3": "unknown"},
+      "hard_constraint_outcomes": {"S1": "pass", "S2": "fail", "S3": "unknown"}
+    }
+  ],
+  "hard_constraints": {
+    "candidate_ids": ["C1", "C2", "C3"],
+    "excluded_ids": ["C1", "C2"],
+    "outcomes": {"C1": "fail", "C2": "pass", "C3": "unknown"}
+  },
+  "eligibility_fee_claims": [
+    {"claim_type": "eligibility", "verified": true, "predicted": true, "expected": true},
+    {"claim_type": "fee", "verified": true, "predicted": 500, "expected": 450},
+    {"claim_type": "fee", "verified": false, "predicted": 400, "expected": 400}
+  ],
+  "explanation_claims": [
+    {"factual": true, "evidence_available": true, "supported": true},
+    {"factual": true, "evidence_available": true, "supported": false},
+    {"factual": true, "evidence_available": false}
+  ],
+  "paired_ratings": {"human": [1, 2, 4, 5], "llm_judge": [1, 2, 4, 5]},
+  "confidence_cases": [
+    {"total_weight": 10, "known_weight": 7, "reported_confidence": 0.7}
+  ]
+}
