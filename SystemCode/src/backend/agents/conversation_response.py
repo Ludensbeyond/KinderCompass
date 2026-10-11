@@ -247,6 +247,16 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
 
 
 SERVICE_ERROR = "The conversation service is unavailable. Please try again."
+UNVERIFIED_ANSWER = "That question is outside what KinderCompass can answer from its preschool records and parent-guide sources."
+COULD_NOT_VERIFY = "I couldn't verify that answer from KinderCompass records. Please ask again."
+
+
+def user_message_for_loop_failure(reason: str, evidence: str = "unknown") -> str:
+    if reason == "response_validation" and evidence == "absent":
+        return UNVERIFIED_ANSWER
+    if reason == "response_validation":
+        return COULD_NOT_VERIFY
+    return SERVICE_ERROR
 
 
 @dataclass(frozen=True)
@@ -287,4 +297,6 @@ async def run_validated_conversation(context: InitialConversationContext,
     except Exception as error:
         tools.abort()
         reason = error.reason if isinstance(error, ConversationLoopError) else "response_error"
-        return ConversationResponse(SERVICE_ERROR, "unavailable", failure_reason=reason)
+        evidence = error.evidence if isinstance(error, ConversationLoopError) else "unknown"
+        answer = user_message_for_loop_failure(reason, evidence)
+        return ConversationResponse(answer, "unavailable", failure_reason=reason)

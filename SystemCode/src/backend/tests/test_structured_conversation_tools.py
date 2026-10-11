@@ -12,7 +12,7 @@ from SystemCode.src.backend.agents.contracts import InitialConversationContext
 from SystemCode.src.backend.agents.structured_contracts import StructuredToolResult
 from SystemCode.src.backend.repositories.school_repository import SchoolRepository, SchoolNotFoundError
 from SystemCode.src.backend.services.conversation_context_service import CAPABILITIES
-from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
+from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService, _public_fee
 from SystemCode.src.backend.services.evaluation_service import EvaluationService
 
 
@@ -58,6 +58,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
         updated.data["staged_profile"]["hard_constraints"].clear()
         result = service.invoke("search_rank_compare_schools", {})
         self.assertEqual([r["school_id"] for r in result.data["records"]], ["CENTRE:A"])
+        self.assertEqual(set(result.data["records"][0]), {"school_id", "name", "match_score"})
         self.assertEqual(result.state_revision, 1)
         self.assertEqual(result.data["profile_used"]["hard_constraints"]["language"], "Chinese")
         self.assertEqual(self.context.model_dump(), before)
@@ -78,12 +79,23 @@ class StructuredConversationToolsTests(unittest.TestCase):
             self.context.family.model_copy(update={"gross_household_income": 1000.0}),
             include_ineligible=True,
         )
-        self.assertEqual(result.data["records"], [r.model_dump(mode="json") for r in expected])
+        self.assertEqual(result.data["records"], [_public_fee(r.model_dump(mode="json")) for r in expected])
         self.assertEqual(result.data["profile_used"], service.staged_profile)
         self.assertTrue(result.data["hypothetical"])
         self.assertEqual(self.context.family.model_dump(), before)
         normal = service.invoke("calculate_fees_scenario", {"school_ids": ["CENTRE:A"]})
         self.assertEqual(normal.data["inputs_used"]["gross_household_income"], 4500)
+        unknown = service.invoke("calculate_fees_scenario", {"school_ids": ["context:current"]})
+        self.assertEqual(unknown.status, "needs_input")
+        self.assertEqual(unknown.missing_inputs, ["school_ids"])
+        self.assertEqual(service.staged_profile["preferences"]["pedagogy"]["value"], "Montessori")
+        fresh = self.service()
+        missing = fresh.invoke("search_rank_compare_schools", {
+            "operation": "compare", "school_ids": ["context:current"],
+        })
+        self.assertEqual(missing.status, "needs_input")
+        self.assertEqual(missing.missing_inputs, ["school_ids"])
+        self.assertFalse(fresh._closed)
 
     def test_contract_rejections_discard_prior_changes(self):
         invalid = [
@@ -210,6 +222,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
         nearby = service.invoke("find_nearby_schools", {"postal_code": "123456"})
         self.assertEqual(nearby.data["missing_location_count"], 1)
         self.assertEqual(nearby.data["records"][0]["distance_km"], 0.5)
+        self.assertEqual(set(nearby.data["records"][0]), {"school_id", "name", "distance_km"})
         unavailable = service.invoke("search_school_evidence", {"school_ids": ["CENTRE:A"], "query": "Outdoor learning"})
         self.assertEqual(unavailable.status, "unavailable")
         self.assertNotIn("answer_candidate", unavailable.model_dump())

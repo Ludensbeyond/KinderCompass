@@ -25,7 +25,8 @@ Later tools read staged changes. Hypothetical scenarios do not save family input
 Resolve school IDs from current context or tool results; clarify ambiguous schools.
 Pending decisions require an explicit user choice before resolution. Do not guess
 preference importance. You may combine calls and use earlier results in later calls.
-Explicit 'Chinese is required' supplies importance required: include it in the patch.
+'I need', 'must', and 'required' supply importance required: include it in the patch.
+Do not ask required versus preferred after those words. 'I want' still omits importance.
 If the newest message names a DIFFERENT preference value, update that value;
 never resolve an older pending value using the strength of the new value.
 For 'Which is closest?', ask for home postal code when it is missing.
@@ -82,9 +83,20 @@ class ModelToolCall(BaseModel):
 class ConversationLoopError(RuntimeError):
     """Safe category only; provider messages and user inputs are never exposed."""
 
-    def __init__(self, reason: str):
+    def __init__(self, reason: str, *, evidence: str = "unknown"):
         self.reason = reason
+        self.evidence = evidence
         super().__init__(f"Conversation loop failed: {reason}")
+
+
+def _evidence_label(results: list[StructuredToolResult]) -> str:
+    """found: a tool returned records. absent: every lookup found nothing."""
+    statuses = {result.status for result in results}
+    if "ok" in statuses:
+        return "found"
+    if statuses and statuses <= {"no_evidence"}:
+        return "absent"
+    return "unknown"
 
 
 def _support_index(result: StructuredToolResult) -> list[dict]:
@@ -173,7 +185,12 @@ async def run_conversation_loop(
             "If a named school's current fee is requested, retrieve it now; do not just offer to look it up. "
             "A hypothetical drop without an amount requires a question; NEVER assume zero income. "
             "Any pending choice must be answered with its question, and resolution needs the resolution tool. "
-            "Unchanged preference acknowledgements can cite context:current as documented; changes require tools."))
+            "Unchanged preference acknowledgements can cite context:current as documented; changes require tools. "
+            "If the user asks which preschool is closest and a home postal code is already in context, call find_nearby_schools. Do not ask for school names or IDs first. "
+            "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
+            "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
+            "When the user asks to compare the selected schools, call search_rank_compare_schools with operation compare and school_ids copied exactly from selected_school_ids. Then call calculate_fees_scenario with those same IDs. Never pass a school name or context:current as a school id. "
+            "'I need', 'must', and 'it must' set importance required. Do not ask required versus preferred after those words."))
         results: list[StructuredToolResult] = []
         used_ids: set[str] = set()
         repairs = 0
@@ -199,7 +216,9 @@ async def run_conversation_loop(
                         await bounded(final_validator, response.content.strip(), tuple(results))
                     except ResponseValidationError as error:
                         if repairs >= limits.repair_calls or iteration == limits.model_calls:
-                            raise ConversationLoopError("response_validation") from None
+                            raise ConversationLoopError(
+                                "response_validation", evidence=_evidence_label(results),
+                            ) from None
                         repairs += 1
                         messages.extend([response, HumanMessage(content=
                             "Response validation failed: " + str(error) +
