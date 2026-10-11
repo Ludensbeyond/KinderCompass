@@ -790,6 +790,14 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("pedagogy", ranked[0]["strengths"])
         self.assertIn("spark certified", ranked[1]["tradeoffs"])
 
+    def test_unknown_preference_keeps_match_below_one_hundred(self):
+        profile = map_text_to_filters("Montessori with transport")
+        school = {**SCHOOL, "pedagogy": "Montessori", "provision_of_transport": None}
+        scored = score_school(profile, school)
+        self.assertGreater(scored["match_score"], 0.0)
+        self.assertLess(scored["match_score"], 100.0)
+        self.assertTrue(any(item["status"] == "unknown" for item in scored["match_breakdown"]))
+
     def test_stage1_missing_evidence_reduces_confidence(self):
         profile = map_text_to_filters("SPARK")
         scored = score_school(profile, SCHOOL)

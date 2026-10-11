@@ -46,7 +46,7 @@ class PreferenceService:
     async def handle_llm_first(self, request, *, history, memory, feedback,
                                model_factory=None, limits=None, shadow=False, legacy_result=None):
         """Staged HTTP orchestration; no legacy routing or per-turn fallback."""
-        from SystemCode.src.backend.agents.conversation_response import SERVICE_ERROR, run_validated_conversation
+        from SystemCode.src.backend.agents.conversation_response import run_validated_conversation
         from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
         from SystemCode.src.backend.domain.models import PreferenceResponse
         from SystemCode.src.backend.services.conversation_context_service import ConversationContextService
@@ -91,7 +91,7 @@ class PreferenceService:
                 "profile": profile, "understood": summarize_profile(profile),
                 "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences"))
                     and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
-                "question": response.answer if succeeded else SERVICE_ERROR,
+                "question": response.answer,
                 "citations": [{**c.model_dump(mode="json"), "chunk_id": c.citation_id} for c in response.citations],
                 "answer_method": "llm_first" if succeeded else "service_error",
                 "fallback_reason": response.failure_reason,

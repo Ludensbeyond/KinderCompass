@@ -109,5 +109,7 @@ class EvaluatedSchool(SchoolRecord):
     programme_options: list[ProgrammeOption] = Field(default_factory=list)
     policy_source: PolicyReference | None = None
     warnings: list[str] = Field(default_factory=list)
+    reason: str | None = None
+    reasons: list[str] = Field(default_factory=list)
     mention_links: MentionLinks | None = None
     parent_rating: ParentRatingSummary | None = None

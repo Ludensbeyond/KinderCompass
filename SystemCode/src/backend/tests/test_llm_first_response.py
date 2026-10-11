@@ -7,7 +7,8 @@ from langchain_core.messages import AIMessage
 
 from SystemCode.src.backend.agents.conversation_loop import LoopLimits
 from SystemCode.src.backend.agents.conversation_response import (
-    SERVICE_ERROR, ResponseValidationError, run_validated_conversation, validate_response,
+    COULD_NOT_VERIFY, SERVICE_ERROR, UNVERIFIED_ANSWER, ResponseValidationError,
+    run_validated_conversation, validate_response,
 )
 from SystemCode.src.backend.agents.structured_contracts import StructuredToolResult
 from SystemCode.src.backend.tests import test_llm_first_loop as fixtures
@@ -244,13 +245,25 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             with patch("SystemCode.src.backend.services.preference_service.classify_intent",
                        side_effect=AssertionError("legacy fallback")):
                 response = await self.run_response(service, model, limits=limits)
-            self.assertEqual((response.status, response.answer), ("unavailable", SERVICE_ERROR))
+            expected = COULD_NOT_VERIFY if response.failure_reason == "response_validation" else SERVICE_ERROR
+            self.assertEqual((response.status, response.answer), ("unavailable", expected))
             self.assertIsNone(response.profile)
             self.assertNotIn("private", response.answer)
             self.assertEqual(service.staged_profile, before)
             self.assertLessEqual(len(model.messages), limits.model_calls)
             with self.assertRaises(ValueError):
                 service.export_validated_state(response_validated=True)
+
+    async def test_no_evidence_validation_failure_says_out_of_scope(self):
+        service = self.service()
+        service._general_retriever_loader = lambda: type("Empty", (), {"search": lambda *args, **kwargs: []})()
+        bad = final("The centre has CCTV.", kind="grounded")
+        response = await self.run_response(service, ScriptedModel(
+            AIMessage(content="", tool_calls=[call("search_general_guidance", {"query": "CCTV"})]),
+            bad, bad, bad,
+        ))
+        self.assertEqual(response.failure_reason, "response_validation")
+        self.assertEqual(response.answer, UNVERIFIED_ANSWER)
 
     async def test_model_authored_missing_evidence_explanation_supported_by_status(self):
         service = self.service()

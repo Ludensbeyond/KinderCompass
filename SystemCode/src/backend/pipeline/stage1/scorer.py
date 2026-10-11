@@ -101,7 +101,9 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
         elif match is False:
             tradeoffs.append(label)
 
-    score = 100.0 if not requested_weight else 0.0 if not verifiable_weight else weighted_score / verifiable_weight * 100.0
+    # Unknown preferences stay in the denominator, so a complete-looking 100%
+    # requires every requested preference to be verified and matched.
+    score = 100.0 if not requested_weight else weighted_score / requested_weight * 100.0
     profile_confidence = 1.0 if not requested_weight else confidence_weight / requested_weight
     return {
         **school,
