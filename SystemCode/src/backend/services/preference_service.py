@@ -194,6 +194,15 @@ class PreferenceService:
         return rank_schools(profile, self.schools.get_many(school_ids), limit=len(school_ids))
 
     @staticmethod
+    def _recommendable_selected_schools(
+        selected: list[AuthoritativeSchoolContext], family: FamilyDetails | None,
+    ) -> list[AuthoritativeSchoolContext]:
+        """Only let Stage 2-confirmed eligible selections enter recommendations."""
+        if family is None:
+            return []
+        return [school for school in selected if school.facts.get("eligible") is True]
+
+    @staticmethod
     def _context_school(record: Any) -> AuthoritativeSchoolContext:
         if hasattr(record, "model_dump"):
             facts = record.model_dump(mode="json")
@@ -364,6 +373,43 @@ class PreferenceService:
             include_full_catalogue=intent.intent == "find_closest_preschool",
             intent=intent,
         )
+        if intent.intent == "recommend_selected_preschool":
+            recommendable = self._recommendable_selected_schools(
+                context.selected_schools, family,
+            )
+            if context.selected_school_ids and not recommendable:
+                if family is None:
+                    question = (
+                        "I can recommend among selected preschools after you provide the "
+                        "child's date of birth, admission date, and family details needed "
+                        "to check Stage 2 eligibility."
+                    )
+                else:
+                    question = (
+                        "I can't recommend these selected preschools because none passed "
+                        "required-preference screening with confirmed Stage 2 eligibility. "
+                        "Schools that fail required preferences, are ineligible, or have "
+                        "unverified eligibility are excluded. Please select a preschool "
+                        "with confirmed eligibility."
+                    )
+                result = {
+                    "profile": context.profile,
+                    "understood": summarize_profile(context.profile),
+                    "status": "needs_information",
+                    "ready_to_search": bool(
+                        context.profile.get("hard_constraints")
+                        or context.profile.get("preferences")
+                    ),
+                    "question": question,
+                    "evidence_category": "unknown",
+                }
+                return enrich_decision_state(
+                    before, result, intent=intent.intent,
+                )
+            context = context.model_copy(update={
+                "selected_schools": recommendable,
+                "selected_school_ids": [school.school_id for school in recommendable],
+            })
         mode = get_conversation_agent_mode()
 
         def deterministic_result() -> dict[str, Any]:

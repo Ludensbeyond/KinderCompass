@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 
 from stage1.nlp_mapper import (
@@ -76,6 +77,10 @@ def _find_closest(centres: list[dict]) -> tuple[str, dict | None]:
 
 def _metric_summary(school: dict) -> str:
     details = [f"{float(school.get('match_score') or 0):.0f}% preference match"]
+    if school.get("profile_confidence") is not None:
+        details.append(f"{float(school['profile_confidence']) * 100:.0f}% evidence completeness")
+    if school.get("combined_score") is not None:
+        details.append(f"{float(school['combined_score']):.0f}% combined ranking score")
     if school.get("net_monthly_fee") is not None:
         details.append(f"${float(school['net_monthly_fee']):,.0f}/month estimated cost")
     if school.get("distance_km") is not None:
@@ -98,7 +103,7 @@ def _explain_top_ranked(centres: list[dict]) -> tuple[str, list[dict]]:
     confidence = top.get("profile_confidence")
     if confidence is not None:
         answer += f" Evidence coverage for the scored preferences is {float(confidence) * 100:.0f}%."
-    answer += " Stage 1 orders by preference-match score, then evidence confidence; cost and distance do not change this ranking."
+    answer += " Stage 1 ranks by the geometric mean of preference match and evidence completeness; cost and distance do not change this ranking. Evidence completeness measures known preference evidence, not factual correctness or source reliability."
     return answer, [top]
 
 
@@ -411,38 +416,41 @@ def _comparison_turn(profile: dict, text: str, task: str, answer: str, centres: 
 def _recommend_selected(centres: list[dict]) -> str:
     if not centres:
         return "Please select at least one preschool in the Results panel, then ask me again."
-    ranked = sorted(
-        centres,
-        key=lambda centre: (
-            -float(centre.get("match_score") or 0),
-            float(centre.get("net_monthly_fee")) if centre.get("net_monthly_fee") is not None else float("inf"),
-            float(centre.get("distance_km")) if centre.get("distance_km") is not None else float("inf"),
-            str(centre.get("name") or ""),
-        ),
-    )
+    ranked = sorted(centres, key=_selected_school_rank_key)
     best = ranked[0]
-    details = [f"a {float(best.get('match_score') or 0):.0f}% preference match"]
-    if best.get("net_monthly_fee") is not None:
-        details.append(f"an estimated monthly cost of ${float(best['net_monthly_fee']):,.0f}")
-    if best.get("distance_km") is not None:
-        details.append(f"a distance of {float(best['distance_km']):.2f} km from home")
-    reason = ", ".join(details)
-    return f"I recommend {best.get('name') or 'the highest-ranked preschool'} based on {reason}. Preference match is prioritised, with cost and distance used as tie-breakers."
+    match = float(best.get("match_score") or 0)
+    confidence = best.get("profile_confidence")
+    combined = best.get("combined_score")
+    if combined is None:
+        combined = math.sqrt(match * float(confidence) * 100) if confidence is not None else match
+    details = [
+        f"a {float(combined):.0f}% combined ranking score",
+        f"a {match:.0f}% preference match",
+    ]
+    if confidence is not None:
+        details.append(f"{float(confidence) * 100:.0f}% evidence completeness")
+    return (
+        f"I recommend {best.get('name') or 'the highest-ranked preschool'} based on "
+        f"{', '.join(details)}. Evidence completeness measures how much preference "
+        "evidence is available, not source reliability or factual correctness. "
+        "Cost and distance are context only; they do not determine this selection."
+    )
 
 
 def _recommended_school_id(centres: list[dict]) -> str | None:
     if not centres:
         return None
-    ranked = sorted(
-        centres,
-        key=lambda centre: (
-            -float(centre.get("match_score") or 0),
-            float(centre.get("net_monthly_fee")) if centre.get("net_monthly_fee") is not None else float("inf"),
-            float(centre.get("distance_km")) if centre.get("distance_km") is not None else float("inf"),
-            str(centre.get("name") or ""),
-        ),
-    )
+    ranked = sorted(centres, key=_selected_school_rank_key)
     return ranked[0].get("school_id")
+
+
+def _selected_school_rank_key(centre: dict) -> tuple[float, float, float, str]:
+    match = float(centre.get("match_score") or 0)
+    confidence = float(centre.get("profile_confidence") or 0)
+    combined = centre.get("combined_score")
+    if combined is None:
+        combined = math.sqrt(match * confidence * 100) if centre.get("profile_confidence") is not None else match
+    return (-float(combined), -match, -confidence, str(centre.get("school_id") or ""))
 
 
 def _assess_selected(centres: list[dict]) -> str:

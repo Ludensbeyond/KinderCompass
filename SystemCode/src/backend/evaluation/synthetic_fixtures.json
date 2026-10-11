@@ -1,0 +1,32 @@
+{
+  "dataset_kind": "synthetic_test_fixture",
+  "description": "Invented IDs and labels used only to verify metric arithmetic; not preschool data or human evaluation.",
+  "ranking_cases": [
+    {
+      "case_id": "synthetic_ordering",
+      "old_order": ["S1", "S2", "S3"],
+      "new_order": ["S2", "S1", "S3"],
+      "reference_order": ["S2", "S1", "S3"],
+      "relevance": {"S1": 2, "S2": 3, "S3": 0}
+    }
+  ],
+  "hard_constraints": {
+    "candidate_ids": ["C1", "C2", "C3"],
+    "excluded_ids": ["C1", "C2"],
+    "outcomes": {"C1": "fail", "C2": "pass", "C3": "unknown"}
+  },
+  "eligibility_fee_claims": [
+    {"claim_type": "eligibility", "verified": true, "predicted": true, "expected": true},
+    {"claim_type": "fee", "verified": true, "predicted": 500, "expected": 450},
+    {"claim_type": "fee", "verified": false, "predicted": 400, "expected": 400}
+  ],
+  "explanation_claims": [
+    {"factual": true, "evidence_available": true, "supported": true},
+    {"factual": true, "evidence_available": true, "supported": false},
+    {"factual": true, "evidence_available": false}
+  ],
+  "paired_ratings": {"human": [1, 2, 4, 5], "llm_judge": [1, 2, 4, 5]},
+  "confidence_cases": [
+    {"total_weight": 10, "known_weight": 7, "reported_confidence": 0.7}
+  ]
+}

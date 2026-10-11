@@ -153,7 +153,7 @@ def synthesize_web_evidence(
 
 def _school_facts(centres: list[dict]) -> list[dict]:
     allowed = (
-        "school_id", "name", "match_score", "profile_confidence", "net_monthly_fee",
+        "school_id", "name", "match_score", "profile_confidence", "combined_score", "net_monthly_fee",
         "distance_km", "strengths", "tradeoffs", "eligible_level", "match_breakdown",
     )
     return [{key: centre.get(key) for key in allowed} for centre in centres]
@@ -184,7 +184,7 @@ def _explain_with_openai(
     timeout = float(os.getenv("OPENAI_EXPLANATION_TIMEOUT_SECONDS", "8"))
     client = OpenAI(timeout=timeout)
     instructions = """Explain a deterministic preschool decision using only the supplied JSON facts.
-The application has already made the decision; do not select a different school or change the suitability verdict. Lead with the conclusion, then explain preference match, strengths, material trade-offs, cost, and distance when those facts are available. Treat unsupported preferences and evidence warnings as limitations, not verified school characteristics. Never invent programmes, quality claims, fees, distances, certifications, or outcomes. State when evidence is unavailable. Keep the answer concise and parent-friendly. referenced_school_ids must contain only IDs from the supplied schools that are actually discussed."""
+The application has already made the decision; do not select a different school or change the suitability verdict. For ranking and recommendation decisions, describe the supplied combined_score as the geometric mean of match_score and evidence completeness expressed as a percentage. Explain both component scores when available. Evidence completeness means the share of weighted preferences with usable evidence, not factual correctness or source reliability. Cost and distance are context, not ranking inputs. Lead with the conclusion, then explain preference match, strengths, material trade-offs, cost, and distance when those facts are available. Treat unsupported preferences and evidence warnings as limitations, not verified school characteristics. Never invent programmes, quality claims, fees, distances, certifications, or outcomes. State when evidence is unavailable. Keep the answer concise and parent-friendly. referenced_school_ids must contain only IDs from the supplied schools that are actually discussed."""
     payload = json.dumps({
         "task": task,
         "user_question": question,

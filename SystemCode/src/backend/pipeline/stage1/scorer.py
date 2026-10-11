@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from stage1.evidence import evidence_details
@@ -43,7 +44,7 @@ def _school_value(school: dict[str, Any], attribute: str, target: Any):
         return ("halal" in value or "no pork" in value, 1.0 if value and value != "na" else 0.0)
     if attribute == "full_day":
         value = school.get("weekday_full_day")
-        return (value not in (None, "", "na"), 1.0 if value is not None else 0.0)
+        return (value not in (None, "", "na"), 1.0 if value not in (None, "", "na") else 0.0)
     return (None, 0.0)
 
 
@@ -62,7 +63,7 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
     weighted_score = 0.0
     requested_weight = 0.0
     verifiable_weight = 0.0
-    confidence_weight = 0.0
+    known_weight = 0.0
     importance_by_attribute = {
         (f"language:{item['value']}" if item["attribute"] == "language" else item["attribute"]): item["importance"]
         for item in profile.get("preference_items", [])
@@ -74,14 +75,16 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
         importance = importance_by_attribute.get(attribute, "preferred")
         base_weight = float(preference.get("weight", 3))
         weight = base_weight * IMPORTANCE_MULTIPLIERS[importance]
-        actual, confidence = _school_value(school, attribute, target)
-        match = _matches(actual, target, desired) if confidence else None
+        actual, availability = _school_value(school, attribute, target)
+        known = bool(availability)
+        match = _matches(actual, target, desired) if known else None
         compatibility = 1.0 if match else 0.0
-        weighted_score += compatibility * weight
-        requested_weight += weight
-        if match is not None:
-            verifiable_weight += weight
-        confidence_weight += confidence * weight
+        if weight > 0:
+            requested_weight += weight
+            if known:
+                known_weight += weight
+                weighted_score += compatibility * weight
+                verifiable_weight += weight
         label = attribute.split(":", 1)[0].replace("_", " ")
         breakdown.append({
             "attribute": attribute,
@@ -91,22 +94,32 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
             "status": "matched" if match is True else "not_matched" if match is False else "unknown",
             "importance": importance,
             "weight": round(weight, 2),
-            "confidence": round(confidence, 2),
+            "confidence": 1.0 if known else 0.0,
             "contribution": round(compatibility * weight, 2),
             "possible_contribution": round(weight, 2) if match is not None else 0.0,
-            **evidence_details(attribute, school, actual, bool(confidence)),
+            **evidence_details(attribute, school, actual, known),
         })
         if match is True:
             strengths.append(label)
         elif match is False:
             tradeoffs.append(label)
 
-    score = 100.0 if not requested_weight else 0.0 if not verifiable_weight else weighted_score / verifiable_weight * 100.0
-    profile_confidence = 1.0 if not requested_weight else confidence_weight / requested_weight
+    # Match retains the original semantics: unknown evidence is excluded from
+    # its denominator. Confidence independently reports evidence completeness.
+    # Unsupported and zero-weight preferences do not affect either score.
+    score = (
+        100.0 if not requested_weight
+        else 0.0 if not verifiable_weight
+        else weighted_score / verifiable_weight * 100.0
+    )
+    profile_confidence = 1.0 if not requested_weight else known_weight / requested_weight
+    confidence_score = profile_confidence * 100.0
+    combined_score = math.sqrt(score * confidence_score)
     return {
         **school,
         "match_score": round(score, 1),
         "profile_confidence": round(profile_confidence, 2),
+        "combined_score": round(combined_score, 1),
         "strengths": strengths[:5],
         "tradeoffs": tradeoffs[:5],
         "match_breakdown": breakdown,
@@ -128,5 +141,12 @@ def rank_schools(profile: dict, schools: list[dict[str, Any]], limit: int = 20):
         )
         if not proven_failure:
             ranked.append(scored)
-    ranked.sort(key=lambda item: (item["match_score"], item["profile_confidence"], item.get("name") or ""), reverse=True)
+    ranked.sort(
+        key=lambda item: (
+            -item["combined_score"],
+            -item["match_score"],
+            -item["profile_confidence"],
+            str(item.get("school_id") or ""),
+        )
+    )
     return ranked[:limit]
