@@ -35,6 +35,7 @@ from SystemCode.src.backend.services.conversation_calculations import (
 )
 from stage1.conversation import update_conversation
 from stage1.intent_router import classify_intent
+from stage1.nlp_mapper import summarize_profile
 from stage1.scorer import rank_schools
 from stage1.web_rag import load_json
 

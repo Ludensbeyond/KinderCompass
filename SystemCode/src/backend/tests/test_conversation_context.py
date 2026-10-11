@@ -24,6 +24,11 @@ class ConversationContextTests(unittest.TestCase):
     def _recommendation_service(self, record):
         schools = Mock()
         schools.catalogue_version = "catalogue-123"
+        schools.get_many.return_value = [{
+            "school_id": "CENTRE:A",
+            "name": "Authoritative school record",
+            "spark_certified": None,
+        }]
         evaluation = Mock()
         evaluation.evaluate.side_effect = lambda ids, *_args, **_kwargs: [
             record for school_id in ids if school_id == "CENTRE:A"
@@ -60,7 +65,7 @@ class ConversationContextTests(unittest.TestCase):
         result = self._recommend(evaluated("CENTRE:A", "Ineligible").model_copy(update={"eligible": False}))
         self.assertEqual(result["status"], "needs_information")
         self.assertIn("confirmed Stage 2 eligibility", result["question"])
-        self.assertIn("Ineligible or unverified", result["question"])
+        self.assertIn("are ineligible, or have unverified eligibility", result["question"])
 
     def test_selected_recommendation_rejects_unknown_eligibility(self):
         result = self._recommend(evaluated("CENTRE:A", "Unknown").model_copy(update={"eligible": None}))

@@ -429,6 +429,9 @@ class WebRagPilotTests(unittest.TestCase):
                 "shared_limit": 1,
                 "delay_seconds": 0,
                 "fetcher": fetch,
+                # Keep the fixture's fixed retrieval timestamp within the
+                # refresh interval across both checkpointing calls.
+                "now": datetime(2026, 8, 11, tzinfo=timezone.utc),
             }
             first = run_incremental(records, **options)
             second = run_incremental(records, **options)
