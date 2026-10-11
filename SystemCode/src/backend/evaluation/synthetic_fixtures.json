@@ -4,10 +4,25 @@
   "ranking_cases": [
     {
       "case_id": "synthetic_ordering",
-      "old_order": ["S1", "S2", "S3"],
-      "new_order": ["S2", "S1", "S3"],
-      "reference_order": ["S2", "S1", "S3"],
-      "relevance": {"S1": 2, "S2": 3, "S3": 0}
+      "reference_case_id": "synthetic_ordering",
+      "profile": {
+        "preferences": {
+          "pedagogy": {"value": "Montessori", "weight": 3},
+          "spark_certified": {"value": true, "weight": 3},
+          "transport": {"value": true, "weight": 3},
+          "operator_scheme": {"value": "A", "weight": 3}
+        }
+      },
+      "schools": [
+        {"school_id": "S1", "name": "School One", "pedagogy": "Montessori", "spark_certified": "na", "provision_of_transport": "na", "operator_scheme": "na"},
+        {"school_id": "S2", "name": "School Two", "pedagogy": "Montessori", "spark_certified": "yes", "provision_of_transport": "yes", "operator_scheme": "B"},
+        {"school_id": "S3", "name": "School Three", "pedagogy": "na", "spark_certified": "no", "provision_of_transport": "no", "operator_scheme": "C"}
+      ],
+      "reference_ids": ["S1", "S2", "S3"],
+      "labels_complete": true,
+      "relevance": {"S1": 0, "S2": 3, "S3": 0},
+      "eligibility": {"S1": "eligible", "S2": "eligible", "S3": "unknown"},
+      "hard_constraint_outcomes": {"S1": "pass", "S2": "fail", "S3": "unknown"}
     }
   ],
   "hard_constraints": {

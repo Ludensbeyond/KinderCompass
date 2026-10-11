@@ -12,6 +12,11 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 
+RELEVANCE_THRESHOLD = 2
+RELEVANCE_SCALE = {0: "not relevant", 1: "marginally relevant", 2: "relevant", 3: "highly relevant"}
+RANKING_K = 3
+
+
 def hard_constraint_metrics(
     candidate_ids: Sequence[str], excluded_ids: Iterable[str], outcomes: Mapping[str, str],
 ) -> dict[str, Any]:
@@ -40,11 +45,230 @@ def hard_constraint_metrics(
     recall = tp / (tp + fn) if tp + fn else None
     f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else 0.0 if precision is not None and recall is not None else None
     unknown_total = unknown_retained + unknown_excluded
+    confirmed_failures = tp + fn
+    confirmed_passes = fp + tn
     return {
         "precision": precision, "recall": recall, "f1": f1,
         "true_positive": tp, "false_positive": fp, "false_negative": fn, "true_negative": tn,
+        "confirmed_failure_violation_rate": fn / confirmed_failures if confirmed_failures else None,
+        "confirmed_failure_denominator": confirmed_failures,
+        "confirmed_pass_over_exclusion_rate": fp / confirmed_passes if confirmed_passes else None,
+        "confirmed_pass_denominator": confirmed_passes,
         "unknown_retained": unknown_retained, "unknown_excluded": unknown_excluded,
+        "unknown_denominator": unknown_total,
         "unknown_retention_rate": unknown_retained / unknown_total if unknown_total else None,
+    }
+
+
+def _unique_ids(ids: Sequence[str]) -> tuple[list[str], int]:
+    unique = list(dict.fromkeys(ids))
+    return unique, len(ids) - len(unique)
+
+
+def evaluate_ranking_case(
+    ranked_ids: Sequence[str],
+    relevance: Mapping[str, float],
+    *,
+    case_id: str | None = None,
+    reference_case_id: str | None = None,
+    reference_ids: Sequence[str] | None = None,
+    labels_complete: bool | None = None,
+    k: int = RANKING_K,
+) -> dict[str, Any]:
+    """Evaluate one returned order against same-case graded labels.
+
+    Relevance is graded 0..3; >=2 is binary relevant. Duplicate result IDs
+    keep their first occurrence. Unlabelled results in the top k make metrics
+    requiring binary decisions undefined. NDCG uses available labels for its
+    ideal order; recall requires complete labels for the declared reference
+    pool. Empty labels and zero-IDCG cases are explicitly excluded.
+    """
+    if not isinstance(case_id, str) or not case_id.strip():
+        raise ValueError("case_id must be a non-empty scenario ID")
+    if not isinstance(reference_case_id, str) or not reference_case_id.strip():
+        raise ValueError(f"reference_case_id must be a non-empty ID for case {case_id!r}")
+    if k <= 0:
+        raise ValueError("k must be positive")
+    if case_id != reference_case_id:
+        raise ValueError(f"ranking case {case_id!r} does not match reference case {reference_case_id!r}")
+    if labels_complete is not None and not isinstance(labels_complete, bool):
+        raise ValueError(f"labels_complete must be true, false, or absent for case {case_id!r}")
+    if reference_ids is not None:
+        if isinstance(reference_ids, (str, bytes)):
+            raise ValueError(f"reference_ids must be a list of school IDs for case {case_id!r}")
+        if any(not isinstance(item, str) or not item.strip() for item in reference_ids):
+            raise ValueError(f"reference_ids contains a missing or empty school ID for case {case_id!r}")
+        if len(set(reference_ids)) != len(reference_ids):
+            raise ValueError(f"reference_ids contains duplicate school IDs for case {case_id!r}")
+    for school_id, value in relevance.items():
+        if isinstance(value, bool) or not isinstance(value, int) or value not in RELEVANCE_SCALE:
+            raise ValueError(f"invalid relevance label for {school_id!r}: {value!r}; expected an integer from 0 to 3")
+
+    reference_id_set = set(reference_ids) if reference_ids is not None else None
+    if reference_id_set is not None and labels_complete is not False:
+        missing_reference_labels = sorted(reference_id_set - set(relevance))
+        if missing_reference_labels:
+            declaration = "labels_complete=true" if labels_complete is True else "a complete reference pool"
+            raise ValueError(
+                f"case {case_id!r} declares {declaration} but has no relevance labels for "
+                f"reference IDs: {missing_reference_labels}"
+            )
+        omitted_relevant_ids = sorted(
+            school_id for school_id, value in relevance.items()
+            if value >= RELEVANCE_THRESHOLD and school_id not in reference_id_set
+        )
+        if omitted_relevant_ids:
+            raise ValueError(
+                f"case {case_id!r} declares a complete reference pool that omits known relevant IDs: "
+                f"{omitted_relevant_ids}"
+            )
+
+    judged_relevance = (
+        dict(relevance) if reference_id_set is None
+        else {school_id: value for school_id, value in relevance.items() if school_id in reference_id_set}
+    )
+    ids, duplicate_count = _unique_ids(ranked_ids)
+    top_ids = ids[:k]
+    missing_top_labels = [school_id for school_id in top_ids if school_id not in judged_relevance]
+    available_relevant = sum(value >= RELEVANCE_THRESHOLD for value in judged_relevance.values())
+    if reference_id_set is None:
+        # Without a reference pool, only an explicit completeness assertion
+        # makes the supplied relevance map a valid recall denominator.
+        label_pool_complete = labels_complete
+    else:
+        # The declared pool gives a denominator, but every member still needs
+        # a label; an explicit false declaration keeps the case incomplete.
+        label_pool_complete = (
+            False if labels_complete is False
+            else all(school_id in relevance for school_id in reference_id_set)
+        )
+
+    if reference_id_set == set() or (reference_id_set is None and labels_complete is True and not relevance):
+        reference_data_status = "empty_reference_pool"
+    elif reference_id_set is None and labels_complete is None:
+        reference_data_status = "missing_reference_data"
+    elif label_pool_complete is True:
+        reference_data_status = "complete_reference_labels"
+    else:
+        reference_data_status = "incomplete_reference_labels"
+
+    missing_reference_reason = (
+        "empty_reference_pool" if reference_data_status == "empty_reference_pool"
+        else "reference_completeness_not_declared" if reference_data_status == "missing_reference_data"
+        else "missing_reference_labels"
+    )
+
+    ndcg = None
+    ndcg_exclusion = None
+    if not judged_relevance:
+        ndcg_exclusion = missing_reference_reason
+    elif missing_top_labels:
+        ndcg_exclusion = "unlabelled_result_in_top_k"
+    else:
+        ndcg = ndcg_at_k(top_ids, judged_relevance, k)
+        if ndcg is None:
+            ndcg_exclusion = "idcg_zero_no_positive_relevance"
+
+    binary_exclusion = missing_reference_reason if not judged_relevance else (
+        "unlabelled_result_in_top_k" if missing_top_labels else None
+    )
+    precision = recall = hit_rate = None
+    recall_exclusion = binary_exclusion
+    if binary_exclusion is None:
+        relevant_results = [school_id for school_id in top_ids if judged_relevance[school_id] >= RELEVANCE_THRESHOLD]
+        precision = len(relevant_results) / len(top_ids) if top_ids else 0.0
+        hit_rate = float(bool(relevant_results))
+        if label_pool_complete is None:
+            recall_exclusion = "reference_completeness_not_declared"
+        elif not label_pool_complete:
+            recall_exclusion = "incomplete_reference_labels"
+        elif reference_data_status == "empty_reference_pool":
+            recall_exclusion = "empty_reference_pool"
+        elif available_relevant == 0:
+            recall_exclusion = "no_relevant_reference_schools"
+        else:
+            recall = len(relevant_results) / available_relevant
+
+    mrr = None
+    mrr_exclusion = None
+    if not judged_relevance:
+        mrr_exclusion = missing_reference_reason
+    else:
+        for index, school_id in enumerate(ids):
+            if school_id not in judged_relevance:
+                mrr_exclusion = "unlabelled_result_before_first_relevant"
+                break
+            if judged_relevance[school_id] >= RELEVANCE_THRESHOLD:
+                mrr = 1.0 / (index + 1)
+                break
+        else:
+            mrr = 0.0
+
+    return {
+        "case_id": case_id,
+        "k": k,
+        "relevance_scale": RELEVANCE_SCALE,
+        "binary_relevance_threshold": RELEVANCE_THRESHOLD,
+        "ranking_ids": ids,
+        "duplicate_result_ids_removed": duplicate_count,
+        "labelled_ids": len(judged_relevance),
+        "unlabelled_top_k_ids": missing_top_labels,
+        "reference_labels_complete": label_pool_complete,
+        "reference_data_status": reference_data_status,
+        "metrics": {
+            "ndcg_at_3": {"value": ndcg, "denominator": 1 if ndcg is not None else 0,
+                           "excluded": int(ndcg is None), "exclusion_reason": ndcg_exclusion,
+                           "ideal_basis": "all available relevance labels"},
+            "precision_at_3": {"value": precision, "denominator": 1 if precision is not None else 0,
+                               "excluded": int(precision is None), "exclusion_reason": binary_exclusion,
+                               "items_in_denominator": len(top_ids) if precision is not None else 0},
+            "recall_at_3": {"value": recall, "denominator": 1 if recall is not None else 0,
+                            "excluded": int(recall is None), "exclusion_reason": recall_exclusion,
+                            "relevant_reference_schools": available_relevant},
+            "mrr": {"value": mrr, "denominator": 1 if mrr is not None else 0,
+                    "excluded": int(mrr is None), "exclusion_reason": mrr_exclusion},
+            "hit_rate_at_3": {"value": hit_rate, "denominator": 1 if hit_rate is not None else 0,
+                               "excluded": int(hit_rate is None), "exclusion_reason": binary_exclusion},
+        },
+    }
+
+
+def aggregate_case_metrics(cases: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Macro-average defined per-case metrics and expose each denominator."""
+    names = ("ndcg_at_3", "precision_at_3", "recall_at_3", "mrr", "hit_rate_at_3")
+    aggregates = {}
+    for name in names:
+        values = [case["metrics"][name]["value"] for case in cases
+                  if case["metrics"][name]["value"] is not None]
+        aggregates[name] = {
+            "value": sum(values) / len(values) if values else None,
+            "denominator": len(values),
+            "excluded_cases": len(cases) - len(values),
+            "aggregation": "macro mean over defined per-case values",
+        }
+    return {"case_count": len(cases), "metrics": aggregates}
+
+
+def eligibility_violation_metrics(
+    recommended_ids: Sequence[str], eligibility: Mapping[str, str],
+) -> dict[str, Any]:
+    """Measure recommendations of confirmed ineligible schools; unknown stays separate."""
+    ids, duplicate_count = _unique_ids(recommended_ids)
+    invalid = {value for value in eligibility.values()} - {"eligible", "ineligible", "unknown"}
+    if invalid:
+        raise ValueError(f"invalid eligibility labels: {sorted(invalid)}")
+    counts = {"eligible": 0, "ineligible": 0, "unknown": 0, "unlabelled": 0}
+    for school_id in ids:
+        counts[eligibility.get(school_id, "unlabelled")] += 1
+    known = counts["eligible"] + counts["ineligible"]
+    return {
+        **counts,
+        "confirmed_ineligible_recommendation_rate": counts["ineligible"] / known if known else None,
+        "known_eligibility_denominator": known,
+        "unknown_recommendation_rate": counts["unknown"] / len(ids) if ids else None,
+        "unknown_denominator": len(ids),
+        "unlabelled_recommendations": counts["unlabelled"],
+        "duplicate_result_ids_removed": duplicate_count,
     }
 
 
