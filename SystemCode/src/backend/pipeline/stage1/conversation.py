@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from SystemCode.src.backend.agents.tools import GeneralKnowledgeRetriever
+
 
 from stage1.nlp_mapper import (
     LANGUAGE_KEYWORDS,
@@ -24,6 +29,25 @@ from stage1.dialogue_manager import (
 REQUIRED_MARKERS = ("must", "need", "required", "require", "essential")
 PREFERRED_MARKERS = ("prefer", "preferred", "preference", "useful", "optional", "nice to have")
 RECOMMEND_SELECTED_MARKERS = ("recommend", "best", "choose", "pick")
+
+
+def _answer_retrieved_guidance(text: str, retriever: GeneralKnowledgeRetriever):
+    from SystemCode.src.backend.agents.contracts import GeneralKnowledgeEvidence
+
+    passages = [GeneralKnowledgeEvidence.model_validate(item)
+                for item in retriever.search(text, limit=3)]
+    if not passages:
+        return "I could not find relevant guidance in the curated early-childhood knowledge base.", [], "unknown"
+    citations = [{
+        "url": item.citation.url, "title": item.citation.title,
+        "retrieved_at": item.citation.retrieved_at.isoformat(),
+        "chunk_id": item.chunk_id, "evidence_scope": "general",
+        "authority": item.citation.authority,
+    } for item in passages]
+    category = ("authoritative_fact"
+                if all(item.evidence_category == "authoritative_fact" for item in passages)
+                else "unknown")
+    return " ".join(item.text for item in passages), citations, category
 
 
 def _contains_any(text: str, markers: tuple[str, ...]) -> bool:
@@ -496,7 +520,7 @@ def _resolve_pending(current: dict, text: str) -> tuple[dict, bool]:
     return sync_preference_schema(profile), True
 
 
-def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None) -> dict:
+def update_conversation(current: dict | None, text: str, selected_centres: list[dict] | None = None, eligible_centres: list[dict] | None = None, web_rag_index: dict | None = None, general_knowledge_index: dict | None = None, classified_intent=None, candidate_facets: dict | None = None, *, general_retriever: GeneralKnowledgeRetriever | None = None) -> dict:
     """Update a profile and determine the next clarification or action."""
     lowered = (text or "").strip().lower()
     contextual_answer = None
@@ -633,23 +657,30 @@ def update_conversation(current: dict | None, text: str, selected_centres: list[
     if intent.intent == "ask_general_knowledge":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
-        answer, citations = _answer_general_knowledge(
-            text, general_knowledge_index, intent.topics, intent.relationship
-        )
+        if general_retriever is not None:
+            answer, citations, category = _answer_retrieved_guidance(text, general_retriever)
+        else:
+            answer, citations = _answer_general_knowledge(
+                text, general_knowledge_index, intent.topics, intent.relationship
+            )
+            category = "authoritative_fact" if citations else "unknown"
         return {
             "profile": profile, "understood": summarize_profile(profile), "status": "general_knowledge",
             "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences")),
             "question": answer, "citations": citations,
             "evidence_scope": "general" if citations else "unavailable", "ranking_affected": False,
-            "evidence_category": "authoritative_fact" if citations else "unknown",
+            "evidence_category": category,
         }
     if intent.intent == "ask_combined_evidence":
         profile = sync_preference_schema(current or {"hard_constraints": {}, "preferences": {}, "recognized": []})
         profile["intent"], profile["intent_method"] = intent.intent, intent.method
         school_answer, school_citations, method, fallback = _answer_web_evidence(text, selected_centres or [], web_rag_index)
-        general_answer, general_citations = _answer_general_knowledge(
-            text, general_knowledge_index, intent.topics, intent.relationship
-        )
+        if general_retriever is not None:
+            general_answer, general_citations, _ = _answer_retrieved_guidance(text, general_retriever)
+        else:
+            general_answer, general_citations = _answer_general_knowledge(
+                text, general_knowledge_index, intent.topics, intent.relationship
+            )
         citations = school_citations + general_citations
         return {
             "profile": profile, "understood": summarize_profile(profile), "status": "combined_evidence",

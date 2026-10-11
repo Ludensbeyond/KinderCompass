@@ -7,6 +7,8 @@ curated data into domain objects for the rest of the backend.
   IDs, including Neo4j-backed catalogue access.
 - `policy_repository.py` selects dated subsidy policy data from
   `resources/policy/`.
+- `parent_guide_index.py` validates and loads persistent guide artifacts without
+  embeddings or rebuilds. See [index construction](file-vector-index.md).
 
 Call repositories from services or backend pipeline code, never from the
 browser. Keep provider-specific queries and loading details here while

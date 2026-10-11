@@ -69,10 +69,10 @@ class ConversationModeDispatchTests(unittest.TestCase):
         self.service.build_conversation_context = Mock(return_value=self.context)
         self.service._conversation_tools = Mock(return_value=[Mock(name="tool")])
 
-    def handle(self, mode: str) -> dict:
+    def handle(self, mode: str | None) -> dict:
         with (
             patch.dict(os.environ, {
-                "CONVERSATION_AGENT_MODE": mode,
+                "CONVERSATION_AGENT_MODE": mode or "",
                 "WEB_RAG_ANSWER_MODE": "agent",
             }),
             patch(
@@ -80,6 +80,8 @@ class ConversationModeDispatchTests(unittest.TestCase):
                 return_value=IntentResult(intent="reset_preferences", confidence=1),
             ),
         ):
+            if mode is None:
+                os.environ.pop("CONVERSATION_AGENT_MODE", None)
             return self.service.handle(
                 message=self.context.message,
                 profile=deepcopy(self.context.profile),
@@ -140,6 +142,36 @@ class ConversationModeDispatchTests(unittest.TestCase):
             result["profile"]["decision_state"]["current_goal"],
             "reset_preferences",
         )
+
+    def test_unset_mode_serves_supervisor_response(self):
+        self.service._handle_deterministic = Mock()
+        self.service._run_conversation_agent = Mock(return_value=SimpleNamespace(
+            response=agent_response(),
+            metadata=SimpleNamespace(validation_succeeded=True),
+        ))
+
+        result = self.handle(None)
+
+        self.service._run_conversation_agent.assert_called_once()
+        self.service._handle_deterministic.assert_not_called()
+        self.assertEqual(result["answer_method"], "agent_grounded")
+
+    def test_unset_mode_preserves_failure_fallback_without_recursive_graph_entry(self):
+        def deterministic(**kwargs):
+            from SystemCode.src.backend.agents.config import (
+                ConversationAgentMode, get_conversation_agent_mode,
+            )
+            self.assertIs(get_conversation_agent_mode(), ConversationAgentMode.DETERMINISTIC)
+            self.assertIs(get_web_rag_answer_mode(), WebRagAnswerMode.DETERMINISTIC)
+            return deterministic_response()
+
+        self.service._handle_deterministic = Mock(side_effect=deterministic)
+        self.service._conversation_tools = Mock(side_effect=RuntimeError("private"))
+
+        result = self.handle(None)
+
+        self.service._handle_deterministic.assert_called_once()
+        self.assertEqual(result["answer_method"], "deterministic_fallback")
 
     def test_agent_setup_failure_falls_back_once_with_fixed_safe_metadata(self):
         expected = deterministic_response()

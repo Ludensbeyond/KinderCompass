@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import re
 from copy import deepcopy
 from pathlib import Path
+from threading import Lock
 from typing import Any, Literal
 
 from SystemCode.src.backend.agents.config import (
@@ -36,10 +38,97 @@ from SystemCode.src.backend.services.conversation_calculations import (
 from stage1.conversation import update_conversation
 from stage1.intent_router import classify_intent
 from stage1.scorer import rank_schools
+from stage1.nlp_mapper import summarize_profile
 from stage1.web_rag import load_json
 
 
 class PreferenceService:
+    async def handle_llm_first(self, request, *, history, memory, feedback,
+                               model_factory=None, limits=None, shadow=False, legacy_result=None):
+        """Staged HTTP orchestration; no legacy routing or per-turn fallback."""
+        from SystemCode.src.backend.agents.conversation_response import SERVICE_ERROR, run_validated_conversation
+        from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
+        from SystemCode.src.backend.domain.models import PreferenceResponse
+        from SystemCode.src.backend.services.conversation_context_service import ConversationContextService
+        from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
+
+        from SystemCode.src.backend.agents.conversation_telemetry import TurnTelemetry
+
+        original = deepcopy(request.profile or {})
+        telemetry = TurnTelemetry("shadow" if shadow else "llm-first")
+        lease = None
+        tools = None
+        response = None
+        try:
+            # Shadow has no shared lease, transcript store or persistent side effect.
+            if not shadow:
+                lease = history.begin_turn(request.anonymous_session_id, profile=original,
+                                           retain=request.remember_conversation)
+            context = ConversationContextService(self.schools).build(
+                message=request.message, profile=original,
+                selected_school_ids=request.selected_school_ids,
+                family=request.family, home_postal_code=request.home_postal_code,
+                history=lease,
+            )
+            tools = ConversationToolService(
+                context, self.schools, self.evaluation, self.locations,
+                school_index_loader=lambda: load_json(Path(os.getenv("WEB_RAG_INDEX_PATH") or
+                    self.repo_root / "SystemCode/src/backend/output/web_rag_pilot_index.json")),
+                general_retriever_loader=lambda: self._knowledge_retriever(load_json(
+                    self.repo_root / "SystemCode/src/backend/resources/web_rag/general_knowledge_index.json")),
+            )
+            try:
+                # Explicit staged path uses configured provider even in legacy rollback mode.
+                model = model_factory() if model_factory else create_conversation_agent_model(
+                    {**os.environ, "CONVERSATION_AGENT_MODE": "agent"})
+            except Exception:
+                model = None
+            response = await run_validated_conversation(
+                context, tools, model=telemetry.wrap(model), limits=limits, shadow=shadow)
+            succeeded = response.status == "ok"
+            profile = response.profile if succeeded else original
+            result = {
+                "profile": profile, "understood": summarize_profile(profile),
+                "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences"))
+                    and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                "question": response.answer if succeeded else SERVICE_ERROR,
+                "citations": [{**c.model_dump(mode="json"), "chunk_id": c.citation_id} for c in response.citations],
+                "answer_method": "llm_first" if succeeded else "service_error",
+                "fallback_reason": response.failure_reason,
+            }
+            PreferenceResponse.model_validate(result)
+
+            if shadow:
+                staged = tools.staged_profile
+                telemetry.compare(legacy_result, {
+                    **result, "profile": staged,
+                    "ready_to_search": bool(staged.get("hard_constraints") or staged.get("preferences"))
+                        and not any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                })
+                return result
+
+            def persist():
+                result["answer_id"] = feedback.record_answer(result)
+                PreferenceResponse.model_validate(result)
+                if succeeded and request.remember_preferences:
+                    memory.save(request.anonymous_session_id, profile)
+
+            if succeeded and lease:
+                history.commit(lease, message=request.message, answer=response.answer,
+                               profile=profile, retain=request.remember_conversation,
+                               before_commit=persist)
+            else:
+                persist()
+            return result
+        except BaseException:
+            response = None
+            raise
+        finally:
+            telemetry.emit(response)
+            if tools:
+                tools.abort()
+            history.abort(lease)
+
     def __init__(
         self, schools: SchoolRepository, evaluation: EvaluationService,
         locations: LocationService, repo_root: Path,
@@ -48,6 +137,31 @@ class PreferenceService:
         self.evaluation = evaluation
         self.locations = locations
         self.repo_root = repo_root
+        self._general_retriever = None
+        self._general_retriever_lock = Lock()
+
+    def _knowledge_retriever(self, index: dict | None):
+        """Resolve configuration and load one index per service/worker lifetime."""
+        from SystemCode.src.backend.agents.tools import CuratedGeneralKnowledgeRetriever
+        from SystemCode.src.backend.pipeline.general_knowledge_config import (
+            GeneralKnowledgeRetrievalMode, get_general_knowledge_config,
+        )
+
+        with self._general_retriever_lock:
+            if self._general_retriever is None:
+                curated = CuratedGeneralKnowledgeRetriever(index or {"chunks": []})
+                try:
+                    config = get_general_knowledge_config()
+                except ValueError:
+                    self._general_retriever = curated
+                else:
+                    if config.mode is GeneralKnowledgeRetrievalMode.CURATED:
+                        self._general_retriever = curated
+                    else:
+                        from SystemCode.src.backend.pipeline.parent_guide_retrieval import ParentGuideRetriever
+
+                        self._general_retriever = ParentGuideRetriever(config, curated=curated)
+        return self._general_retriever
 
     @staticmethod
     def _run_selected_school_agent(
@@ -92,7 +206,10 @@ class PreferenceService:
             ),
             *create_decision_and_calculation_tools(context, self.evaluation),
             create_structured_school_facts_tool(context, self.schools),
-            *create_evidence_tools(context),
+            *create_evidence_tools(
+                context,
+                general_retriever=self._knowledge_retriever(context.general_knowledge_evidence.index),
+            ),
         ]
 
     @staticmethod
@@ -337,6 +454,11 @@ class PreferenceService:
             context.general_knowledge_evidence.index,
             intent,
             self.schools.facet_summary(),
+            general_retriever=(
+                self._knowledge_retriever(context.general_knowledge_evidence.index)
+                if intent.intent in {"ask_general_knowledge", "ask_combined_evidence"}
+                else None
+            ),
         )
         if intent.intent == "ask_selected_school_evidence":
             result = self._apply_selected_school_answer_mode(
@@ -349,6 +471,60 @@ class PreferenceService:
         selected_school_ids: list[str], eligible_school_ids: list[str],
         excluded_school_ids: list[str], family: FamilyDetails | None, home_postal_code: str | None,
     ) -> dict[str, Any]:
+        # Social and help turns need no school lookup, geocoding, or model call. Keep
+        # saved preferences and any unresolved decision intact.
+        greeting = re.fullmatch(
+            r"(?:hi|hello|hey|good morning|good afternoon|good evening)[\s!.]*",
+            message.strip(), re.IGNORECASE,
+        )
+        help_request = re.fullmatch(
+            r"(?:(?:hi|hello|hey)[\s,!.]+)?(?:please\s+)?(?:"
+            r"what (?:can|do) you do(?: for me)?|"
+            r"what can you help(?: me)? with|how can you help(?: me)?|"
+            r"(?:can|could) you (?:help me|tell me what you (?:can|do) do)|"
+            r"(?:what are|tell me about) your (?:capabilities|features)|"
+            r"who are you|what is kindercompass|what's kindercompass|"
+            r"how (?:do i use|does) (?:kindercompass|this (?:app|chat))(?: work)?|"
+            r"help(?: me)?)(?:,?\s+please)?[\s?!.]*",
+            message.strip(), re.IGNORECASE,
+        )
+        if greeting or help_request:
+            saved = deepcopy(profile or {})
+            pending_question = next((
+                saved[key].get("question")
+                for key in ("pending_contradiction", "pending_relaxation")
+                if saved.get(key)
+            ), None)
+            ready = bool(saved.get("hard_constraints") or saved.get("preferences") or saved.get("preference_items")) and not any(
+                saved.get(key) for key in ("pending", "pending_contradiction", "pending_relaxation")
+            )
+            question = "Hi! Tell me what you would like in a preschool, such as language, teaching approach, or distance from home."
+            if pending_question:
+                question = f"Hi! {pending_question}"
+            elif saved.get("pending"):
+                question = "Hi! Would you like your last preference to be required or preferred?"
+            elif ready:
+                question = "Hi! Add another preschool preference or click Show recommendations to use your saved preferences."
+            if help_request:
+                question = (
+                    "I'm KinderCompass, your guide to choosing a preschool in Singapore. "
+                    "I can help you set preferences such as language, teaching approach, budget, "
+                    "and distance; find nearby preschools; compare selected schools and explain "
+                    "recommendations; estimate fees and subsidies using your family details; "
+                    "and answer questions about preschool approaches, enrolment, and available school information. "
+                    "Try asking 'What is Montessori?' or 'Which preschool is closest to me?', "
+                    "or tell me 'I want a preschool that teaches Chinese.'"
+                )
+                if pending_question:
+                    question += f" To continue your saved preferences: {pending_question}"
+                elif saved.get("pending"):
+                    question += " To continue your last preference, tell me whether it is required or preferred."
+                elif ready:
+                    question += " Click Show recommendations to use your saved preferences."
+            return {
+                "profile": saved, "understood": summarize_profile(saved),
+                "ready_to_search": ready, "question": question,
+            }
         current = profile or {}
         before = deepcopy(current)
         active = current.get("active_school") or {}

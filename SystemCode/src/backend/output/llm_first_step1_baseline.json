@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "capture_kind": "synthetic_injected_model",
+  "provider_calls": 0,
+  "persistent_state_writes": 0,
+  "preference_schema_sha256": "4fa8be7da087be9255812e40a86a8b24b47e66e74c8e591723a4d480cd1d19d6",
+  "traces": [
+    {
+      "case_id": "greeting",
+      "carries_previous_profile": false,
+      "events": [],
+      "model_calls": 0,
+      "profile_changed": false,
+      "chinese_preference_present": false,
+      "profile_keys": [],
+      "ready_to_search": false,
+      "answer_method": null,
+      "fallback_reason": null
+    },
+    {
+      "case_id": "help",
+      "carries_previous_profile": false,
+      "events": [],
+      "model_calls": 0,
+      "profile_changed": false,
+      "chinese_preference_present": false,
+      "profile_keys": [],
+      "ready_to_search": false,
+      "answer_method": null,
+      "fallback_reason": null
+    },
+    {
+      "case_id": "mixed_preference_guidance",
+      "carries_previous_profile": false,
+      "events": [
+        {
+          "event": "semantic_routing"
+        },
+        {
+          "event": "intent",
+          "intent": "ask_general_knowledge"
+        },
+        {
+          "event": "context_before_model"
+        },
+        {
+          "event": "supervisor"
+        },
+        {
+          "event": "bind_capabilities",
+          "tools": [
+            "search_general_knowledge"
+          ],
+          "required": true
+        },
+        {
+          "event": "model"
+        },
+        {
+          "event": "model"
+        }
+      ],
+      "model_calls": 2,
+      "profile_changed": true,
+      "chinese_preference_present": false,
+      "profile_keys": [
+        "decision_state",
+        "hard_constraints",
+        "intent",
+        "intent_method",
+        "preference_items",
+        "preferences",
+        "recognized",
+        "schema_version",
+        "unsupported_preferences"
+      ],
+      "ready_to_search": false,
+      "answer_method": "agent_grounded",
+      "fallback_reason": null
+    },
+    {
+      "case_id": "importance_followup",
+      "carries_previous_profile": true,
+      "events": [
+        {
+          "event": "semantic_routing"
+        },
+        {
+          "event": "intent",
+          "intent": "update_preferences"
+        },
+        {
+          "event": "context_before_model"
+        },
+        {
+          "event": "supervisor"
+        },
+        {
+          "event": "bind_capabilities",
+          "tools": [
+            "update_preferences"
+          ],
+          "required": true
+        },
+        {
+          "event": "model"
+        },
+        {
+          "event": "model"
+        }
+      ],
+      "model_calls": 2,
+      "profile_changed": true,
+      "chinese_preference_present": false,
+      "profile_keys": [
+        "decision_state",
+        "extraction_method",
+        "hard_constraints",
+        "intent",
+        "intent_method",
+        "preference_items",
+        "preferences",
+        "recognized",
+        "schema_version",
+        "source_text",
+        "unsupported_preferences"
+      ],
+      "ready_to_search": false,
+      "answer_method": "agent_grounded",
+      "fallback_reason": null
+    }
+  ]
+}

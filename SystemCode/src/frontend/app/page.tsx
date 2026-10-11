@@ -221,14 +221,26 @@ function sourceDateLabel(value?: string | null): string {
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.detail ?? "Something went wrong. Please try again.");
-  return data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const response = await fetch(`${API}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail ?? "Something went wrong. Please try again.");
+    return data;
+  } catch (caught) {
+    if (controller.signal.aborted) {
+      throw new Error("The request took too long. Please try again.");
+    }
+    throw caught;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export default function Home() {

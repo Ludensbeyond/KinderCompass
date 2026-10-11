@@ -23,6 +23,7 @@ from .contracts import (
     SelectedSchoolAgentRequest,
 )
 from .model_factory import create_agent_model
+from .observability import observe_tool_execution
 from .tools import (
     SELECTED_SCHOOL_EVIDENCE_TOOL_NAME,
     create_selected_school_evidence_tool,
@@ -172,7 +173,8 @@ def create_selected_school_evidence_graph(
         for tool_call in response.tool_calls:
             if tool_call["name"] != SELECTED_SCHOOL_EVIDENCE_TOOL_NAME:
                 raise ValueError("model requested an unregistered tool")
-            result = evidence_tool.invoke(request.model_dump())
+            with observe_tool_execution(SELECTED_SCHOOL_EVIDENCE_TOOL_NAME):
+                result = evidence_tool.invoke(request.model_dump())
             evidence.extend(result)
             tool_messages.append(
                 ToolMessage(

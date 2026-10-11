@@ -72,6 +72,10 @@ OPENAI_WEB_RAG_ANSWERS_ENABLED=true
 OPENAI_WEB_RAG_MODEL=gpt-4o-mini
 OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
 
+# Full-conversation supervisor: agent is the default; deterministic restores
+# the existing controller. Shadow serves the controller and evaluates the agent.
+CONVERSATION_AGENT_MODE=agent
+
 # Selected-school webpage answer implementation (deterministic or agent)
 WEB_RAG_ANSWER_MODE=deterministic
 
@@ -90,10 +94,49 @@ invalid values resolve to `deterministic`. Agent mode runs the bounded
 selected-school evidence graph behind the existing preferences endpoint and
 falls back to its deterministic answer on any failure. It supersedes the
 legacy `OPENAI_WEB_RAG_ANSWERS_ENABLED` synthesis path for this intent.
-Deterministic mode does not construct an agent model client or require
-`OPENAI_API_KEY`. Agent-mode model construction uses
+With `CONVERSATION_AGENT_MODE=deterministic`, the selected-school deterministic
+mode does not construct an agent model client or require `OPENAI_API_KEY`.
+Agent-mode model construction uses
 `OPENAI_WEB_RAG_MODEL` and requires `OPENAI_WEB_RAG_TIMEOUT_SECONDS` to be
 between 1 and 30 seconds.
+
+`POST /api/preferences` defaults to the validated LLM-first model/tool loop.
+Set `CONVERSATION_FLOW_MODE=shadow` for an isolated inline comparison while
+serving legacy responses, or `legacy` for rollback. The explicit
+`/api/preferences/llm-first` evaluation endpoint remains available. New-flow
+failures return a fixed service error and discard staged state. See the
+[rollout contract](doc/llm-first-rollout.md) for seven-day observation, token/cost
+telemetry, school-demo acceptance and remaining limitations.
+
+The following routing, greeting/help and supervisor settings describe the
+retained **legacy** implementation. They apply when `CONVERSATION_FLOW_MODE`
+is `legacy` or `shadow`.
+
+The full-conversation supervisor defaults to `agent` when
+`CONVERSATION_AGENT_MODE` is missing, blank, or invalid. Set it explicitly to
+`deterministic` to restore the existing conversation controller, or `shadow` to
+serve the controller response while evaluating an agent candidate inline.
+Restart the backend after changing deployment configuration. Agent mode requires
+`OPENAI_API_KEY` for model calls and preserves the existing controller fallback
+when the model is unavailable, execution fails, or validation rejects its result.
+Full-conversation agent and shadow modes disable the separate selected-school
+graph for that request. No frontend configuration or API contract change is needed.
+
+The backend console logs each executed agent tool with `tool_execution`, its
+name, a generated execution ID, and `event=started`, `completed`, or `failed`.
+Completion and failure include elapsed milliseconds. Parent-guide searches also
+emit `guide_retrieval` with the configured mode at start and the actual mode,
+result count, elapsed time, and safe failure category at completion. For example,
+`mode=vector` confirms vector ranking was used; `mode=lexical` with
+`failure_category=embedding_unavailable` identifies fallback. Questions, tool
+arguments, evidence text, and provider error messages are excluded. These INFO
+logs are enabled in the API console; restart the backend to load this change.
+An actual clarification stops before executing tools and uses
+`fallback_reason=clarification_required`; `invalid_routing` indicates a rejected
+route rather than an ordinary clarification. Explicit education overview requests
+such as “tell me about education system in Singapore” route to general-knowledge
+retrieval. Answers remain limited to the available reviewed early-childhood
+documents; routing does not add evidence about the entire education system.
 
 When `OPENAI_INTENT_CLASSIFICATION_ENABLED=true`, structured LLM interpretation
 takes priority for explanatory, ambiguous, mixed-topic, and nearest-school chat.
@@ -103,6 +146,13 @@ the fallback. Other explicit operations, such as resetting preferences or acting
 on selected schools, retain deterministic precedence. Retrieval, ranking,
 eligibility, fees, and distance remain grounded or deterministic regardless of
 the routing method.
+
+Standalone greetings and help questions such as “what can you do?”, “how can
+you help me?”, and “who are you?” receive a direct introduction and supported
+preschool tasks with example prompts in every conversation mode. These turns
+preserve saved preferences, active school context, and pending decisions without
+school, location, or model calls. Messages that also request a specific task
+continue through normal conversation routing.
 
 A nearest-school chat request does not require an existing recommendation list.
 With the saved postal code, the backend loads the full grounded Neo4j school
@@ -165,6 +215,14 @@ The development CORS policy accepts the frontend origins
 See the [`doc/` directory guide](doc/README.md) for ownership boundaries and
 more detail about each backend folder.
 
+See the [file-based vector store plan](../../../docs/file-vector-store-plan.md) for the
+planned embedding index of the Singapore preschool parent guide and its
+integration with the existing general-knowledge retrieval tool.
+Steps 1–5 are complete; step 6 evaluation is implemented with failing acceptance gates; see the [source review and opt-in configuration](doc/file-vector-source-review.md)
+and [Markdown chunking](doc/file-vector-chunking.md) for verified mappings,
+corpus exclusions and offline parsing. See [backend integration](doc/file-vector-service.md)
+for opt-in retrieval in the agent and deterministic paths. See the [evaluation and demo guide](doc/file-vector-demo.md) for results, failures and reproducible commands.
+
 | Path | Description |
 |---|---|
 | `main.py` | Thin FastAPI routing layer, CORS policy, service wiring, and HTTP error translation. |
@@ -210,6 +268,10 @@ while the older Stage 1 scoring functions are migrated incrementally.
 | `runner.py` | Stage 1 command-line and reusable execution entry points. |
 
 ### Maintenance scripts
+
+The [persistent parent-guide index guide](doc/file-vector-index.md) documents
+the explicit offline build and validation commands, vector reuse and rollback.
+The build extension is complete through Step 3; runtime retrieval is deferred.
 
 | Script | Purpose |
 |---|---|
@@ -351,3 +413,28 @@ from being silently used.
 
 See the [PoC 1 guide](../../../docs/poc1/Readme.md) for the full application
 workflow, frontend launch, demonstration inputs, and system limitations.
+
+The [standalone parent-guide retrieval guide](doc/file-vector-retrieval.md) documents
+step 4 query commands, relevance calibration, dated constraints and fallback.
+The [backend integration guide](doc/file-vector-service.md) documents step 5
+service injection, runtime opt-in and deterministic fallbacks.
+
+The active [LLM-first phase](../../../docs/llm-first-conversation-plan.md) and
+[Step 1 baseline](doc/llm-first-baseline.md) record the next architecture phase.
+The [Step 2 context contract](doc/llm-first-context.md) describes bounded opt-in
+ephemeral history and minimal context preparation for the forthcoming new flow.
+The [Step 3 tool contract](doc/llm-first-tools.md) describes structured
+capabilities and request-local staged state for the new flow.
+See [backend progress](doc/agents.md) for completed-step verification and the
+historical supervisor rollout evidence.
+
+The [Step 4 model loop](doc/llm-first-loop.md) records LLM-controlled action
+selection, dependent tools and bounded execution for the new flow.
+
+The [Step 5 response contract](doc/llm-first-responses.md) records model-authored
+wording, claim/value/citation checks, bounded repair and failure rollback.
+
+The [Step 6 staged HTTP contract](doc/llm-first-http.md) records the additive
+history consent, session commit behavior, compatibility checks and live capture.
+Step 6 is complete under the authorized school-demo evaluation profile;
+strict evaluation gaps and Step 7 rollout work remain documented.

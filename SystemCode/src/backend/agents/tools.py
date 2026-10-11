@@ -679,7 +679,11 @@ def create_evidence_tools(
             answer=" ".join(item.text for item in passages[:2]),
             grounding_facts=[item.text for item in passages],
             citations=[item.citation for item in passages],
-            evidence_category="authoritative_fact",
+            evidence_category=(
+                "authoritative_fact"
+                if all(item.evidence_category == "authoritative_fact" for item in passages)
+                else "unknown"
+            ),
             answer_status="general_knowledge",
         )
 
