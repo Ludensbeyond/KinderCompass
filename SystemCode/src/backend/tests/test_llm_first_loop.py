@@ -10,7 +10,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 
 from SystemCode.src.backend.agents.contracts import InitialConversationContext
 from SystemCode.src.backend.agents.conversation_loop import (
-    ConversationLoopError, LoopLimits, run_conversation_loop,
+    SYSTEM_PROMPT, ConversationLoopError, LoopLimits, run_conversation_loop,
 )
 from SystemCode.src.backend.services.conversation_context_service import CAPABILITIES
 from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
@@ -306,6 +306,38 @@ class LlmFirstLoopTests(unittest.IsolatedAsyncioTestCase):
             ticks[0] = 31.0
             return AIMessage(content="Hi")
         await self.rejected(self.service(), ScriptedModel(slow_model), "elapsed_limit", clock=lambda: ticks[0])
+
+    async def test_looking_for_spark_within_distance_is_instructed_as_preference_update(self):
+        self.assertIn("Looking for / find me / I want a preschool with named attributes", SYSTEM_PROMPT)
+        self.assertIn("Do not use find_nearby_schools when SPARK", SYSTEM_PROMPT)
+        message = "i am looking for a spark preschool within 3km from my home"
+        service = self.service(message, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**record, "distance_km": 1.0} for record in records
+        ]
+        model = ScriptedModel(
+            AIMessage(content="", tool_calls=[
+                call("update_preferences", {"set": [
+                    {"attribute": "spark_certified", "value": True, "importance": "required"},
+                    {"attribute": "max_distance_km", "value": 3, "importance": "required"},
+                ]}),
+                call("search_rank_compare_schools", id="call:2"),
+            ]),
+            AIMessage(content="SPARK and a 3 km home limit are saved. Click Show recommendations for ranked results."),
+        )
+        candidate = await self.run_loop(service, model)
+        instructions = "\n".join(
+            item.content for item in model.messages[0] if isinstance(getattr(item, "content", None), str)
+        )
+        self.assertIn("call update_preferences first", instructions)
+        self.assertIn("Do not call find_nearby_schools for that combined request", instructions)
+        self.assertEqual([result.tool_name for result in candidate.results], [
+            "update_preferences", "search_rank_compare_schools",
+        ])
+        profile = service.export_validated_state(response_validated=True)
+        self.assertTrue(profile["preferences"]["spark_certified"]["value"])
+        self.assertEqual(profile["hard_constraints"]["max_distance_km"], 3)
+        self.assertIn("Show recommendations", candidate.answer)
 
     async def test_unavailable_evidence_is_structured_and_model_can_explain_gap(self):
         service = self.service("What is Montessori?")

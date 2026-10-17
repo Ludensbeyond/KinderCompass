@@ -57,9 +57,11 @@ that primarily describe one school remain properties.
 | `provision_of_transport` | String or null | Recorded transport provision. |
 | `last_updated` | String or null | Source catalogue update date. |
 
-The compatibility properties remain because the current Stage 1 query and
-ranking code reads them. They may coexist with normalized relationships until
-all consumers have migrated.
+The compatibility properties remain because Stage 1 ranking still reads them.
+Hard Stage 1 filters now use the normalized relationships (`LOCATED_IN`,
+`SERVES_LEVEL`, `TEACHES_IN`, and legacy `USES_PEDAGOGY`). Preferred SPARK,
+pedagogy, operator, food, and transport stay as score-time checks so unknown
+evidence is not treated as a failed must-have.
 
 ## Relationships
 
@@ -172,6 +174,18 @@ the explicit `--clear-existing` option is supplied.
 - A language relationship confirms only that the source record lists the
   language; it does not establish instructional intensity or quality.
 - Provenance is documented by the application and source fields but is not yet
-  represented with dedicated evidence nodes.
-- Stage 1 still reads compatibility properties for filtering and ranking; the
-  normalized relationships currently support exploration and future migration.
+  represented with dedicated evidence nodes. Stage 1 hard-filter results include
+  a `retrieval_path` of the relationships used to retrieve the school.
+- Stage 1 ranking still reads compatibility properties. Preferred attributes
+  are scored after retrieval rather than used as Cypher filters.
+
+## Stage 1 graph evaluation
+
+Workstream 2 retrieval quality is measured by
+`SystemCode/src/backend/scripts/evaluate_stage1_graph.py` against
+`resources/stage1_graph_evaluation.json`. Gold school sets are independent
+canonical Cypher queries, not `query_builder` output. The harness reports
+competency-question coverage, Stage 1 precision/recall against those gold
+sets, multi-hop path recovery, and provenance completeness. SPARK and chat
+pedagogy remain score-time; the evaluation checks that they are not applied as
+`HAS_CERTIFICATION` or `USES_PEDAGOGY` hard filters.
