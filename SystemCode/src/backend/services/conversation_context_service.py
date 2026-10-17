@@ -17,6 +17,27 @@ CAPABILITIES = (
 )
 
 
+def current_state_support(context: InitialConversationContext):
+    """Scalar support for current user inputs, never catalogue facts."""
+    from ..agents.structured_contracts import StructuredToolResult
+    from ..pipeline.stage1.preference_schema import sync_preference_schema
+
+    current = sync_preference_schema(context.profile)
+    return StructuredToolResult(
+        result_id="context:current", tool_name="update_preferences", status="ok",
+        data={
+            "profile": {
+                "hard_constraints": {k: v for k, v in current.get("hard_constraints", {}).items()
+                                     if k in {"language", "level", "max_distance_km"}},
+                "preference_items": current.get("preference_items", []),
+                "unsupported_preferences": current.get("unsupported_preferences", []),
+            },
+            "family": context.family.model_dump(mode="json") if context.family else None,
+            "home_postal_code": context.home_postal_code,
+        }, catalogue_version=context.catalogue_version, state_revision=0,
+    )
+
+
 class ConversationContextService:
     def __init__(self, schools: SchoolRepository):
         self.schools = schools

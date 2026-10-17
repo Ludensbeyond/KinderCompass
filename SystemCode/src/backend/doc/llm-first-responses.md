@@ -35,6 +35,16 @@ known school names are excluded from numeric scanning. Conversation and
 clarification output may have no factual claims, for conversational wording and
 questions. Grounded replies require claims.
 
+Current user inputs have internal support result `context:current`, built by the
+same helper for model context and validation. Allowed paths include restricted
+preferences, typed `/data/family/...` fields and `/data/home_postal_code`. These
+support summaries of entered inputs, not school facts, calculated age,
+eligibility or completed changes. Family/postal inputs remain unchanged during
+preference staging; preference claims from an earlier revision still fail.
+Search-record addresses can support separate school-attributed claims. Fixed
+validation-error categories are retained for telemetry on successful repairs and
+exhausted attempts; no answer text, family values or provider errors are logged.
+
 ## Repair, state and failures
 
 Invalid final structures, values or citations receive fixed-category feedback

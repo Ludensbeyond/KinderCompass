@@ -12,12 +12,21 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .contracts import InitialConversationContext, Identifier
 from .structured_contracts import StructuredToolResult
 from ..services.conversation_tool_service import ConversationToolService
+from ..services.conversation_context_service import current_state_support
 
 
 SYSTEM_PROMPT = """You help families choose Singapore preschools. Interpret the whole
 message and recent dialogue, including combined requests and follow-up references.
 You choose actions from the permitted capabilities; no server intent selects them.
 Reply directly to greetings and capability questions, without unnecessary tools.
+If asked to name or suggest Singapore preschools, search_rank_compare_schools
+with operation search and a small limit, even when preferences are empty. Give
+repository school names first, then ask what would help narrow the options.
+For broad introductions, mention each distinct returned preschool name once.
+If discussing individual branches, use returned centre_address to distinguish
+them and support addresses with their own record scalar claims.
+Do not imply these examples are already age-eligible, affordable or nearby;
+those claims need the relevant calculation tools.
 Ask a targeted clarification for ambiguous references or missing user choices.
 Use tools for school facts, evidence, calculations and preference changes. Use
 typed patches for user choices only; never invent school records or replace state.
@@ -170,8 +179,14 @@ async def run_conversation_loop(
         names = {tool.name for tool in registry}
         schemas = [{"name": tool.name, "description": tool.description,
                     "parameters": tool.args_schema.model_json_schema()} for tool in registry]
+        initial_payload = context.model_dump(mode="json")
+        if final_validator:
+            support = current_state_support(context)
+            initial_payload["current_state_support"] = {
+                **support.model_dump(mode="json"), "claim_paths": _support_index(support),
+            }
         messages = [SystemMessage(content=SYSTEM_PROMPT + final_prompt),
-                    HumanMessage(content=context.model_dump_json())]
+                    HumanMessage(content=json.dumps(initial_payload, ensure_ascii=False))]
         # Preserve actual speaker order as well as the authoritative snapshot.
         # Serialized history alone can look like another instruction/message.
         for exchange in context.recent_exchanges:

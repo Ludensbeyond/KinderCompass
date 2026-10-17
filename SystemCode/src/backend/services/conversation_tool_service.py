@@ -360,6 +360,9 @@ class ConversationToolService:
             if ranked is None:
                 return "needs_input", {}, ["home_postal_code"], []
             shown = [_public_school(record) for record in ranked[:request.limit]]
+        for item, record in zip(shown, ranked):
+            if record.get("centre_address"):
+                item["centre_address"] = record["centre_address"]
         return ("ok" if ranked else "no_evidence", {
             "records": shown, "operation": request.operation,
             "profile_used": deepcopy(self._profile), "total_matches": len(ranked),

@@ -3,6 +3,21 @@
 Date: 2026-10-10
 Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
+Rollout maintenance, 2026-10-17: investigated user-reported validation failures.
+Family-summary support was missing despite family inputs reaching the model.
+Model and validator now share bounded current family/postal/preference support;
+broad-school requests are instructed to search first. Optional branch addresses
+and fixed validation-error telemetry improve presentation and diagnosis. The
+post-fix synthetic sequence served all four messages. Actual-catalogue claim
+formatting remains inconsistent; no general live quality gate pass is claimed.
+Affected tests: 62 pass; an unchanged scoring expectation fails independently.
+Final full discovery: 537 tests, 536 pass and that one scoring failure, 44.102s
+(`/tmp/kindercompass-chat-verified-regression.log`).
+See the [investigation record](../SystemCode/src/backend/doc/agents.md#rollout-investigation--family-summaries-and-school-requests-2026-10-17).
+This user-requested maintenance does not begin a new architecture step or retire
+rollback; rollout observation remains next. Browser transcript history is still
+absent.
+
 ## Objective
 
 Every valid chat message should reach the LLM before any application decision

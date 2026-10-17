@@ -1,5 +1,40 @@
 # Backend conversation progress
 
+## Rollout investigation — family summaries and school requests, 2026-10-17
+
+The user's `I couldn't verify` message means response validation exhausted its
+repairs, not that catalogue records are necessarily missing. A configured-provider
+trace with synthetic inputs reproduced the family-summary failure:
+`invalid_response_kind`, then `invalid_support_path` twice. Family fields reached
+the model but were absent from permitted `context:current` support.
+
+Model and validator now share typed family/postal input support and the existing
+restricted preference snapshot. It cannot supply school facts or eligibility;
+unchanged family inputs survive preference changes while old preference claims
+remain rejected. Broad-school prompts request catalogue examples first. Search
+records expose available branch addresses, with name/address attribution tests.
+Telemetry records fixed validation-error categories without private text.
+
+Post-fix synthetic provider sequence: **4/4 served turns**, covering family
+summary, school examples, pending Chinese and required Chinese. The synthetic
+broad-school request did not reproduce the original rejection. Actual-catalogue
+traces exposed repeated branch names and further claim-format repair failures;
+no general provider-quality pass is claimed. The browser still does not opt into
+transcript history; pending preference state explains why `required` works.
+
+Affected tests: **62 pass in 2.331s**, outside sandbox,
+`/tmp/kindercompass-chat-focused-final.log`. Full discovery also exposes the
+unchanged unknown-preference scoring expectation, which fails alone in 0.003s
+(`/tmp/kindercompass-chat-existing-failure.log`). Its scorer deliberately excludes
+unknown evidence from match-score denominators and reports confidence separately.
+Final discovery: **537 tests in 44.102s; 536 pass, one unchanged scoring failure**,
+`/tmp/kindercompass-chat-verified-regression.log`, outside sandbox. Corrected the
+new address test's cache setup and discovery-compatible import before this run.
+Sandbox worker-thread test/provider runs stalled and were stopped; outside-sandbox
+checks completed. Whitespace and diff review pass. No scoring,
+frontend consent, rollback or deployment change; rollout observation remains
+next and this investigation does not authorize legacy retirement.
+
 ## Active phase — LLM-first conversation, 2026-10-10
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs

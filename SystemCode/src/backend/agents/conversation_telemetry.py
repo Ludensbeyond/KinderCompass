@@ -73,7 +73,11 @@ class TurnTelemetry:
 
     def emit(self, response):
         import json
+        from .conversation_response import VALIDATION_CATEGORIES
         reason = getattr(response, "failure_reason", None)
+        validation_errors = getattr(response, "validation_errors", ())
+        if not isinstance(validation_errors, (list, tuple)):
+            validation_errors = ()
         # Reasons originate from the new-flow fixed exception categories only.
         allowed = {"elapsed_limit", "context_limit", "output_limit", "model_limit", "tool_limit",
                    "invalid_model_message", "invalid_tool_call", "invalid_tool_arguments",
@@ -92,6 +96,8 @@ class TurnTelemetry:
             "executed_tool_calls": getattr(response, "tool_calls", 0),
             "validation_succeeded": getattr(response, "status", None) == "ok",
             "failure_reason": reason if reason in allowed else ("request_or_commit_failure" if response is None else None),
+            "validation_errors": [category for category in validation_errors[:3]
+                                  if isinstance(category, str) and category in VALIDATION_CATEGORIES],
             "input_tokens": self.input_tokens, "cached_input_tokens": self.cached_tokens,
             "output_tokens": self.output_tokens, "usage_complete": complete_usage,
             "estimated_cost_usd": cost, "comparison": self.comparison,

@@ -11,6 +11,7 @@ from SystemCode.src.backend.agents.conversation_response import (
     run_validated_conversation, validate_response,
 )
 from SystemCode.src.backend.agents.structured_contracts import StructuredToolResult
+from SystemCode.src.backend.repositories.school_repository import SchoolRepository
 from SystemCode.src.backend.tests import test_llm_first_loop as fixtures
 
 ScriptedModel = fixtures.ScriptedModel
@@ -134,6 +135,100 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ResponseValidationError, "missing_pending_question"):
             validate_response(final("Chinese remains required.").content, (), service.initial_context)
 
+    async def test_entered_family_details_have_zero_tool_scalar_support(self):
+        family = {"dob": "2022-06-01", "admission_date": "2026-11-01",
+                  "gross_household_income": 6000, "citizenship": "SC",
+                  "programme_type": "full_day", "working_hours_per_month": 160,
+                  "household_size": 4, "non_earning_dependants": 1,
+                  "special_approval": False}
+        service = self.service("what detail have i inputted?", family=family,
+                               home_postal_code="123456")
+        answer = "You entered household income of $6,000, household size 4, and postal code 123456."
+        claims = [claim("household income of $6,000", 6000.0,
+                        path="/data/family/gross_household_income", result="context:current", school=None),
+                  claim("household size 4", 4, path="/data/family/household_size",
+                        result="context:current", school=None),
+                  claim("postal code 123456", "123456", path="/data/home_postal_code",
+                        result="context:current", school=None)]
+        def respond(messages):
+            snapshot = json.loads(messages[1].content)["current_state_support"]
+            self.assertEqual(snapshot["data"]["family"]["gross_household_income"], 6000)
+            self.assertIn("/data/family/gross_household_income",
+                          [entry["path"] for entry in snapshot["claim_paths"]])
+            return final(answer, claims)
+        with patch.object(service, "invoke", side_effect=AssertionError("unnecessary tool")):
+            response = await self.run_response(service, ScriptedModel(respond))
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", answer, 0))
+        for field, value in service.initial_context.family.model_dump(mode="json").items():
+            span = f"You entered {field}: {value}."
+            supported = claim(span, value, path=f"/data/family/{field}",
+                              result="context:current", school=None)
+            self.assertEqual(validate_response(final(span, [supported]).content, (),
+                             service.initial_context).answer, span)
+
+    def test_family_support_rejects_invented_values_absent_inputs_and_school_claims(self):
+        service = self.service(family={"dob": "2022-06-01", "admission_date": "2026-11-01",
+                                       "gross_household_income": 6000},
+                               profile={"school_fee": 999})
+        span = "You entered income of $999."
+        supported = claim(span, 999, path="/data/family/gross_household_income",
+                          result="context:current", school=None)
+        cases = [(supported, "wrong_claim_value"),
+                 ({**supported, "path": "/data/profile/school_fee"}, "invalid_support_path"),
+                 ({**supported, "path": "/data/family/school_fee"}, "invalid_support_path"),
+                 ({**supported, "value": 6000, "school_id": "CENTRE:A"}, "cross_school_attribution")]
+        for wrong, category in cases:
+            with self.subTest(category=category), self.assertRaisesRegex(ResponseValidationError, category):
+                validate_response(final(span, [wrong]).content, (), service.initial_context)
+        with self.assertRaisesRegex(ResponseValidationError, "invalid_support_path"):
+            validate_response(final(span, [supported]).content, (), self.service().initial_context)
+
+    def test_family_input_remains_valid_after_mutation_but_old_preferences_do_not(self):
+        service = self.service(family={"dob": "2022-06-01", "admission_date": "2026-11-01",
+                                       "gross_household_income": 6000},
+                               profile={"hard_constraints": {"max_distance_km": 1}})
+        result = service.invoke("update_preferences", {"set": [
+            {"attribute": "language", "value": "Chinese", "importance": "required"}]})
+        span = "You entered household income of $6,000."
+        supported = claim(span, 6000, path="/data/family/gross_household_income",
+                          result="context:current", school=None)
+        self.assertEqual(validate_response(final(span, [supported]).content, (result,),
+                         service.initial_context).answer, span)
+        old = "The distance limit is 1 km."
+        with self.assertRaisesRegex(ResponseValidationError, "stale_state_claim"):
+            validate_response(final(old, [claim(old, 1, path="/data/profile/hard_constraints/max_distance_km",
+                              result="context:current", school=None)]).content, (result,), service.initial_context)
+
+    async def test_broad_preschool_list_uses_repository_names_with_individual_claims(self):
+        service = self.service("give me some singapore pre-school")
+        answer = "Here are some preschool options:\n- School A\n- School B\nWhat matters most to you?"
+        model = ScriptedModel(AIMessage(content="", tool_calls=[
+            call("search_rank_compare_schools", {"operation": "search", "limit": 3})]),
+            final(answer, [claim("School A", "School A", path="/data/records/0/name"),
+                           claim("School B", "School B", path="/data/records/1/name", school="CENTRE:B")]))
+        response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", answer, 1))
+        self.locations.attach_distances.assert_not_called()
+        self.assertFalse(response.profile.get("hard_constraints"))
+
+    def test_same_named_branches_include_grounded_addresses(self):
+        self.schools.catalogue_path.write_text(json.dumps([
+            {"school_id": "CENTRE:A", "name": "Example Preschool", "centre_address": "10 Alpha Road"},
+            {"school_id": "CENTRE:B", "name": "Example Preschool", "centre_address": "20 Beta Road"},
+        ]))
+        self.schools = SchoolRepository(self.schools.catalogue_path)
+        service = self.service("give me some singapore pre-school")
+        result = service.invoke("search_rank_compare_schools", {"limit": 3})
+        self.assertEqual([r["centre_address"] for r in result.data["records"]],
+                         ["10 Alpha Road", "20 Beta Road"])
+        answer = "Example Preschool is at 10 Alpha Road. Example Preschool is at 20 Beta Road."
+        claims = [claim("Example Preschool is at 10 Alpha Road.", "10 Alpha Road",
+                        path="/data/records/0/centre_address"),
+                  claim("Example Preschool is at 20 Beta Road.", "20 Beta Road",
+                        path="/data/records/1/centre_address", school="CENTRE:B")]
+        self.assertEqual(validate_response(final(answer, claims).content, (result,),
+                         service.initial_context).answer, answer)
+
     def evidence(self):
         return StructuredToolResult(
             result_id="result:1", tool_name="search_school_evidence", status="ok",
@@ -182,6 +277,7 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             response = await self.run_response(service, model)
         self.assertEqual((response.status, response.answer), ("ok", good))
         self.assertEqual((response.model_calls, response.tool_calls), (3, 1))
+        self.assertEqual(response.validation_errors, ("wrong_reported_number",))
         export.assert_called_once()
 
     async def test_model_authored_preference_acknowledgement_uses_latest_staged_state(self):
@@ -248,6 +344,8 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             expected = COULD_NOT_VERIFY if response.failure_reason == "response_validation" else SERVICE_ERROR
             self.assertEqual((response.status, response.answer), ("unavailable", expected))
             self.assertIsNone(response.profile)
+            if response.failure_reason == "response_validation":
+                self.assertTrue(response.validation_errors)
             self.assertNotIn("private", response.answer)
             self.assertEqual(service.staged_profile, before)
             self.assertLessEqual(len(model.messages), limits.model_calls)
