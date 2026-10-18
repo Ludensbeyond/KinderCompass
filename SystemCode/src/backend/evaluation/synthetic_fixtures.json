@@ -1,4 +1,6 @@
 {
+  "schema_version": 1,
+  "benchmark_version": "0.1.0",
   "dataset_kind": "synthetic_test_fixture",
   "description": "Invented IDs and labels used only to verify metric arithmetic; not preschool data or human evaluation.",
   "ranking_cases": [
@@ -35,12 +37,6 @@
     {"claim_type": "fee", "verified": true, "predicted": 500, "expected": 450},
     {"claim_type": "fee", "verified": false, "predicted": 400, "expected": 400}
   ],
-  "explanation_claims": [
-    {"factual": true, "evidence_available": true, "supported": true},
-    {"factual": true, "evidence_available": true, "supported": false},
-    {"factual": true, "evidence_available": false}
-  ],
-  "paired_ratings": {"human": [1, 2, 4, 5], "llm_judge": [1, 2, 4, 5]},
   "confidence_cases": [
     {"total_weight": 10, "known_weight": 7, "reported_confidence": 0.7}
   ]

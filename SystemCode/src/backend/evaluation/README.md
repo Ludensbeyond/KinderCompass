@@ -28,29 +28,66 @@ Run from the repository root:
 PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline python -m SystemCode.src.backend.evaluation.run_recommendation_evaluation
 ```
 
-Pass `--dataset PATH` to evaluate a different labelled JSON file or `--output
-PATH` to write a JSON report. The bundled `synthetic_fixtures.json` contains
+Pass `--dataset PATH` to evaluate a different labelled JSON file, `--output
+PATH` to write a report, and `--format summary` for readable text instead of JSON.
+Select `--metric {hard-constraints,ranking,claims,explanations,agreement}` to emit
+one metric family, or use `all` for the complete report. Each metric is also a
+standalone function in `recommendation_metrics.py`. Reports include the schema
+and benchmark version, source-label status, counts and metric configuration.
+The bundled `synthetic_fixtures.json` contains
 invented IDs and labels for reproducibility and metric smoke checks only. It is
 not preschool data and provides no evidence about product performance. Keep
 real evaluations in a separate, documented dataset with independent labels;
 never append human judgements or real school outcomes to the synthetic fixture.
+The separate `benchmark/development.json` and `benchmark/held_out_test.json`
+files currently contain synthetic scenario fixtures and must report
+`illustrative_only`; they are not manually verified product-quality evidence.
+The validator also retains the strict `manual_label_benchmark` mode, which
+requires source/date/reviewer provenance for reference labels. See
+[`benchmark/README.md`](benchmark/README.md) for the fixture rubric, evaluator
+scope, and future manual-benchmark requirements.
 
 The dataset may provide `hard_constraints` (`candidate_ids`, predicted
 `excluded_ids`, and `outcomes` with `pass`, `fail`, or `unknown`), `ranking_cases`
 (stable `case_id` and matching `reference_case_id`, a profile, candidate school
-records, `reference_ids`, completeness declaration, and graded relevance),
-`eligibility_fee_claims` (atomic claim records with `claim_type` set to
-`eligibility` or `fee`, plus `verified`, `predicted`, and `expected`),
-`explanation_claims`, paired `human` and `llm_judge` ratings, and
+records, `reference_ids`, completeness declaration, graded relevance and an
+optional independent `reference_order`), and optional `hard_constraint_checks`
+(one constraint name, candidate IDs, predicted exclusions, and reference
+outcomes per check). `eligibility_fee_claims` contain atomic claim records with
+`claim_type`, `verified`, `predicted`, `expected`, and an independent `reference`
+object with a source and stable reference identifier. `explanation_claims` are
+manually segmented factual claims with stable `claim_id`, claim text, evidence
+source/reference and an explicit status. Missing claim identity, evidence
+source/reference or adjudication makes a factual claim unverifiable.
+`human_judge_ratings` retain one paired human and LLM rating per sample
+and rubric dimension; include `judge_configuration` with model, prompt version,
+rubric version and settings. Paired rating arrays are not used because they lose
+sample and dimension identity. The dataset may also provide
 `confidence_cases` containing `known_weight`, `total_weight`, and reported
 0–1 completeness. Missing hard-constraint labels are unknown. Unknown ground
 truth is omitted from precision/recall/F1 and reported separately, including
-the proportion retained. Claim accuracy counts only verified claims with usable
-values; fee amounts are compared numerically and status labels case-insensitively.
-Missing or malformed values are reported as unverified. Grounded-claim rate counts atomic
-factual claims only when evidence is available; unavailable evidence is
-unverified, not grounded or unsupported. Claims without an explicit support
-label are also unverified.
+the proportion retained. Claim accuracy requires an independent reference
+source and identifier; the `verified` flag alone is insufficient. Numeric
+claims (fees, subsidies and ages) use a per-claim non-negative tolerance
+(default zero) and matching units when units are supplied. Dates compare ISO
+calendar dates. Missing or malformed values are unverified. Explanation claims
+use `supported`, `contradicted`, `unsupported`, or `unverifiable` annotations.
+Grounded-claim rate is supported divided by supported + contradicted +
+unsupported factual claims; unverifiable claims and non-factual wording are
+reported separately. Evidence source/reference is retained per claim. Claim
+segmentation and adjudication require manual review; the metric does not infer
+claims from prose.
+
+The hard-constraint evaluation unit is one family–preschool pair. A confirmed
+violation is the positive class. Precision is TP/(TP+FP), recall is
+TP/(TP+FN), and F1 is 2TP/(2TP+FP+FN). Precision or recall is `null` when its
+denominator is zero. F1 is zero when its denominator is non-zero but TP is zero;
+it is `null` only when its denominator is zero. Unknown reference outcomes are
+reported separately and excluded from the confusion matrix. Aggregate
+precision/recall/F1 pool the confusion counts (micro aggregation); per-check and
+per-case counts remain available. High recall reduces the risk of recommending
+a preschool that violates a must-have; precision measures how reliably
+exclusions are justified.
 
 ### Ranking metrics and comparison policy
 
@@ -76,13 +113,13 @@ reference pool, distinct from missing reference data. An empty pool has no
 Recall@3 score. A non-empty, fully labelled pool with no relevant schools is
 also excluded from Recall@3, with a separate reason.
 
-The evaluator computes NDCG@3 with exponential gain `(2^relevance - 1)` and
-discount `log2(rank + 1)`. IDCG uses all available graded labels for that same
-case. If there are no positive graded labels, IDCG is zero and NDCG is `null`,
+The evaluator computes NDCG@3 and NDCG@5 with exponential gain
+`(2^relevance - 1)` and discount `log2(rank + 1)`. IDCG uses all available graded labels for that same
+case after the hard-safety override. If there are no positive graded labels, IDCG is zero and NDCG is `null`,
 with `idcg_zero_no_positive_relevance` and an excluded-case count. Empty or
-missing reference labels are separately identified. An unlabelled school in the returned top three makes
-NDCG and binary top-three metrics undefined for that case; it is never silently
-treated as irrelevant. For fewer than three returned schools, Precision@3's
+missing reference labels are separately identified. An unlabelled school in
+the top three/top five makes the corresponding NDCG or binary top-three metric
+undefined; it is never silently treated as irrelevant. For fewer than three returned schools, Precision@3's
 denominator is the number actually returned. Recall@3 uses all labelled
 relevant IDs in the declared reference pool and is excluded when that pool is
 incompletely labelled or contains no relevant school. MRR and Hit Rate@3 are
@@ -99,18 +136,30 @@ rate is the share of confirmed failing candidates that remain in the generated
 result; over-exclusion (confirmed pass excluded) is reported separately.
 Unknown outcomes have separate counts and are omitted from confirmed rates.
 
+Kendall tau-b compares the returned order with an independently supplied
+`reference_order` (an ordered list, or a school-to-rank mapping to express ties),
+over shared candidates. Known hard-constraint failures and ineligible schools
+are assigned zero relevance for NDCG/binary relevance and removed from tau-b;
+their inclusion is counted separately by the safety metrics. Unknown candidates
+remain unknown. Tau-b is undefined with fewer than two safe comparable items or
+no untied pairs. Ranking aggregates are macro means over defined case values,
+with denominators and exclusions reported per metric.
+
 The old order is generated by the frozen `legacy_match_first.py` scorer copied
 from `main` at `c86d269`; the new order uses production `rank_schools()`. Both
 receive the same profile and school records, then use the same reference labels
 for evaluation. The fixture is synthetic and only checks evaluation plumbing;
 its scores do not support claims of recommendation quality or improvement.
 
-NDCG uses exponential graded gain. Kendall tau-b compares shared candidates;
-the metric helper accepts rank/score mappings when ties need to be represented
-and returns `null` when fewer than two comparable items or no untied pairs are
-available. Human–LLM agreement uses quadratic weighted Cohen's kappa for
-ordinal 1–5 ratings; it is not accuracy, and a constant-rating sample returns
-`null` because chance agreement cannot be estimated. Confidence error checks
+Human–LLM agreement is calculated only for paired ratings from a
+`human_reviewed` dataset. The report includes sample count, raw agreement and
+its 95% Wilson interval, quadratic weighted Cohen's kappa, and preserved paired
+ratings by rubric dimension. Kappa is undefined when expected disagreement is
+zero. Model, prompt, rubric and settings are captured in `judge_configuration`.
+Investigate disagreements by checking each rating against cited evidence and
+tracking whether the judge systematically rates higher or lower by dimension.
+No human ratings exist in the bundled fixture, so agreement is not measured.
+Confidence error checks
 only whether the reported value matches weighted evidence completeness. It is
 not factual correctness or probability calibration.
 

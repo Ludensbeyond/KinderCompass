@@ -11,6 +11,12 @@ The current evidence-state and ranking contract is documented in
 It defines match support, inferred/partial/stale evidence, empty-search
 diagnostics, and unrounded Stage 1 ordering.
 
+The separate offline recommendation metric suite is documented in
+[`evaluation/README.md`](evaluation/README.md). It evaluates hard-constraint
+decisions, NDCG@3/@5 and Kendall tau-b, authoritative claim accuracy, manually
+annotated explanation grounding, and paired human–LLM agreement. The bundled
+benchmark is synthetic and is not performance evidence.
+
 ## Quick start
 
 The recommended Windows workflow starts the backend and frontend together. From
