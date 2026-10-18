@@ -70,6 +70,76 @@ are described below. The validator checks structure and provenance presence only
 it cannot establish that a source is authoritative or that a reviewer actually
 performed the stated verification.
 
+## Generating a versioned scenario split from real school records
+
+`SystemCode/src/backend/scripts/generate_recommendation_benchmark.py` is a
+separate, opt-in scenario generator. It performs a read-only query against
+Neo4j `Preschool` nodes using the existing `stage1.kg_client`, joins those
+records by stable `school_id` to `data/processed/kindercompass_master.json` for
+the detailed service menu used by Stage 2, and freezes the school records used
+by each case. Neo4j-owned values take precedence, including explicit nulls.
+Each artifact records the model, prompt version, seed, catalogue version, and a
+SHA-256 snapshot fingerprint.
+
+The LLM proposes synthetic family details, supported preference choices,
+candidate IDs from the supplied snapshot, and a short scenario description.
+Schema validation rejects unsupported preferences, malformed family values,
+duplicate candidates, and IDs absent from the snapshot. The model is not asked
+for recommendations, relevance judgements, or expected labels. The generator
+uses production `EvaluationService.evaluate()` over frozen candidate records
+to calculate ranking and Stage 2 eligibility/fee outputs. Direct required
+care-level and language outcomes are labelled as code-derived; missing facts
+remain `unknown`. Relevance remains empty for separate human review.
+Family age, citizenship, household income, and programme inputs are validated
+against `FamilyDetails`; distance is omitted because production distance search
+also requires a six-digit home postal code and OneMap geocoding, which this
+generator does not freeze or replay.
+
+This workflow does not replay the per-case Stage 1 Neo4j retrieval query. The
+LLM proposes candidate IDs from the frozen snapshot, and the report marks
+`candidate_retrieval.status` as `not_executed`. It exercises production ranking
+and Stage 2 calculations over that fixed subset; it cannot measure retrieval
+recall or prove that live search would have returned those same candidates.
+
+Generate the two splits in separate invocations. The held-out command requires
+an extra confirmation switch, and outputs are created exclusively: an existing
+path is never overwritten.
+
+```sh
+PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  python -m SystemCode.src.backend.scripts.generate_recommendation_benchmark \
+  --split development --seed 4107 \
+  --output SystemCode/src/backend/evaluation/generated/20261018/development.json \
+  --allow-live-neo4j --allow-llm-cost
+
+PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  python -m SystemCode.src.backend.scripts.generate_recommendation_benchmark \
+  --split held_out_test --seed 9921 \
+  --output /secure/kindercompass-benchmark/20261018/held_out_test.json \
+  --allow-live-neo4j --allow-llm-cost --confirm-held-out-generation
+```
+
+Replay either saved artifact without contacting Neo4j or an LLM:
+
+```sh
+PYTHONPATH=SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  python -m SystemCode.src.backend.scripts.evaluate_generated_recommendation_benchmark \
+  --dataset SystemCode/src/backend/evaluation/generated/20261018/development.json \
+  --output /tmp/kindercompass-development-report.json
+```
+
+The command reads Neo4j credentials and `OPENAI_API_KEY` from the environment;
+it does not print or store them. Review `generated_at` and
+`source_snapshot.sha256` before refreshing deliberately. A checked-in held-out
+file cannot be made inaccessible by code alone: restrict its access in the
+repository process. The generator rejects a held-out output path inside this
+development repository, and do not inspect the held-out artifact while tuning
+development behavior.
+Different case IDs do not establish independent samples. This generator does
+not create human relevance labels or prove recommendation quality. Generated
+files are a separate artifact kind and do not replace the existing synthetic
+smoke fixtures.
+
 ## Case template
 
 Copy a case into the file's `ranking_cases` list and replace every placeholder.
