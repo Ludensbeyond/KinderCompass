@@ -114,6 +114,24 @@ class EvaluationService:
             "mention_links": parent_mention_links(school.get("name"), school.get("postal_code")),
         })
 
+    @staticmethod
+    def _passes_profile_hard_constraints(profile: dict[str, Any], school: SchoolRecord) -> bool:
+        """Fail closed on missing care-level/language evidence for hard choices."""
+        hard = profile.get("hard_constraints") or {}
+        required_level = hard.get("level")
+        if required_level and required_level not in (school.get("care_levels") or []):
+            return False
+        required_language = hard.get("language")
+        if required_language:
+            offered = {
+                token.strip().casefold()
+                for token in str(school.get("second_languages_offered") or "").split("|")
+                if token.strip()
+            }
+            if str(required_language).casefold() not in offered:
+                return False
+        return True
+
     def evaluate(
         self,
         school_ids: list[str],
@@ -123,6 +141,14 @@ class EvaluationService:
         include_ineligible: bool = False,
     ) -> list[EvaluatedSchool]:
         trusted = self.schools.get_many(school_ids)
+        trusted = [
+            school if isinstance(school, SchoolRecord) else SchoolRecord.model_validate(school)
+            for school in trusted
+        ]
+        trusted = [
+            school for school in trusted
+            if self._passes_profile_hard_constraints(profile, school)
+        ]
         if profile.get("hard_constraints") or profile.get("preferences"):
             trusted = rank_schools(profile, trusted, limit=len(trusted))
         evaluated = [

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import LiveMap, { MapPoint } from "./LiveMap";
-import { getParentFeeBreakdown, getParentRecommendationDetails, getRecommendationEmptyState, getRecommendationScores } from "./recommendation-display.mjs";
+import { getParentFeeBreakdown, getParentRecommendationDetails, getRecommendationEmptyState, getRecommendationScores, getStage1EmptyState } from "./recommendation-display.mjs";
 
 type ProgrammeId = "full_day" | "half_day_am" | "half_day_pm" |
   "flexi_care_1" | "flexi_care_1_am" | "flexi_care_1_pm" |
@@ -33,6 +33,8 @@ type ProgrammeOption = {
   net_monthly_fee: number;
   basic_subsidy?: number;
   additional_subsidy?: number;
+  maximum_additional_subsidy?: number;
+  additional_subsidy_applied?: number;
   minimum_copayment?: number;
   warnings?: string[];
   policy_source?: Centre["policy_source"];
@@ -52,6 +54,8 @@ type Centre = {
   fee_before_subsidy?: number;
   basic_subsidy?: number;
   additional_subsidy?: number;
+  maximum_additional_subsidy?: number;
+  additional_subsidy_applied?: number;
   minimum_copayment?: number;
   programme_id?: ProgrammeId;
   service_label?: string;
@@ -70,7 +74,7 @@ type Centre = {
   combined_score?: number;
   strengths?: string[];
   tradeoffs?: string[];
-  match_breakdown?: { attribute: string; preference: unknown; school_value: unknown; matched: boolean | null; status: "matched" | "not_matched" | "unknown"; importance: string; contribution: number; possible_contribution: number; evidence_state: "verified" | "derived" | "calculated" | "unknown"; value_state: "confirmed_yes" | "confirmed_no" | "confirmed_value" | "unknown"; source: string; source_method: string; source_reliability: string; source_date?: string | null; freshness: "current" | "stale" | "future_dated" | "unknown" }[];
+  match_breakdown?: { attribute: string; preference: unknown; school_value: unknown; recorded_value?: unknown; matched: boolean | null; status: "matched" | "not_matched" | "unknown" | "inferred" | "partially_supported"; importance: string; contribution: number; possible_contribution: number; evidence_state: "verified" | "derived" | "calculated" | "partially_supported" | "recorded" | "unknown"; value_state: "confirmed_yes" | "confirmed_no" | "confirmed_value" | "inferred_value" | "calculated_value" | "partially_supported_value" | "recorded_value" | "unknown"; source: string; source_method: string; source_reliability: string; availability: number; source_date?: string | null; freshness: "current" | "stale" | "future_dated" | "unknown" }[];
 };
 
 type Stop = MapPoint & {
@@ -89,7 +93,7 @@ type PreferenceItem = { attribute: string; value: unknown; importance: Preferenc
 type PreferenceProfile = { hard_constraints: Record<string, unknown>; preferences: Record<string, unknown>; preference_items?: PreferenceItem[]; unsupported_preferences?: PreferenceItem[]; recognized?: string[] };
 type FamilyDetails = { dob: string; admission_date: string; gross_household_income: number; citizenship: "SC" | "SPR" | "Others"; programme_type: "full_day" | "half_day" | "flexi_care_1" | "flexi_care_2" | "flexi_care_3"; working_hours_per_month: number; household_size: number; non_earning_dependants: number; special_approval: boolean };
 type SchoolRelationship = "enrolled" | "visited" | "applied" | "researching";
-type ResultsEmptyState = "not_ready" | "stage1" | "stage2";
+type ResultsEmptyState = "not_ready" | "stage1" | "stage1_hard_filters" | "stage1_required" | "stage1_distance" | "stage1_distance_unknown" | "stage2";
 const EXPERIENCE_LABELS: Record<SchoolRelationship, string> = {
   researching: "Researching the school",
   applied: "Applied the school",
@@ -112,7 +116,7 @@ function appliedFilters(profile: PreferenceProfile | null): string[] {
 
 function FeeNotes({ centre }: { centre: Centre }) {
   const fee = getParentFeeBreakdown(centre);
-  const hasBreakdown = [fee.fee, fee.basic, fee.additional].some(Number.isFinite);
+  const hasBreakdown = [fee.fee, fee.basic, fee.additional, fee.maximumAdditional].some(Number.isFinite);
   const notes = [
     ...(centre.status === "manual_review" && centre.reason ? [centre.reason] : []),
     ...(centre.warnings ?? []).filter((note) => !note.toLowerCase().includes("not an ecda subsidy approval")),
@@ -120,8 +124,9 @@ function FeeNotes({ centre }: { centre: Centre }) {
   if (fee.net == null && !hasBreakdown && notes.length === 0 && !centre.policy_source) return null;
   return <div className="feeNotes">
     {fee.net != null && <strong className="feeEstimate">Estimated monthly fee: {money.format(fee.net)}</strong>}
-    {hasBreakdown && <p className="feeBreakdown">{fee.fee != null && <>Fee before subsidy: {money.format(fee.fee)}</>}{fee.basic != null && <> · Basic subsidy: −{money.format(fee.basic)}</>}{fee.additional != null && <> · Additional subsidy: −{money.format(fee.additional)}</>}{fee.minimumApplied && fee.minimum != null && <> · Minimum payable: {money.format(fee.minimum)}</>}</p>}
-    {fee.minimumApplied && <p>After subsidies, the fee would be below the policy minimum payable amount, so the estimate uses that minimum.</p>}
+    {hasBreakdown && <p className="feeBreakdown">{fee.fee != null && <>Fee before subsidy: {money.format(fee.fee)}</>}{fee.basic != null && <> · Basic subsidy: −{money.format(fee.basic)}</>}{fee.additional != null && <> · Additional subsidy applied: −{money.format(fee.additional)}</>}{fee.maximumAdditional != null && <> · Maximum additional subsidy: up to {money.format(fee.maximumAdditional)}</>}</p>}
+    {fee.additional == null && fee.maximumAdditional != null && <p>This response includes the maximum additional subsidy but not the amount actually applied, so the breakdown cannot be fully reconciled.</p>}
+    {fee.minimumApplied && fee.minimum != null && <p>A minimum monthly co-payment of {money.format(fee.minimum)} applies under this estimate.</p>}
     {fee.reconciles === false && <p className="feeWarning">The returned fee estimate does not reconcile with the displayed fee and subsidy figures. Confirm the estimate before relying on this breakdown.</p>}
     {centre.policy_source && <p>Policy source: <a href={centre.policy_source.source_url} target="_blank" rel="noreferrer">{centre.policy_source.authority} · effective {sourceDateLabel(centre.policy_source.effective_from)}</a></p>}
     <p>This is an estimate based on the family details provided, not ECDA approval. Confirm current fees and eligibility with the preschool; GST treatment and additional charges may vary.</p>
@@ -142,7 +147,7 @@ function RecommendationExplanation({ centre, profile, distanceKm }: { centre: Ce
       <section>
         <h4>Information available</h4>
         {details.information.length > 0 || distanceKm != null
-          ? <ul>{details.information.map((item) => <li key={`${item.label}-${item.source.label}`}><strong>{item.label}:</strong> {item.value}<small>Source: {item.source.url ? <a href={item.source.url} target="_blank" rel="noreferrer">{item.source.label}</a> : item.source.label}{item.inferred ? " · Inferred from centre name" : " · Recorded catalogue information"}</small></li>)}{distanceKm != null && <li><strong>Distance from home:</strong> {distanceKm.toFixed(2)} km<small>Calculated from the entered postal code and preschool location.</small></li>}</ul>
+          ? <ul>{details.information.map((item) => <li key={`${item.label}-${item.source.label}`}><strong>{item.label}:</strong> {item.value} · {item.matches ? "matches this preference" : "does not match this preference"}<small>Source: {item.source.url ? <a href={item.source.url} target="_blank" rel="noreferrer">{item.source.label}</a> : item.source.label}{item.sourceDate ? ` · Catalogue updated ${item.sourceDate}` : " · Update date unavailable"}</small></li>)}{distanceKm != null && <li><strong>Distance from home:</strong> {distanceKm.toFixed(2)} km<small>Calculated from the entered postal code and preschool location.</small></li>}</ul>
           : <p>No preference-related details are available in the school record.</p>}
         {details.information.length > 0 && <small>Recorded school information is not independently checked for current accuracy.</small>}
       </section>
@@ -348,6 +353,7 @@ export default function Home() {
     recordedState: resultsEmptyState,
     eligibleCount: eligible.length,
     visibleCount: visibleEligible.length,
+    unknownDistanceCount: distanceFilter === "none" ? 0 : Math.max(0, eligible.length - Object.keys(distances).length),
   });
 
   useEffect(() => {
@@ -458,17 +464,21 @@ export default function Home() {
     try {
       const distancePreference = preferenceProfile.preference_items?.find((item) => item.attribute === "max_distance_km");
       const requestedRadius = distancePreference ? Number(distancePreference.value) : undefined;
-      const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string }; message: string; profile: PreferenceProfile }>("/api/search", {
+      const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string; [key: string]: unknown }; message: string; profile: PreferenceProfile }>("/api/search", {
         profile: preferenceProfile,
         ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
       });
       if (searchResult.centres.length === 0) {
         setPreferenceProfile(searchResult.profile);
         setReadyToSearch(false);
-        setResultsEmptyState("stage1");
+        const empty = getStage1EmptyState(searchResult.trace);
+        setResultsEmptyState(empty === "hard_filters" ? "stage1_hard_filters"
+          : empty === "required_preferences" ? "stage1_required"
+            : empty === "distance_unknown" ? "stage1_distance_unknown"
+              : empty === "distance_filtered" ? "stage1_distance" : "stage1");
         setEligible([]); setSelected([]); setRoutes({});
         setMessages((items) => [...items, { role: "assistant", text: searchResult.message }]);
-        setStage("search"); setTab("form");
+        setStage("search"); setTab("results");
         return;
       }
       const evaluationResult = await post<{ centres: Centre[] }>("/api/evaluate", {
@@ -648,13 +658,14 @@ export default function Home() {
                 <button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Edit family details</button>
               </div>}
 
-              {tab === "results" && stage !== "choose" && <div className="emptyState"><span>⌁</span>{recommendationEmptyState === "no_candidates" ? <><h2>No preschools matched these preferences</h2><p>Try changing or relaxing a preference in Compass chat, then show recommendations again.</p></> : recommendationEmptyState === "no_eligible" ? <><h2>No eligible preschools in these results</h2><p>The Stage 1 matches did not meet the current age and fee eligibility checks. Review family details or preferences and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></> : <><h2>Recommendations are not ready</h2><p>{stage === "family" ? "Complete Family details first." : "Continue in Compass chat and show recommendations."}</p></>}</div>}
+              {tab === "results" && stage !== "choose" && <div className="emptyState"><span>⌁</span>{recommendationEmptyState === "hard_filters" ? <><h2>No schools met all applied filters</h2><p>The catalogue returned no candidates for these hard filters. Missing catalogue information may also prevent a school from being checked; review the required care level, language, and location.</p></> : recommendationEmptyState === "required_preferences" ? <><h2>No candidates met the required preferences</h2><p>No candidate remained after the required-preference check. Unknown or inferred evidence is not treated as a confirmed mismatch.</p></> : recommendationEmptyState === "distance_unknown" ? <><h2>Distance could not be confirmed</h2><p>No candidate with a known location was available within the requested distance. Schools without coordinates cannot be confirmed as near or far.</p></> : recommendationEmptyState === "distance_filtered" ? <><h2>No candidates were within the requested distance</h2><p>Candidates with known coordinates were outside the selected radius. You can explicitly increase the distance or remove that requirement.</p></> : recommendationEmptyState === "no_candidates" ? <><h2>No preschools matched these preferences</h2><p>No candidates remained after the current preference checks. Ask Compass which supported requirement could be changed, or update a preference and search again.</p></> : recommendationEmptyState === "no_eligible" ? <><h2>No eligible preschools in these results</h2><p>The Stage 1 candidates did not meet the current age and fee eligibility checks. Review family details and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></> : <><h2>Recommendations are not ready</h2><p>{stage === "family" ? "Complete Family details first." : "Continue in Compass chat and show recommendations."}</p></>}</div>}
 
               {tab === "results" && stage === "choose" && <>
 
                 <div className="rankingSummary"><div><strong>Recommendations for your family</strong><p>Each preschool shows which preferences its recorded information supports and what still needs confirmation.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>{appliedFilters(preferenceProfile).length > 0 && <p className="appliedFilters">Filters applied: {appliedFilters(preferenceProfile).join(" · ")}</p>}
                 <div className="resultToolbar"><label>Distance from home<select value={distanceFilter} onChange={(event) => setDistanceFilter(event.target.value)}><option value="none">None</option>{distanceFilter !== "none" && !["1", "2", "3", "4", "5"].includes(distanceFilter) && <option value={distanceFilter}>Within {distanceFilter} km</option>}{[1, 2, 3, 4, 5].map((km) => <option value={km} key={km}>Within {km} km</option>)}</select></label><span>Filtering preserves the original rank</span></div>
-                <div className="resultList selectable">{recommendationEmptyState === "no_eligible" ? <div className="emptyState"><h2>No eligible preschools in these results</h2><p>The matched schools did not meet the current age and fee eligibility checks. Review family details or preferences and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></div> : recommendationEmptyState === "distance_filtered" ? <div className="emptyState"><h2>No eligible schools within {distanceFilter} km</h2><p>Increase the distance or select None to see all eligible recommendations.</p></div> : visibleEligible.map((centre) => { const scores = getRecommendationScores(centre); return <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}>
+                {distanceFilter !== "none" && eligible.length > Object.keys(distances).length && visibleEligible.length > 0 && <p className="appliedFilters">Distance is unknown for {eligible.length - Object.keys(distances).length} school(s) without coordinates; they are omitted from this distance-filtered view.</p>}
+                <div className="resultList selectable">{recommendationEmptyState === "no_eligible" ? <div className="emptyState"><h2>No eligible preschools in these results</h2><p>The matched schools did not meet the current age and fee eligibility checks. Review family details or preferences and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></div> : recommendationEmptyState === "distance_filtered" ? <div className="emptyState"><h2>No eligible schools with a known distance within {distanceFilter} km</h2><p>The eligible schools with calculable distances are outside this radius. Increase the distance or select None to see all eligible recommendations.</p></div> : recommendationEmptyState === "distance_unknown" ? <div className="emptyState"><h2>Distance is unknown for some schools</h2><p>No school with a calculated distance is within {distanceFilter} km. {Math.max(0, eligible.length - Object.keys(distances).length)} eligible school(s) have no coordinates, so their distance cannot be confirmed.</p></div> : visibleEligible.map((centre) => { const scores = getRecommendationScores(centre); return <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}>
                   <button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}>
                     <span className="selectMark">✓</span>
                     <div>

@@ -15,12 +15,14 @@ export function getRecommendationScores(centre) {
 /** Return unknown evidence labels without treating them as a match or mismatch. */
 export function unknownPreferenceLabels(breakdown) {
   return breakdown
-    .filter((item) => item.status === "unknown")
+    .filter((item) => ["unknown", "inferred", "partially_supported"].includes(item.status))
     .map((item) => {
       const label = item.attribute.startsWith("language:")
         ? `Language (${item.attribute.slice("language:".length)})`
         : item.attribute.replaceAll("_", " ");
-      return `${label}${item.importance === "required" ? " (required)" : ""}`;
+      const evidence = item.status === "inferred" ? " (inferred)"
+        : item.status === "partially_supported" ? " (partial evidence)" : " (unknown)";
+      return `${label}${item.importance === "required" ? " (required)" : ""}${evidence}`;
     });
 }
 
@@ -79,17 +81,18 @@ export function getParentRecommendationDetails(centre, profile) {
         : requested === "yes" ? label : `no ${label}`
       : desired ? `${requested} ${label}` : `avoiding ${preferenceValue(item.preference)}`;
     const schoolValue = preferenceValue(item.school_value);
-    if (item.status === "unknown") {
+    if (["unknown", "inferred", "partially_supported"].includes(item.status)
+        || ["derived", "partially_supported"].includes(item.evidence_state)
+        || ["stale", "future_dated"].includes(item.freshness)) {
+      const evidenceNote = item.status === "inferred" || item.evidence_state === "derived"
+        ? `The available value “${preferenceValue(item.recorded_value ?? item.school_value)}” is inferred and is not a confirmed school fact.`
+        : item.status === "partially_supported" || item.evidence_state === "partially_supported"
+          ? `The catalogue value “${preferenceValue(item.recorded_value ?? item.school_value)}” only partially supports this comparison.`
+          : item.freshness === "stale" || item.freshness === "future_dated"
+            ? "The available record is not current enough to confirm this preference."
+            : "KinderCompass has no recorded information about this preference.";
       confirm.push({
-        text: `KinderCompass has no recorded information about ${label}. Ask the preschool whether it meets your ${item.importance === "required" ? "required " : ""}preference for ${requestedPhrase}.`,
-        importance: item.importance,
-      });
-      continue;
-    }
-    // Name-derived attributes are not enough to establish a school preference match.
-    if (item.evidence_state === "derived") {
-      confirm.push({
-        text: `KinderCompass cannot confirm the preschool's ${label} from its current school information. Ask the preschool directly about your preference for ${requestedPhrase}.`,
+        text: `${evidenceNote}${item.source_date ? ` Source date: ${item.source_date}.` : ""} Ask the preschool whether it meets your ${item.importance === "required" ? "required " : ""}preference for ${requestedPhrase}.`,
         importance: item.importance,
       });
       continue;
@@ -98,8 +101,10 @@ export function getParentRecommendationDetails(centre, profile) {
       label,
       value: schoolValue,
       source: parentSource(item.source),
-      inferred: false,
+      inferred: item.evidence_state === "derived",
       matches: item.status === "matched",
+      sourceDate: item.source_date,
+      freshness: item.freshness,
     });
     if (item.status === "matched") matches.push(`Recorded school information matches your preference for ${requestedPhrase}.`);
   }
@@ -116,7 +121,8 @@ export function getParentRecommendationDetails(centre, profile) {
 export function getParentFeeBreakdown(centre) {
   const fee = centre.fee_before_subsidy;
   const basic = centre.basic_subsidy;
-  const additional = centre.additional_subsidy;
+  const additional = centre.additional_subsidy_applied;
+  const maximumAdditional = centre.maximum_additional_subsidy ?? centre.additional_subsidy;
   const minimum = centre.minimum_copayment;
   const net = centre.net_monthly_fee;
   const hasCoreValues = [fee, basic, additional, net].every(Number.isFinite);
@@ -130,21 +136,37 @@ export function getParentFeeBreakdown(centre) {
     fee,
     basic,
     additional,
+    maximumAdditional,
     minimum,
     net,
-    minimumApplied: hasMinimum && rawAfterSubsidies != null && rawAfterSubsidies < minimum && Math.abs(net - minimum) < 0.01,
+    minimumApplied: hasMinimum && rawAfterSubsidies != null && rawAfterSubsidies <= minimum && Math.abs(net - minimum) < 0.01,
     reconciles,
   };
 }
 
 /** Distinguish no Stage 1 matches, no Stage 2 eligible schools, and distance filtering. */
-export function getRecommendationEmptyState({ stage, recordedState, eligibleCount, visibleCount }) {
+export function getStage1EmptyState(trace) {
+  if (trace?.database_candidates_after_hard_constraints === 0) return "hard_filters";
+  if (trace?.after_distance_filter === 0) {
+    if ((trace?.distance_missing_coordinates ?? 0) > 0) return "distance_unknown";
+    if ((trace?.distance_outside_radius ?? 0) > 0) return "distance_filtered";
+  }
+  if (trace?.after_required_preference_enforcement === 0) return "required_preferences";
+  return "no_candidates";
+}
+
+export function getRecommendationEmptyState({ stage, recordedState, eligibleCount, visibleCount, unknownDistanceCount = 0 }) {
   if (stage !== "choose") {
+    if (recordedState === "stage1_hard_filters") return "hard_filters";
+    if (recordedState === "stage1_required") return "required_preferences";
+    if (recordedState === "stage1_distance") return "distance_filtered";
+    if (recordedState === "stage1_distance_unknown") return "distance_unknown";
     if (recordedState === "stage1") return "no_candidates";
     if (recordedState === "stage2") return "no_eligible";
     return "not_ready";
   }
   if (eligibleCount === 0) return "no_eligible";
+  if (visibleCount === 0 && unknownDistanceCount > 0) return "distance_unknown";
   if (visibleCount === 0) return "distance_filtered";
   return null;
 }

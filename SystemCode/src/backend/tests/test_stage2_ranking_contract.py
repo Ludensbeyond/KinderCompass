@@ -26,6 +26,36 @@ def _school(school_id, *, spark, transport):
 
 
 class Stage2RankingContractTests(unittest.TestCase):
+    def test_stage2_rechecks_all_hard_constraints_before_preference_scoring(self):
+        records = [
+            SchoolRecord.model_validate({
+                "school_id": "PASS", "name": "Pass",
+                "care_levels": ["Nursery"], "second_languages_offered": "Chinese|Malay",
+            }),
+            SchoolRecord.model_validate({
+                "school_id": "WRONG_LEVEL", "name": "Wrong level",
+                "care_levels": ["Kindergarten 1"], "second_languages_offered": "Chinese",
+            }),
+            SchoolRecord.model_validate({
+                "school_id": "WRONG_LANGUAGE", "name": "Wrong language",
+                "care_levels": ["Nursery"], "second_languages_offered": "Malay",
+            }),
+            SchoolRecord.model_validate({"school_id": "UNKNOWN", "name": "Unknown"}),
+        ]
+        service = EvaluationService(InMemorySchoolRepository(records))
+        profile = {"hard_constraints": {"level": "Nursery", "language": "Chinese"}, "preferences": {}}
+        family = FamilyDetails(
+            dob=dt.date(2022, 1, 1), admission_date=dt.date(2026, 1, 1),
+            gross_household_income=4500,
+        )
+        with patch.object(service, "_evaluate_school", side_effect=lambda school, _family:
+                          EvaluatedSchool.model_validate({
+                              **school.model_dump(), "status": "estimated", "eligible": True,
+                              "preferred_programme": "full_day", "preferred_programme_available": True,
+                          })):
+            result = service.evaluate([record.school_id for record in records], profile, family)
+        self.assertEqual([item.school_id for item in result], ["PASS"])
+
     def test_stage2_returns_final_score_fields_in_rank_order_and_filters_ineligible(self):
         records = [
             _school("HIGH_MATCH_LOW_EVIDENCE", spark="Yes", transport=None),

@@ -88,6 +88,8 @@ class ProgrammeOption(MappingModel):
     net_monthly_fee: float = Field(ge=0)
     basic_subsidy: float | None = Field(default=None, ge=0)
     additional_subsidy: float | None = Field(default=None, ge=0)
+    maximum_additional_subsidy: float | None = Field(default=None, ge=0)
+    additional_subsidy_applied: float | None = Field(default=None, ge=0)
     minimum_copayment: float | None = Field(default=None, ge=0)
     policy_source: PolicyReference | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -103,6 +105,8 @@ class EvaluatedSchool(SchoolRecord):
     net_monthly_fee: float | None = Field(default=None, ge=0)
     basic_subsidy: float | None = Field(default=None, ge=0)
     additional_subsidy: float | None = Field(default=None, ge=0)
+    maximum_additional_subsidy: float | None = Field(default=None, ge=0)
+    additional_subsidy_applied: float | None = Field(default=None, ge=0)
     minimum_copayment: float | None = Field(default=None, ge=0)
     preferred_programme: str
     preferred_programme_available: bool

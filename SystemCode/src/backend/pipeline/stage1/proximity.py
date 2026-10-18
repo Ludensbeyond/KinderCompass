@@ -115,12 +115,31 @@ def planning_area_for_point(origin, path):
                 return town
     raise ValueError("The postal-code coordinates are outside the planning-area dataset")
 
-def filter_within_radius(centres, origin, locations, radius_km=1.0):
+def filter_within_radius(centres, origin, locations, radius_km=1.0, *, include_trace=False):
     nearby = []
+    missing_coordinates = 0
+    outside_radius = 0
+    nearest_outside_distance = None
     for centre in centres:
         location = locations.get(centre.get("centre_code"))
         if location:
             distance = _haversine_km(origin, location)
             if distance <= radius_km:
                 nearby.append({**centre, "distance_km": round(distance, 3)})
-    return sorted(nearby, key=lambda centre: centre["distance_km"])
+            else:
+                outside_radius += 1
+                nearest_outside_distance = (
+                    distance if nearest_outside_distance is None
+                    else min(nearest_outside_distance, distance)
+                )
+        else:
+            missing_coordinates += 1
+    results = sorted(nearby, key=lambda centre: centre["distance_km"])
+    if include_trace:
+        return results, {
+            "distance_missing_coordinates": missing_coordinates,
+            "distance_outside_radius": outside_radius,
+            "nearest_outside_distance_km": round(nearest_outside_distance, 3)
+            if nearest_outside_distance is not None else None,
+        }
+    return results

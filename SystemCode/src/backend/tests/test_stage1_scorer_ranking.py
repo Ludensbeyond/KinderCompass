@@ -1,6 +1,6 @@
 import unittest
 
-from stage1.scorer import rank_schools, score_school
+from stage1.scorer import individually_relaxable_required_preferences, rank_schools, score_school
 
 
 def make_profile(*, spark_importance="preferred", transport_importance="preferred"):
@@ -156,6 +156,93 @@ class Stage1ScorerRankingTests(unittest.TestCase):
         confirmed_no = score_school(profile, {"weekday_full_day": "No"})
         self.assertEqual(confirmed_no["match_breakdown"][0]["status"], "not_matched")
         self.assertEqual(confirmed_no["profile_confidence"], 1.0)
+
+    def test_pedagogy_availability_remains_partial_and_does_not_claim_a_match(self):
+        profile = {
+            "preferences": {"pedagogy": {"value": "Montessori", "weight": 2}},
+            "preference_items": [{"attribute": "pedagogy", "value": "Montessori", "importance": "required"}],
+        }
+        scored = score_school(profile, {"school_id": "DERIVED", "pedagogy": "Montessori"})
+        item = scored["match_breakdown"][0]
+        self.assertEqual(item["availability"], 0.65)
+        self.assertEqual(item["evidence_state"], "derived")
+        self.assertEqual(item["status"], "inferred")
+        self.assertIsNone(item["matched"])
+        self.assertEqual(item["inferred_match"], True)
+        self.assertEqual(item["contribution"], 0.0)
+        self.assertEqual(scored["match_score"], 0.0)
+        self.assertEqual(scored["profile_confidence"], 0.65)
+
+    def test_food_matcher_requires_explicit_support_and_preserves_unknown(self):
+        profile = {
+            "preferences": {"food": {"value": "halal", "weight": 1}},
+            "preference_items": [{"attribute": "food", "value": "halal", "importance": "required"}],
+        }
+        for text, expected in (("Halal meals", "partially_supported"),
+                               ("No pork or lard", "unknown"),
+                               ("Pork is served", "partially_supported"),
+                               ("Meals are provided", "unknown"),
+                               ("Kitchen information pending", "unknown")):
+            with self.subTest(text=text):
+                item = score_school(profile, {"food_offered": text})["match_breakdown"][0]
+                self.assertEqual(item["status"], expected)
+                if expected == "partially_supported":
+                    self.assertIn(item["partial_match"], (True, False))
+                    self.assertEqual(item["contribution"], 0.0)
+                else:
+                    self.assertIsNone(item["partial_match"])
+
+        no_pork_profile = {
+            "preferences": {"food": {"value": "no_pork", "weight": 1}},
+            "preference_items": [{"attribute": "food", "value": "no_pork", "importance": "required"}],
+        }
+        no_pork_item = score_school(no_pork_profile, {"food_offered": "No pork or lard"})["match_breakdown"][0]
+        self.assertEqual(no_pork_item["status"], "partially_supported")
+        self.assertTrue(no_pork_item["partial_match"])
+
+    def test_freshness_is_reported_without_turning_stale_data_into_a_mismatch(self):
+        profile = {
+            "preferences": {"spark_certified": {"value": True, "weight": 1}},
+            "preference_items": [{"attribute": "spark_certified", "value": True, "importance": "required"}],
+        }
+        item = score_school(profile, {
+            "spark_certified": "No", "last_updated": "2020-01-01",
+        })["match_breakdown"][0]
+        self.assertEqual(item["freshness"], "stale")
+        self.assertEqual(item["status"], "unknown")
+        self.assertIsNone(item["matched"])
+
+    def test_ranking_uses_unrounded_score_for_near_ties_and_is_repeatable(self):
+        profile = {"preferences": {
+            "spark_certified": {"value": True, "weight": 1.0002},
+            "transport": {"value": True, "weight": 1},
+        }, "preference_items": []}
+        # Both displayed match scores round to 50.0, while the exact weighted
+        # score and combined score favor the first record.
+        first = school("B", spark="Yes", transport="No")
+        second = school("A", spark="No", transport="Yes")
+        ordered = rank_schools(profile, [first, second])
+        self.assertEqual([item["school_id"] for item in ordered], ["B", "A"])
+        self.assertEqual([item["match_score"] for item in ordered], [50.0, 50.0])
+        self.assertEqual(ordered, rank_schools(profile, [first, second]))
+
+    def test_multiple_required_constraints_report_only_individually_actionable_relaxations(self):
+        profile = {
+            "preferences": {
+                "spark_certified": {"value": True, "weight": 1},
+                "transport": {"value": True, "weight": 1},
+            },
+            "preference_items": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+                {"attribute": "transport", "value": True, "importance": "required"},
+            ],
+        }
+        schools = [school("A", spark="Yes", transport="No"), school("B", spark="No", transport="Yes")]
+        self.assertEqual(rank_schools(profile, schools), [])
+        self.assertEqual(
+            individually_relaxable_required_preferences(profile, schools),
+            ["spark_certified", "transport"],
+        )
 
 
 if __name__ == "__main__":

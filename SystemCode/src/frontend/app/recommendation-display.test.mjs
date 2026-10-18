@@ -6,6 +6,7 @@ import {
   getParentRecommendationDetails,
   getParentFeeBreakdown,
   getRecommendationScores,
+  getStage1EmptyState,
   unknownPreferenceLabels,
 } from "./recommendation-display.mjs";
 
@@ -30,14 +31,19 @@ test("labels unknown required evidence without claiming match or mismatch", () =
     { attribute: "spark_certified", status: "unknown", importance: "required" },
     { attribute: "language:Chinese", status: "unknown", importance: "preferred" },
     { attribute: "transport", status: "matched", importance: "preferred" },
-  ]), ["spark certified (required)", "Language (Chinese)"]);
+  ]), ["spark certified (required) (unknown)", "Language (Chinese) (unknown)"]);
 });
 
 test("distinguishes Stage 1 empty, Stage 2 empty, and distance-filtered results", () => {
   assert.equal(getRecommendationEmptyState({ stage: "search", recordedState: "stage1", eligibleCount: 0, visibleCount: 0 }), "no_candidates");
   assert.equal(getRecommendationEmptyState({ stage: "choose", recordedState: "stage2", eligibleCount: 0, visibleCount: 0 }), "no_eligible");
   assert.equal(getRecommendationEmptyState({ stage: "choose", recordedState: "not_ready", eligibleCount: 2, visibleCount: 0 }), "distance_filtered");
+  assert.equal(getRecommendationEmptyState({ stage: "choose", recordedState: "not_ready", eligibleCount: 2, visibleCount: 0, unknownDistanceCount: 1 }), "distance_unknown");
   assert.equal(getRecommendationEmptyState({ stage: "choose", recordedState: "not_ready", eligibleCount: 2, visibleCount: 1 }), null);
+  assert.equal(getStage1EmptyState({ database_candidates_after_hard_constraints: 0 }), "hard_filters");
+  assert.equal(getStage1EmptyState({ database_candidates_after_hard_constraints: 2, after_distance_filter: 0, distance_missing_coordinates: 2 }), "distance_unknown");
+  assert.equal(getStage1EmptyState({ database_candidates_after_hard_constraints: 2, after_distance_filter: 0, distance_outside_radius: 2 }), "distance_filtered");
+  assert.equal(getStage1EmptyState({ database_candidates_after_hard_constraints: 2, after_distance_filter: 2, after_required_preference_enforcement: 0 }), "required_preferences");
 });
 
 test("explains recorded matches, exposes source, and directs unknown requirements to confirmation", () => {
@@ -73,7 +79,7 @@ test("explains recorded matches, exposes source, and directs unknown requirement
     url: "https://data.gov.sg/datasets/d_696c994c50745b079b3684f0e90ffc53/view",
   });
   assert.match(details.confirm[0].text, /no recorded information.*required preference for transport/i);
-  assert.match(details.confirm[1].text, /cannot confirm.*teaching approach/i);
+  assert.match(details.confirm[1].text, /inferred.*not a confirmed school fact.*teaching approach/i);
   assert.match(details.confirm[2].text, /does not currently assess/);
   assert.equal(details.information.find((item) => item.label === "transport").matches, false);
   assert.doesNotMatch(JSON.stringify(details), /verified points|last updated/i);
@@ -93,12 +99,15 @@ test("explains a fee estimate that is limited by the policy minimum payable amou
     fee_before_subsidy: 610,
     basic_subsidy: 300,
     additional_subsidy: 440,
+    maximum_additional_subsidy: 440,
+    additional_subsidy_applied: 285,
     minimum_copayment: 25,
     net_monthly_fee: 25,
   }), {
     fee: 610,
     basic: 300,
-    additional: 440,
+    additional: 285,
+    maximumAdditional: 440,
     minimum: 25,
     net: 25,
     minimumApplied: true,
@@ -111,6 +120,8 @@ test("flags fee figures that do not reconcile and handles incomplete fee data", 
     fee_before_subsidy: 610,
     basic_subsidy: 300,
     additional_subsidy: 440,
+    maximum_additional_subsidy: 440,
+    additional_subsidy_applied: 285,
     minimum_copayment: 25,
     net_monthly_fee: 30,
   }).reconciles, false);
