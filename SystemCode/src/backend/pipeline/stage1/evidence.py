@@ -18,6 +18,12 @@ EVIDENCE_PROVENANCE = {
     "max_distance_km": {"source": "OneMap and preschool coordinates", "method": "calculated", "reliability": "calculated"},
 }
 
+GRAPH_RETRIEVAL_RELS = {
+    "language": "TEACHES_IN",
+    "care_level": "SERVES_LEVEL",
+    "pedagogy": "USES_PEDAGOGY",
+}
+
 
 def _canonical_attribute(attribute: str) -> str:
     return "language" if attribute.startswith("language:") else attribute
@@ -45,6 +51,23 @@ def value_state(actual: Any, available: bool) -> str:
     return "confirmed_value"
 
 
+def retrieval_steps(school: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalise a Cypher retrieval_path into a list of relationship steps."""
+    path = school.get("retrieval_path") or []
+    if not isinstance(path, list):
+        return []
+    steps = []
+    for step in path:
+        if not isinstance(step, dict) or not step.get("rel"):
+            continue
+        steps.append({
+            "rel": str(step["rel"]),
+            "label": step.get("label"),
+            "name": step.get("name"),
+        })
+    return steps
+
+
 def evidence_details(attribute: str, school: dict[str, Any], actual: Any, available: bool) -> dict[str, Any]:
     """Return stable provenance metadata for one scored attribute."""
     canonical = _canonical_attribute(attribute)
@@ -54,7 +77,7 @@ def evidence_details(attribute: str, school: dict[str, Any], actual: Any, availa
     method = provenance["method"]
     state = "unknown" if not available else "derived" if method.startswith("derived") else "calculated" if method == "calculated" else "verified"
     source_date = school.get("last_updated")
-    return {
+    details = {
         "evidence_state": state,
         "value_state": value_state(actual, available),
         "source": provenance["source"],
@@ -63,3 +86,10 @@ def evidence_details(attribute: str, school: dict[str, Any], actual: Any, availa
         "source_date": source_date,
         "freshness": freshness(source_date),
     }
+    steps = retrieval_steps(school)
+    if steps:
+        details["retrieval_path"] = steps
+        expected_rel = GRAPH_RETRIEVAL_RELS.get(canonical)
+        if expected_rel and any(step["rel"] == expected_rel for step in steps):
+            details["retrieval_method"] = "graph_traversal"
+    return details

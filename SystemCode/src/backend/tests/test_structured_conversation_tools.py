@@ -212,6 +212,12 @@ class StructuredConversationToolsTests(unittest.TestCase):
             tools["read_school_facts"].invoke({"school_ids": ["CENTRE:A"], "operation": "invented"})
         self.assertEqual(service.staged_profile, original)
 
+    def test_nearby_tool_is_reserved_for_closest_without_ranking_attributes(self):
+        descriptions = {tool.name: tool.description for tool in self.service().registered_tools()}
+        self.assertIn("Named attributes require update_preferences", descriptions["find_nearby_schools"])
+        self.assertIn("after update_preferences", descriptions["search_rank_compare_schools"])
+        self.assertIn("SPARK within a distance", descriptions["search_rank_compare_schools"])
+
     def test_lazy_reads_missing_inputs_access_and_bounds(self):
         loader = Mock(return_value=None)
         service = self.service(school_index_loader=loader, general_retriever_loader=loader)

@@ -78,8 +78,10 @@ property-versus-node design and source mapping.
 
 Longitude and latitude parsed from the official location GeoJSON are retained
 on each `Preschool` node. Existing scalar properties remain available for
-backward compatibility with Stage 1 ranking. Concept relationships that no
-longer apply are replaced during refresh, and unused concept nodes are removed.
+Stage 1 ranking. Stage 1 hard filters use `LOCATED_IN`, `SERVES_LEVEL`, and
+`TEACHES_IN`; preferred SPARK and pedagogy stay as score-time checks. Concept
+relationships that no longer apply are replaced during refresh, and unused
+concept nodes are removed.
 
 After updating the graph, inspect the enriched model in Neo4j Browser:
 
@@ -117,4 +119,5 @@ data/raw
    -> build_knowledge_graph.py
    -> Neo4j
    -> backend Stage 1 search
+   -> evaluate_stage1_graph.py (Workstream 2 P1)
 ```

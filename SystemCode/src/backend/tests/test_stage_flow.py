@@ -977,9 +977,11 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("toLower(toString(t.name)) = toLower($town)", query)
         self.assertEqual(params["town"], "Sengkang")
 
-    def test_stage1_filters_after_optional_matches(self):
+    def test_stage1_legacy_philosophy_uses_pedagogy_relationship(self):
         query, params = build_stage1_query({"philosophy": "Montessori"})
-        self.assertLess(query.index("WITH p, t, c"), query.index("WHERE"))
+        self.assertIn("[:USES_PEDAGOGY]", query)
+        self.assertIn("toLower(toString(ped.name)) CONTAINS toLower($philosophy)", query)
+        self.assertNotIn("p.philosophy", query.split("RETURN", 1)[0])
         self.assertEqual(params["philosophy"], "Montessori")
 
     @patch("pipeline.run_from_text", return_value=[SCHOOL])
