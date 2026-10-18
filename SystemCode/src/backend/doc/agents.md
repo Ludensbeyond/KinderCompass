@@ -1,5 +1,46 @@
 # Backend conversation progress
 
+## Implemented maintenance — matching-school clarification, 2026-10-18
+
+The reported kindergarten/1 km/bilingual sequence lost requirements after
+language clarification. Instructions now save known constraints first. Typed
+`pending_school_inputs` carries missing care-level/language choices through the
+existing profile round trip, including when transcript consent is off. The
+minimal Step 2 integration was recorded in the active plan before implementation;
+optional preference-memory consent still controls persistence. Supplied language
+values clear their missing-value field while preserving pending strength. Later
+same-value explicit strength can resolve atomically with other supplied choices.
+Contradictions and newly staged decisions retain their existing protections.
+
+The tool rejects guessed K1/K2 values lacking an explicit current-message level
+reference; `1km` and bare confirmation cannot select K1. Missing requirements
+block search/readiness. Search exposes authoritative care levels, second
+languages and addresses. Distance-filtered school-record claims require a
+supported numeric distance with units (or the existing same-postal-location
+explanation), with bounded repair. These are programme/proximity facts, not
+eligibility or bilingual teaching-quality guarantees.
+
+Verification: final required discovery **609 tests in 50.415s, OK**,
+`/tmp/kindercompass-matching-backend-final.log`; earlier affected suite **75 in
+3.635s, OK**, `/tmp/kindercompass-matching-focused-final.log`. Final discovery
+includes the later provenance, numeric-distance and atomic-choice tests. Sandbox
+worker/provider attempts stalled; outside-sandbox checks completed. Whitespace
+review passes. No deployment or commit.
+
+Seven successive synthetic provider captures exposed and informed the changes;
+earlier captures are retained in `/tmp/kindercompass-matching-live-first.json`
+through `-sixth.json`. Final capture `/tmp/kindercompass-matching-live.json` and
+SHA-bound review `/tmp/kindercompass-matching-live-review.json`: **8/9 served,
+7/9 targeted task checks pass**. Initial radius and unresolved kindergarten
+state survive with history on/off; explicit K2/required Chinese returns only the
+matching nearby centre with its address and 0.5 km distance in the stateless
+sequence. The history-enabled final list exhausts response-format repairs and
+rolls back safely; the missing-postal case asks about an already supplied
+language. These remain live model reliability issues, not a passed quality gate.
+Synthetic catalogue/distances do not establish actual OneMap/Neo4j quality.
+Next remains rollout observation, including these response-format and missing-
+input issues; no new architecture step or legacy retirement is authorized here.
+
 ## Completed maintenance — response repair allowance, 2026-10-18
 
 Increased the user-requested LLM-first response repair default and maximum from

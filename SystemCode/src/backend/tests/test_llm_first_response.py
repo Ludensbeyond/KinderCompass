@@ -57,6 +57,48 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(ValueError):
                 service.export_validated_state(response_validated=True)
 
+    async def test_distance_filtered_bare_list_repairs_without_replaying_search(self):
+        service = self.service("yes find me the list", profile={"hard_constraints": {
+            "max_distance_km": 1, "language": "Chinese"}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        name = claim("School A", "School A", path="/data/records/0/name")
+        answer = "School A is 0.5 km from home."
+        response = await self.run_response(service, ScriptedModel(
+            AIMessage(content="", tool_calls=[call("search_rank_compare_schools")]),
+            final("- School A", [name]), final(answer, [name,
+                claim(answer, 0.5, path="/data/records/0/distance_km")])))
+        self.assertEqual(response.status, "ok")
+        self.assertEqual(response.answer, answer)
+        self.assertEqual(response.validation_errors, ("missing_distance_claim",))
+        self.assertEqual(response.tool_calls, 1)
+        self.locations.attach_distances.assert_called_once()
+
+    def test_nearby_wording_does_not_replace_the_calculated_distance(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        answer = "School A is nearby."
+        claims = [claim(answer, "School A", path="/data/records/0/name"),
+                  claim(answer, 0.5, path="/data/records/0/distance_km")]
+        self.check_invalid(service, result, final(answer, claims), "missing_distance_claim")
+
+    def test_distance_listing_requires_each_centre_and_accepts_same_location_support(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**r, "distance_km": 0 if r["school_id"] == "CENTRE:A" else 0.75} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        answer = "School A: your postal code resolves to its recorded location. School B is 0.75 km from home."
+        claims = [
+            claim("School A", "School A", path="/data/records/0/name"),
+            claim("School A: your postal code resolves to its recorded location.", True,
+                  path="/data/records/0/same_location_as_postal_code"),
+            claim("School B", "School B", path="/data/records/1/name", school="CENTRE:B"),
+            claim("School B is 0.75 km from home.", 0.75, path="/data/records/1/distance_km", school="CENTRE:B"),
+        ]
+        self.assertEqual(validate_response(final(answer, claims).content, (result,), service.initial_context).answer, answer)
+        self.check_invalid(service, result, final(answer.replace(" is 0.75 km from home.", "."), claims[:-1]),
+                           "missing_distance_claim")
+
     def test_pending_acknowledgement_is_supported_but_missing_input_data_is_not(self):
         service = self.service()
         result = service.invoke("update_preferences", {"set": [

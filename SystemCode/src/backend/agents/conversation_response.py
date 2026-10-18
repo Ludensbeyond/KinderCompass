@@ -73,6 +73,14 @@ care, and booleans are yes/no. Claim values still use the exact supplied scalar.
 For a simple school list, each school name may be its own claim span supported by
 that record's /name; keep facts in separate claims. Use unnumbered bullets so list
 positions do not become unsupported numerical facts.
+For matching schools with a saved distance limit, every listed centre needs its
+own calculated /distance_km claim, repeating the full school name. A bare-name
+list is incomplete. Report the exact supplied distance; do not round it. For a
+zero distance with same_location_as_postal_code, explain that the postal code
+resolves to the centre's recorded location instead of saying it is zero km away;
+support that explanation with /same_location_as_postal_code. Care levels use
+/care_levels/0 (or the correct list index); language uses /second_languages_offered.
+These verify offered programmes/languages, not eligibility or teaching quality.
 For branches sharing a name, copy centre_address exactly as returned, including
 unit numbers and punctuation. Support the name/address sentence with that
 record's centre_address scalar. Do not shorten or reformat address numbers.
@@ -117,12 +125,14 @@ VALIDATION_CATEGORIES = frozenset({
     "unsupported_result_status", "wrong_claim_value", "wrong_reported_number",
     "unknown_validation_error",
     "duplicate_school_listing",
+    "missing_distance_claim",
 })
 
 
 REPAIR_GUIDANCE = {
+    "missing_distance_claim": "For every listed matching centre, include its exact calculated distance in a separate sentence with the full school name and a claim for that record's /distance_km. For same_location_as_postal_code true, explain that the postal code resolves to the centre's recorded location and cite that boolean. Keep the saved radius and existing verified results; do not call tools.",
     "duplicate_school_listing": "Do not repeat identical bare preschool names in a list. Mention the organisation once, or include supported addresses to distinguish its locations. Keep the existing verified records and claims.",
-    "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict. Include this question alongside supported guidance.",
+    "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict; ask for the remaining pending_school_inputs (kindergarten level or language). Include this question alongside supported guidance.",
     "wrong_reported_number": "Split claims into shorter exact spans so each span contains only its supported number. Remove other numbers from that span and support them separately.",
     "invalid_response_kind": "Use grounded when claims are present; conversation and clarification require an empty claims list.",
     "support_must_be_scalar": "Index list values, e.g. /data/records/0/facts/care_levels/0, not /data/records/0/facts/care_levels.",
@@ -200,7 +210,7 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
         raise ResponseValidationError("duplicate_school_listing")
     staged = next((r.data.get("staged_profile") for r in reversed(results)
                    if "staged_profile" in r.data), current)
-    if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")):
+    if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation", "pending_school_inputs")):
         if "?" not in response.answer:
             raise ResponseValidationError("missing_pending_question")
     if response.kind in {"conversation", "clarification"} and response.claims:
@@ -279,6 +289,29 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     from collections import Counter
     if Counter(_numbers(clean_answer)) - Counter(covered_numbers):
         raise ResponseValidationError("unsupported_reported_number")
+    # A successful constrained search must not become a bare list during prose
+    # composition. Inspect validated school-record claims, not user keywords.
+    for result in results:
+        if (result.tool_name != "search_rank_compare_schools" or result.status != "ok"
+                or result.state_revision != latest_revision
+                or not result.data.get("profile_used", {}).get("hard_constraints", {}).get("max_distance_km")):
+            continue
+        for index, record in enumerate(result.data.get("records", [])):
+            prefix = f"/data/records/{index}/"
+            claims = [c for c in response.claims if c.result_id == result.result_id
+                      and c.school_id == record.get("school_id")]
+            if not any(c.path.startswith(prefix) for c in claims):
+                continue
+            distance = record.get("distance_km")
+            numeric_distance = any(
+                c.path == prefix + "distance_km" and distance is not None
+                and Decimal(str(distance)) in _numbers(c.span.replace(record.get("name", ""), ""))
+                and re.search(r"\b(?:km|kilometres?|kilometers?)\b", c.span, re.IGNORECASE)
+                for c in claims)
+            same_location = record.get("same_location_as_postal_code") is True and any(
+                c.path == prefix + "same_location_as_postal_code" for c in claims)
+            if not (numeric_distance or same_location):
+                raise ResponseValidationError("missing_distance_claim")
     return response
 
 

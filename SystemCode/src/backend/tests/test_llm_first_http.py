@@ -115,6 +115,90 @@ class LlmFirstHttpTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(second["ready_to_search"])
         self.memory.save.assert_not_called()
 
+    async def test_kindergarten_radius_survives_language_clarification_with_and_without_history(self):
+        k1, k2 = "Kindergarten 1 (5 yrs old)", "Kindergarten 2 (6 yrs old)"
+        path = self.schools.catalogue_path
+        path.write_text(json.dumps([
+            {"school_id": "CENTRE:A", "name": "School A", "care_levels": [k2], "second_languages_offered": "Chinese", "centre_address": "Alpha Road"},
+            {"school_id": "CENTRE:B", "name": "School B", "care_levels": [k2], "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:C", "name": "School C", "care_levels": [k1], "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:D", "name": "School D", "care_levels": [k2], "second_languages_offered": "Malay"},
+            {"school_id": "CENTRE:E", "name": "School E", "care_levels": [k2], "second_languages_offered": "Chinese"},
+        ]))
+        schools = type(self.schools)(path)
+        self.service = PreferenceService(schools, EvaluationService(schools), self.locations, Path("."))
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**r, "distance_km": {"CENTRE:B": 2, "CENTRE:E": None}.get(r["school_id"], 0.5)} for r in records]
+        for retain in (False, True):
+            with self.subTest(history=retain):
+                settings = {"anonymous_session_id": str(uuid.uuid4()), "remember_conversation": retain}
+                first = await self.turn(ScriptedModel(
+                    AIMessage(content="", tool_calls=[call("update_preferences", {
+                        "set": [{"attribute": "max_distance_km", "value": 1, "importance": "required"}],
+                        "missing_school_inputs": ["care_level", "language"]})]),
+                    final("Which language and kindergarten level do you need?", kind="clarification")),
+                    message="kindergarten 1km from my home, bilingual", **settings)
+                self.assertEqual(first["answer_method"], "llm_first")
+                self.assertEqual(first["profile"]["hard_constraints"], {"max_distance_km": 1})
+                self.assertFalse(first["ready_to_search"])
+                second = await self.turn(ScriptedModel(
+                    AIMessage(content="", tool_calls=[call("update_preferences", {
+                        "set": [{"attribute": "language", "value": "Chinese"}]})]),
+                    final("Should Chinese be required or preferred? Which kindergarten level?", kind="clarification")),
+                    message="Chinese", profile=first["profile"], **settings)
+                self.assertEqual(second["profile"]["pending_school_inputs"], ["care_level"])
+                self.assertEqual(second["profile"]["pending"]["value"], "Chinese")
+                third = await self.turn(ScriptedModel(
+                    AIMessage(content="", tool_calls=[call("reset_continue_preferences", {
+                        "operation": "resolve_strength", "choice": "required"})]),
+                    final("Which kindergarten level do you need?", kind="clarification")),
+                    message="required", profile=second["profile"], **settings)
+                self.assertEqual(third["profile"]["pending_school_inputs"], ["care_level"])
+                blocked = await self.turn(ScriptedModel(
+                    AIMessage(content="", tool_calls=[call("search_rank_compare_schools")]),
+                    final("Which kindergarten level do you need?", kind="clarification")),
+                    message="yes find me the list", profile=third["profile"], **settings)
+                self.assertFalse(blocked["ready_to_search"])
+                self.assertEqual(blocked["profile"]["hard_constraints"]["max_distance_km"], 1)
+                answer = "School A is 0.5 km from home. School A offers Kindergarten 2 (6 yrs old)."
+                last_model = ScriptedModel(
+                    AIMessage(content="", tool_calls=[
+                        call("update_preferences", {"set": [{"attribute": "care_level", "value": k2, "importance": "required"}]}),
+                        call("search_rank_compare_schools", id="call:2")]),
+                    final(answer, [
+                        claim("School A", "School A", path="/data/records/0/name", result="result:2"),
+                        claim("School A is 0.5 km from home.", 0.5, path="/data/records/0/distance_km", result="result:2"),
+                        claim("School A offers Kindergarten 2 (6 yrs old).", k2, path="/data/records/0/care_levels/0", result="result:2"),
+                    ]))
+                last = await self.turn(last_model, message="K2, find me the list", profile=blocked["profile"],
+                                       home_postal_code="123456", **settings)
+                self.assertEqual(last["answer_method"], "llm_first")
+                self.assertTrue(last["ready_to_search"])
+                self.assertNotIn("pending_school_inputs", last["profile"])
+                search = json.loads(last_model.messages[-1][-1].content)
+                self.assertEqual([r["school_id"] for r in search["data"]["records"]], ["CENTRE:A"])
+                self.assertEqual(search["data"]["records"][0]["centre_address"], "Alpha Road")
+                self.assertEqual(last["question"], answer)
+        self.memory.save.assert_not_called()
+
+    async def test_explicit_language_strength_and_level_resolve_together_on_later_turn(self):
+        profile = {"hard_constraints": {"max_distance_km": 1},
+                   "pending": {"kind": "language", "value": "Chinese", "desired": True},
+                   "pending_school_inputs": ["language", "care_level"]}
+        k2 = "Kindergarten 2 (6 yrs old)"
+        result = await self.turn(ScriptedModel(
+            AIMessage(content="", tool_calls=[call("update_preferences", {"set": [
+                {"attribute": "language", "value": "Chinese", "importance": "required"},
+                {"attribute": "care_level", "value": k2, "importance": "required"}],
+                "missing_school_inputs": ["language", "care_level"]})]),
+            final("Your choices are ready for matching.")),
+            message="K2; Chinese is required", profile=profile)
+        self.assertEqual(result["answer_method"], "llm_first")
+        self.assertEqual(result["profile"]["hard_constraints"], {"max_distance_km": 1, "language": "Chinese", "level": k2})
+        self.assertNotIn("pending", result["profile"])
+        self.assertNotIn("pending_school_inputs", result["profile"])
+        self.assertTrue(result["ready_to_search"])
+
     async def test_failure_discards_new_pending_strength(self):
         model = ScriptedModel(AIMessage(content="", tool_calls=[call("update_preferences", {
             "set": [{"attribute": "language", "value": "Chinese"}]})]), RuntimeError("provider"))

@@ -30,6 +30,32 @@ Set choices carry attribute, value, importance and desired direction; evidence
 metadata is constructed by `make_preference_item`, never accepted from a model.
 Existing schema-v2 and backward-compatible profile representations are retained.
 
+For matching-school clarification, `update_preferences.missing_school_inputs`
+accepts unique `care_level`/`language` field names only. The model records these
+alongside unambiguous constraints, such as a radius, before asking for missing
+choices. The existing profile dict carries them as `pending_school_inputs`, so
+the client can round-trip unresolved requirements without transcript consent.
+Confirmed choices and explicit removal clear the corresponding field; reset
+clears all. Supplied values take precedence over stale missing-field entries,
+and already confirmed values are not made missing again. A supplied language
+with unspecified strength clears its missing value while retaining the existing
+pending-strength decision; it still requires an explicit strength choice.
+A later typed patch supplying that same pending value/direction with explicit
+importance can resolve it atomically alongside other choices. It cannot resolve
+a newly staged decision in the same turn, replace a different pending value or
+bypass a contradiction/relaxation. Search returns `needs_input` while
+school inputs remain unresolved, and HTTP reports recommendations as not ready.
+For model-selected K1/K2 values, the tool validates that the current user message
+explicitly names that level (K1/K2, Kindergarten 1/2 or one/two). An absent choice
+leaves care level unresolved while preserving other supplied constraints;
+`1km` and a bare confirmation cannot supply K1. This is an argument provenance
+check after the model chooses its action, not server-side intent selection.
+Other paraphrases still need clarification; this guard does not prove general
+semantic correctness or infer age eligibility.
+Search rows expose recorded care levels and offered second languages alongside
+optional addresses and calculated distances. These are programme facts, not
+proof of age eligibility or bilingual teaching intensity.
+
 Each output is a `StructuredToolResult` with request-local result ID, explicit
 `ok`, `needs_input`, `no_evidence` or `unavailable` status, structured data,
 missing inputs, citations, catalogue version and staged-state revision. There
@@ -48,7 +74,8 @@ the saved family or context. Dates use the current authoritative family inputs.
 
 Changing a required language/teaching approach stages a contradiction instead
 of applying it. Pending decisions block new patches until an explicit typed
-resolution. A conflicting patch stages only the conflict; other entries remain
+resolution, including the same-value later-turn strength patch described above.
+A conflicting patch stages only the conflict; other entries remain
 unapplied and must be resubmitted after resolution. Existing pending strength,
 contradiction and relaxation shapes remain supported through deterministic
 validation/adapters. Reset clears preferences and pending state while retaining

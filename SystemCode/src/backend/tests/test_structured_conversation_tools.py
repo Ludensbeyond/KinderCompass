@@ -60,6 +60,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertEqual([r["school_id"] for r in result.data["records"]], ["CENTRE:A"])
         self.assertEqual(set(result.data["records"][0]), {
             "school_id", "name", "match_score", "profile_confidence", "combined_score",
+            "care_levels", "second_languages_offered",
         })
         self.assertEqual(result.state_revision, 1)
         self.assertEqual(result.data["profile_used"]["hard_constraints"]["language"], "Chinese")
@@ -154,6 +155,59 @@ class StructuredConversationToolsTests(unittest.TestCase):
         from SystemCode.src.backend.agents.structured_contracts import SearchArguments
         with self.assertRaises(ValidationError):
             SearchArguments(operation="compare", school_ids=["CENTRE:A", "CENTRE:B"], presentation="distinct_names")
+
+    def test_missing_search_inputs_are_typed_and_resettable(self):
+        from SystemCode.src.backend.agents.structured_contracts import PreferencePatch
+        from SystemCode.src.backend.pipeline.stage1.preference_schema import sync_preference_schema
+        for missing in (["unknown"], ["language", "language"], "language", [{"text": "private"}]):
+            with self.subTest(missing=missing):
+                with self.assertRaises(ValueError):
+                    PreferencePatch.model_validate({"missing_school_inputs": missing})
+                with self.assertRaises(ValueError):
+                    sync_preference_schema({"pending_school_inputs": missing})
+        supplied = self.service()
+        supplied.invoke("update_preferences", {"missing_school_inputs": ["language"], "set": [
+            {"attribute": "language", "value": "Chinese", "importance": "required"}]})
+        self.assertNotIn("pending_school_inputs", supplied.staged_profile)
+        supplied.invoke("update_preferences", {"missing_school_inputs": ["language"]})
+        self.assertNotIn("pending_school_inputs", supplied.staged_profile)
+        service = self.service()
+        result = service.invoke("update_preferences", {"missing_school_inputs": ["care_level"]})
+        self.assertEqual(result.status, "needs_input")
+        self.assertEqual(service.invoke("search_rank_compare_schools", {}).missing_inputs, ["care_level"])
+        service.invoke("reset_continue_preferences", {"operation": "reset"})
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+        self.assertEqual(service.invoke("search_rank_compare_schools", {}).status, "ok")
+
+    def test_kindergarten_choice_cannot_come_from_radius_or_bare_confirmation(self):
+        for message in ("kindergarten 1km from my home, bilingual", "yes find me the list"):
+            with self.subTest(message=message):
+                self.context = self.context.model_copy(update={"message": message})
+                service = self.service()
+                result = service.invoke("update_preferences", {"set": [
+                    {"attribute": "care_level", "value": "Kindergarten 1 (5 yrs old)", "importance": "required"},
+                    {"attribute": "max_distance_km", "value": 1, "importance": "required"},
+                ]})
+                self.assertEqual(result.status, "needs_input")
+                self.assertEqual(service.staged_profile["hard_constraints"], {"max_distance_km": 1})
+                self.assertEqual(service.staged_profile["pending_school_inputs"], ["care_level"])
+                self.assertEqual(result.data["rejected_school_inputs"], ["care_level"])
+        for message in ("K2, please", "Kindergarten 2", "kindergarten two"):
+            self.context = self.context.model_copy(update={"message": message})
+            service = self.service()
+            result = self.update(service, "care_level", "Kindergarten 2 (6 yrs old)")
+            self.assertEqual(result.status, "ok")
+            self.assertEqual(service.staged_profile["hard_constraints"]["level"], "Kindergarten 2 (6 yrs old)")
+
+    def test_saved_radius_requires_postal_code_instead_of_returning_general_examples(self):
+        service = self.service()
+        self.update(service, "max_distance_km", 1)
+        result = service.invoke("search_rank_compare_schools", {"presentation": "distinct_names"})
+        self.assertEqual(result.status, "needs_input")
+        self.assertEqual(result.missing_inputs, ["home_postal_code"])
+        self.assertNotIn("records", result.data)
+        self.assertEqual(service.staged_profile["hard_constraints"]["max_distance_km"], 1)
+        self.locations.attach_distances.assert_not_called()
 
     def test_pending_choice_preserves_direction_and_blocks_other_mutations(self):
         service = self.service()

@@ -91,7 +91,7 @@ class PreferenceService:
             result = {
                 "profile": profile, "understood": summarize_profile(profile),
                 "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences"))
-                    and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                    and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation", "pending_school_inputs")),
                 "question": response.answer,
                 "citations": [{**c.model_dump(mode="json"), "chunk_id": c.citation_id} for c in response.citations],
                 "answer_method": "llm_first" if succeeded else "service_error",
@@ -104,7 +104,7 @@ class PreferenceService:
                 telemetry.compare(legacy_result, {
                     **result, "profile": staged,
                     "ready_to_search": bool(staged.get("hard_constraints") or staged.get("preferences"))
-                        and not any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")),
+                        and not any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation", "pending_school_inputs")),
                 })
                 return result
 

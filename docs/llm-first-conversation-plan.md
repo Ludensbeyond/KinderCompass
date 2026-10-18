@@ -3,6 +3,22 @@
 Date: 2026-10-10
 Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
+Implemented authorized maintenance (2026-10-18): preserve distance and unresolved
+kindergarten/language requirements across clarification. The minimal Step 2
+integration was recorded before implementation: `pending_school_inputs` travels
+in the existing preference-profile dict, without transcript retention or a
+frontend contract change. Explicit choices clear missing fields; later same-value
+strength can resolve with other choices. Tools reject guessed K1/K2 values from
+`1km` or bare confirmation, block incomplete matching searches and expose
+programme/language evidence. Distance-filtered lists require supported numeric
+distances. Required discovery: **609 tests in 50.415s, OK**. Final synthetic
+provider replay: **8/9 served, 7/9 targeted task checks pass**; one list exhausts
+format repairs and one missing-postal request asks the wrong clarification.
+No general live-quality pass, deployment or commit claimed. See
+[implementation and verification](../SystemCode/src/backend/doc/agents.md#implemented-maintenance--matching-school-clarification-2026-10-18).
+Next remains rollout observation, including these remaining model-reliability
+issues.
+
 Completed authorized maintenance (2026-10-18): increased response repairs from
 two to four, within the existing eight-model-call and 30-second turn budgets.
 Telemetry retains five validation errors. Focused tests: 52 pass; required

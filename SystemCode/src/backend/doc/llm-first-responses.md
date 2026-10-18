@@ -45,6 +45,16 @@ Search-record addresses can support separate school-attributed claims. Fixed
 validation-error categories are retained for telemetry on successful repairs and
 exhausted attempts; no answer text, family values or provider errors are logged.
 
+For a successful current-revision search with a saved distance limit, each
+school mentioned through a validated search-record claim must include supported
+distance evidence. Bare lists receive `missing_distance_claim` feedback and
+bounded repair without replaying tools. When the postal code resolves to the
+school's recorded location, the existing `same_location_as_postal_code` boolean
+can support that explanation. Unresolved `pending_school_inputs` require a
+question alongside any supported acknowledgement. These checks inspect typed
+tool results, not user-message keywords; model interpretation is still evaluated
+separately.
+
 ## Repair, state and failures
 
 Invalid final structures, values or citations receive fixed-category feedback
