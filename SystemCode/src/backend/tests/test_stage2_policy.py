@@ -36,6 +36,18 @@ class Stage2PolicyTests(unittest.TestCase):
         self.assertEqual(result["net_monthly_fee"], 160)
         self.assertEqual(result["policy_source"]["policy_id"], "ecda-preschool-subsidies-2025-01-01")
 
+    def test_minimum_copayment_caps_net_fee_when_subsidies_exceed_fee(self):
+        result = evaluate_preschool_eligibility(
+            dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+            ghi=4500, base_fee=610, basic_subsidy=300,
+            citizenship="SC", programme_type="full_day", working_hours_per_month=56,
+        )
+        self.assertEqual(result["fee_before_subsidy"], 610)
+        self.assertEqual(result["basic_subsidy"], 300)
+        self.assertEqual(result["additional_subsidy"], 440)
+        self.assertEqual(result["minimum_copayment"], 25)
+        self.assertEqual(result["net_monthly_fee"], 25)
+
     def test_exact_half_day_variant_does_not_use_cheaper_sibling_fee(self):
         level = "Pre-Nursery (3 yrs old)"
         menu = [

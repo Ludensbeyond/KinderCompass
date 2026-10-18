@@ -61,6 +61,8 @@ class Stage1ScorerRankingTests(unittest.TestCase):
         }
         ranked = rank_schools(profile, [school("FAIL", spark="No"), school("UNKNOWN", spark=None)])
         self.assertEqual([item["school_id"] for item in ranked], ["UNKNOWN"])
+        self.assertIsNone(ranked[0]["match_breakdown"][0]["matched"])
+        self.assertEqual(ranked[0]["match_breakdown"][0]["status"], "unknown")
 
     def test_importance_multipliers_change_weighted_match(self):
         profile = make_profile(spark_importance="nice_to_have", transport_importance="high_priority")
@@ -79,6 +81,15 @@ class Stage1ScorerRankingTests(unittest.TestCase):
         self.assertEqual(ranked[0]["school_id"], "COMPLETE")
         self.assertEqual(ranked[0]["combined_score"], 83.2)
         self.assertLess(ranked[1]["combined_score"], ranked[0]["combined_score"])
+        self.assertLess(ranked[0]["match_score"], ranked[1]["match_score"])
+        expected_scores = {
+            "COMPLETE": (69.23076923076923 * 100) ** 0.5,
+            "INCOMPLETE": (100 * (2 / 6.5 * 100)) ** 0.5,
+        }
+        for item in ranked:
+            self.assertAlmostEqual(
+                item["combined_score"], round(expected_scores[item["school_id"]], 1),
+            )
 
     def test_ties_use_ascending_stable_school_id(self):
         profile = {"preferences": {"spark_certified": {"value": True, "weight": 1}}, "preference_items": []}
