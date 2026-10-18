@@ -104,6 +104,12 @@ const EXPERIENCE_LABELS: Record<SchoolRelationship, string> = {
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const money = new Intl.NumberFormat("en-SG", { style: "currency", currency: "SGD", maximumFractionDigits: 0 });
 
+function formatPostalCode(value: Centre["postal_code"]): string | null {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  return digits.length < 6 ? digits.padStart(6, "0") : digits;
+}
+
 function appliedFilters(profile: PreferenceProfile | null): string[] {
   const hard = profile?.hard_constraints;
   if (!hard) return [];
@@ -336,12 +342,19 @@ export default function Home() {
   const [memoryStatus, setMemoryStatus] = useState("");
 
   const mapPoints = useMemo<MapPoint[]>(() => {
-    const comparisons = Object.values(routes);
+    const comparisons = Object.entries(routes);
     if (comparisons.length) {
-      return [comparisons[0].schedule[0], ...comparisons.map((comparison) => comparison.schedule[1])];
+      const schoolById = new Map(eligible.map((centre) => [centre.school_id, centre]));
+      return [
+        comparisons[0][1].schedule[0],
+        ...comparisons.map(([schoolId, comparison]) => ({
+          ...comparison.schedule[1],
+          postal_code: schoolById.get(schoolId)?.postal_code,
+        })),
+      ];
     }
     return homePoint ? [homePoint] : [];
-  }, [homePoint, routes]);
+  }, [eligible, homePoint, routes]);
 
   const visibleEligible = useMemo(() => {
     if (distanceFilter === "none") return eligible;
@@ -686,12 +699,12 @@ export default function Home() {
                 <div className="rankingSummary"><div><strong>Recommendations for your family</strong><p>Each preschool shows which preferences its recorded information supports and what still needs confirmation.</p></div><span>{visibleEligible.length} of {eligible.length} schools</span></div>{appliedFilters(preferenceProfile).length > 0 && <p className="appliedFilters">Filters applied: {appliedFilters(preferenceProfile).join(" · ")}</p>}
                 <div className="resultToolbar"><label>Distance from home<select value={distanceFilter} onChange={(event) => setDistanceFilter(event.target.value)}><option value="none">None</option>{distanceFilter !== "none" && !["1", "2", "3", "4", "5"].includes(distanceFilter) && <option value={distanceFilter}>Within {distanceFilter} km</option>}{[1, 2, 3, 4, 5].map((km) => <option value={km} key={km}>Within {km} km</option>)}</select></label><span>Filtering preserves the original rank</span></div>
                 {distanceFilter !== "none" && eligible.length > Object.keys(distances).length && visibleEligible.length > 0 && <p className="appliedFilters">Distance is unknown for {eligible.length - Object.keys(distances).length} school(s) without coordinates; they are omitted from this distance-filtered view.</p>}
-                <div className="resultList selectable">{recommendationEmptyState === "no_eligible" ? <div className="emptyState"><h2>No eligible preschools in these results</h2><p>The matched schools did not meet the current age and fee eligibility checks. Review family details or preferences and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></div> : recommendationEmptyState === "distance_filtered" ? <div className="emptyState"><h2>No eligible schools with a known distance within {distanceFilter} km</h2><p>The eligible schools with calculable distances are outside this radius. Increase the distance or select None to see all eligible recommendations.</p></div> : recommendationEmptyState === "distance_unknown" ? <div className="emptyState"><h2>Distance is unknown for some schools</h2><p>No school with a calculated distance is within {distanceFilter} km. {Math.max(0, eligible.length - Object.keys(distances).length)} eligible school(s) have no coordinates, so their distance cannot be confirmed.</p></div> : visibleEligible.map((centre) => { const scores = getRecommendationScores(centre); return <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}>
+                <div className="resultList selectable">{recommendationEmptyState === "no_eligible" ? <div className="emptyState"><h2>No eligible preschools in these results</h2><p>The matched schools did not meet the current age and fee eligibility checks. Review family details or preferences and try again.</p><button className="primary" onClick={() => { setStage("family"); setTab("form"); }}>Review family details</button></div> : recommendationEmptyState === "distance_filtered" ? <div className="emptyState"><h2>No eligible schools with a known distance within {distanceFilter} km</h2><p>The eligible schools with calculable distances are outside this radius. Increase the distance or select None to see all eligible recommendations.</p></div> : recommendationEmptyState === "distance_unknown" ? <div className="emptyState"><h2>Distance is unknown for some schools</h2><p>No school with a calculated distance is within {distanceFilter} km. {Math.max(0, eligible.length - Object.keys(distances).length)} eligible school(s) have no coordinates, so their distance cannot be confirmed.</p></div> : visibleEligible.map((centre) => { const scores = getRecommendationScores(centre); const postalCode = formatPostalCode(centre.postal_code); return <article className={selected.includes(centre.school_id) ? "selected" : ""} key={centre.school_id}>
                   <button className="resultChoice" onClick={() => toggleSchool(centre.school_id)}>
                     <span className="selectMark">✓</span>
                     <div>
                       <span className="rankBadge">#{eligible.findIndex((item) => item.school_id === centre.school_id) + 1}</span>
-                      <h3>{centre.name}</h3>
+                      <h3>{centre.name}{postalCode && <span className="schoolPostalCode">(Postal code: {postalCode})</span>}</h3>
                       <p>{centre.eligible_level ?? "Preschool"} · Age/fee eligible</p>
                     </div>
                     {routes[centre.school_id] && <div className="schoolMetrics"><strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>route from home</small></strong></div>}
