@@ -11,6 +11,7 @@ dependency constraints, contributor guidance, and the following areas:
 | `repositories/` | Authoritative catalogue and policy access. | [Repositories](repositories.md) |
 | `services/` | Application use cases and orchestration. | [Services](services.md) |
 | `pipeline/` | Reusable recommendation and distance logic. | [Pipeline](pipeline.md) |
+| `recommendation-evidence-contract.md` | Stage 1 evidence semantics, ranking, required-preference uncertainty and tie-breaking. | [Recommendation contract](recommendation-evidence-contract.md) |
 | `scripts/` | Offline audits, evaluations, and data preparation. | [Scripts](scripts.md) |
 | `resources/` | Versioned, curated inputs used at runtime or during evaluation. | [Resources](resources.md) |
 | `tests/` | Automated backend regression coverage. | [Tests](tests.md) |

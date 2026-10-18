@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+from copy import deepcopy
 from typing import Any
 
 from stage1.evidence import evidence_details
@@ -76,7 +77,23 @@ def _school_value(school: dict[str, Any], attribute: str, target: Any):
         if _is_missing(raw_value):
             return (None, 0.0)
         value = str(raw_value).strip().casefold()
-        return ("halal" in value or "no pork" in value, 1.0)
+        # The catalogue is not a certification source. Only explicit wording
+        # can support a comparison; arbitrary food descriptions stay unknown.
+        negative = any(term in value for term in (
+            "not halal", "non-halal", "pork served", "pork is served", "contains pork",
+        ))
+        if str(target).casefold() == "no_pork":
+            positive = any(term in value for term in ("no pork", "no lard", "halal"))
+            negative = any(term in value for term in ("pork served", "pork is served", "contains pork"))
+        else:
+            # A no-pork statement alone does not establish halal sourcing or
+            # certification, and therefore cannot satisfy a halal preference.
+            positive = "halal" in value and not negative
+        if negative:
+            return (False, 1.0)
+        if positive:
+            return (True, 1.0)
+        return (None, 0.0)
     if attribute == "full_day":
         value = school.get("weekday_full_day")
         parsed = _yes_no(value)
@@ -117,7 +134,7 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
     weighted_score = 0.0
     requested_weight = 0.0
     verifiable_weight = 0.0
-    known_weight = 0.0
+    evidence_weight = 0.0
     importance_by_attribute = {
         (f"language:{item['value']}" if item["attribute"] == "language" else item["attribute"]): item["importance"]
         for item in profile.get("preference_items", [])
@@ -130,28 +147,46 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
         base_weight = float(preference.get("weight", 3))
         weight = base_weight * IMPORTANCE_MULTIPLIERS[importance]
         actual, availability = _school_value(school, attribute, target)
-        known = bool(availability)
+        details = evidence_details(attribute, school, actual, availability)
+        # Derived/partial records are retained as evidence metadata but do not
+        # establish a confirmed match or mismatch. Stale evidence is likewise
+        # not used as a current fact.
+        usable = (
+            float(availability or 0) > 0
+            and details["evidence_state"] == "verified"
+            and details["freshness"] not in {"stale", "future_dated"}
+        )
+        known = usable
+        inferred = float(availability or 0) > 0 and details["evidence_state"] == "derived"
+        partially_supported = float(availability or 0) > 0 and details["evidence_state"] == "partially_supported"
         match = _matches(actual, target, desired) if known else None
         compatibility = 1.0 if match else 0.0
         if weight > 0:
             requested_weight += weight
             if known:
-                known_weight += weight
+                evidence_weight += weight
                 weighted_score += compatibility * weight
                 verifiable_weight += weight
+            elif inferred and details["freshness"] not in {"stale", "future_dated"}:
+                # Preserve the existing 0.65 pedagogy support factor as
+                # completeness only; it is not a probability or match credit.
+                evidence_weight += weight * float(availability)
         label = attribute.split(":", 1)[0].replace("_", " ")
         breakdown.append({
             "attribute": attribute,
             "preference": target,
             "school_value": actual,
+            "recorded_value": school.get("food_offered") if attribute == "food" else actual,
             "matched": match,
-            "status": "matched" if match is True else "not_matched" if match is False else "unknown",
+            "status": "matched" if match is True else "not_matched" if match is False else "inferred" if inferred else "partially_supported" if partially_supported else "unknown",
             "importance": importance,
             "weight": round(weight, 2),
-            "confidence": 1.0 if known else 0.0,
+            "confidence": round(float(availability or 0) if known or inferred else 0.0, 2),
+            "inferred_match": _matches(actual, target, desired) if inferred else None,
+            "partial_match": _matches(actual, target, desired) if partially_supported and actual is not None else None,
             "contribution": round(compatibility * weight, 2),
             "possible_contribution": round(weight, 2) if match is not None else 0.0,
-            **evidence_details(attribute, school, actual, known),
+            **details,
         })
         if match is True:
             strengths.append(label)
@@ -166,7 +201,7 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
         else 0.0 if not verifiable_weight
         else weighted_score / verifiable_weight * 100.0
     )
-    profile_confidence = 1.0 if not requested_weight else known_weight / requested_weight
+    profile_confidence = 1.0 if not requested_weight else evidence_weight / requested_weight
     confidence_score = profile_confidence * 100.0
     combined_score = math.sqrt(score * confidence_score)
     return {
@@ -177,6 +212,9 @@ def score_school(profile: dict, school: dict[str, Any]) -> dict[str, Any]:
         "strengths": strengths[:5],
         "tradeoffs": tradeoffs[:5],
         "match_breakdown": breakdown,
+        "_ranking_match": score,
+        "_ranking_coverage": profile_confidence,
+        "_ranking_combined": combined_score,
     }
 
 
@@ -197,10 +235,30 @@ def rank_schools(profile: dict, schools: list[dict[str, Any]], limit: int = 20):
             ranked.append(scored)
     ranked.sort(
         key=lambda item: (
-            -item["combined_score"],
-            -item["match_score"],
-            -item["profile_confidence"],
+            -item["_ranking_combined"],
+            -item["_ranking_match"],
+            -item["_ranking_coverage"],
             str(item.get("school_id") or ""),
         )
     )
+    for item in ranked:
+        for key in ("_ranking_match", "_ranking_coverage", "_ranking_combined"):
+            item.pop(key, None)
     return ranked[:limit]
+
+
+def individually_relaxable_required_preferences(
+    profile: dict, schools: list[dict[str, Any]],
+) -> list[str]:
+    """Return required scored attributes whose individual downgrade yields candidates."""
+    attributes = []
+    for item in profile.get("preference_items", []):
+        if item.get("importance") != "required" or item.get("attribute") in {"care_level", "max_distance_km"}:
+            continue
+        candidate = deepcopy(profile)
+        for candidate_item in candidate.get("preference_items", []):
+            if candidate_item.get("attribute") == item.get("attribute") and candidate_item.get("value") == item.get("value"):
+                candidate_item["importance"] = "preferred"
+        if rank_schools(candidate, schools, limit=1):
+            attributes.append(str(item["attribute"]))
+    return attributes

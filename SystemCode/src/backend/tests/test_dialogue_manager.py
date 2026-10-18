@@ -77,30 +77,50 @@ class ContradictionDetectionTests(unittest.TestCase):
         resolved = update_conversation(conflict["profile"], "keep Montessori")
         self.assertEqual(resolved["profile"]["preferences"]["pedagogy"]["value"], "Montessori")
 
+    def test_conflicting_soft_transport_preferences_require_explicit_resolution(self):
+        first = update_conversation(None, "I prefer school transport")
+        self.assertTrue(first["ready_to_search"])
+        conflict = update_conversation(first["profile"], "I do not want transport")
+        self.assertEqual(conflict["status"], "needs_clarification")
+        self.assertTrue(conflict["profile"]["preferences"]["transport"]["desired"])
+        resolved = update_conversation(conflict["profile"], "use new")
+        self.assertFalse(resolved["profile"]["preferences"]["transport"]["desired"])
+
 
 class ControlledRelaxationTests(unittest.TestCase):
-    def test_proposes_smallest_distance_change_without_applying_it(self):
+    def test_proposes_distance_change_only_for_a_known_outside_candidate(self):
         profile = update_conversation(None, "within 1 km")["profile"]
-        proposal = propose_constraint_relaxation(profile)
+        proposal = propose_constraint_relaxation(profile, trace={
+            "distance_outside_radius": 1,
+            "nearest_outside_distance_km": 1.42,
+        })
         self.assertEqual(profile["hard_constraints"]["max_distance_km"], 1)
-        self.assertEqual(proposal["new_value"], 2)
+        self.assertEqual(proposal["new_value"], 1.5)
+        self.assertIsNone(propose_constraint_relaxation(profile, trace={
+            "distance_missing_coordinates": 1,
+        }))
 
     def test_relaxation_requires_explicit_approval(self):
         profile = update_conversation(None, "within 1 km")["profile"]
-        profile["pending_relaxation"] = propose_constraint_relaxation(profile)
+        profile["pending_relaxation"] = propose_constraint_relaxation(profile, trace={
+            "distance_outside_radius": 1, "nearest_outside_distance_km": 1.42,
+        })
         pending = update_conversation(profile, "maybe")
         self.assertFalse(pending["ready_to_search"])
         self.assertEqual(pending["profile"]["hard_constraints"]["max_distance_km"], 1)
 
         approved = update_conversation(pending["profile"], "apply relaxation")
-        self.assertEqual(approved["profile"]["hard_constraints"]["max_distance_km"], 2)
+        self.assertEqual(approved["profile"]["hard_constraints"]["max_distance_km"], 1.5)
         self.assertNotIn("pending_relaxation", approved["profile"])
 
     def test_declining_preserves_constraints(self):
-        profile = update_conversation(None, "Chinese is required")["profile"]
-        profile["pending_relaxation"] = propose_constraint_relaxation(profile)
+        profile = update_conversation(None, "SPARK is required")["profile"]
+        profile["pending_relaxation"] = propose_constraint_relaxation(profile, trace={
+            "individually_relaxable_required_preferences": ["spark_certified"],
+        })
         declined = update_conversation(profile, "keep constraints")
-        self.assertEqual(declined["profile"]["hard_constraints"]["language"], "Chinese")
+        item = next(i for i in declined["profile"]["preference_items"] if i["attribute"] == "spark_certified")
+        self.assertEqual(item["importance"], "required")
 
 
 class WhatIfAndExclusionTests(unittest.TestCase):

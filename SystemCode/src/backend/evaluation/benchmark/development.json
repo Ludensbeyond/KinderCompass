@@ -1,0 +1,3200 @@
+{
+  "schema_version": 1,
+  "benchmark_id": "kindercompass-synthetic-recommendation-scenarios",
+  "benchmark_version": "1.0.0",
+  "dataset_kind": "synthetic_test_fixture",
+  "split": "development",
+  "reference_label_status": "illustrative_only",
+  "synthetic_data_notice": "Every candidate, profile scenario, relevance grade, and hard-constraint outcome is invented for implementation smoke testing only; none is a real preschool fact, an independently reviewed label, or performance evidence.",
+  "scenario_relevance_rubric": {
+    "scale": {
+      "0": "Synthetic scenario has no meaningful fit to either stated preference dimension or explicitly conflicts with the primary dimension.",
+      "1": "Synthetic scenario has a limited fit to one stated preference dimension.",
+      "2": "Synthetic scenario fits the primary stated preference dimension.",
+      "3": "Synthetic scenario fits both stated preference dimensions."
+    },
+    "assignment": "Grades are authored from the synthetic two-dimension scenario matrix before and independently of invoking the production ranker. They are illustrative rubric examples, not human or independently verified relevance judgments."
+  },
+  "stage_scope_note": "The offline evaluator calls legacy and production Stage 1 rankers only. It does not run Neo4j hard filters, postal-code geocoding or radius filtering, nor Stage 2 age/programme/budget eligibility or fee policy. Distance, family, fee, and care-level fields are correctly shaped synthetic context but receive no expected Stage 2 labels and do not affect this report. Zero-results cases exercise Stage 1 required-preference enforcement only.",
+  "ranking_cases": [
+    {
+      "case_id": "development-synthetic-01",
+      "reference_case_id": "development-synthetic-01",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "distance_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-01-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 0.5
+        },
+        {
+          "school_id": "SYN-DEV-01-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 1.6
+        },
+        {
+          "school_id": "SYN-DEV-01-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 2.7
+        },
+        {
+          "school_id": "SYN-DEV-01-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-01-1",
+        "SYN-DEV-01-2",
+        "SYN-DEV-01-3",
+        "SYN-DEV-01-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-01-1": 3,
+        "SYN-DEV-01-2": 2,
+        "SYN-DEV-01-3": 1,
+        "SYN-DEV-01-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-02",
+      "reference_case_id": "development-synthetic-02",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "missing_information",
+        "budget_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 5,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1220
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-02-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-02-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-02-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-02-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-02-1",
+        "SYN-DEV-02-2",
+        "SYN-DEV-02-3",
+        "SYN-DEV-02-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-02-1": 3,
+        "SYN-DEV-02-2": 2,
+        "SYN-DEV-02-3": 1,
+        "SYN-DEV-02-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 4700,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-03",
+      "reference_case_id": "development-synthetic-03",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "programme_context"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 3,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "high_priority",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-03-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-03-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-03-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-03-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-03-1",
+        "SYN-DEV-03-2",
+        "SYN-DEV-03-3",
+        "SYN-DEV-03-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-03-1": 3,
+        "SYN-DEV-03-2": 2,
+        "SYN-DEV-03-3": 1,
+        "SYN-DEV-03-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 4800,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-04",
+      "reference_case_id": "development-synthetic-04",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "different_relevance_levels"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 4,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-04-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-04-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-04-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-04-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-04-1",
+        "SYN-DEV-04-2",
+        "SYN-DEV-04-3",
+        "SYN-DEV-04-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-04-1": 3,
+        "SYN-DEV-04-2": 2,
+        "SYN-DEV-04-3": 1,
+        "SYN-DEV-04-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-04-1": "pass",
+        "SYN-DEV-04-2": "pass",
+        "SYN-DEV-04-3": "fail",
+        "SYN-DEV-04-4": "fail"
+      }
+    },
+    {
+      "case_id": "development-synthetic-05",
+      "reference_case_id": "development-synthetic-05",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "stale_evidence_input"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 5,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-05-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "last_updated": "2020-01-01"
+        },
+        {
+          "school_id": "SYN-DEV-05-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "last_updated": "2020-01-01"
+        },
+        {
+          "school_id": "SYN-DEV-05-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "last_updated": "2020-01-01"
+        },
+        {
+          "school_id": "SYN-DEV-05-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "last_updated": "2020-01-01"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-05-1",
+        "SYN-DEV-05-2",
+        "SYN-DEV-05-3",
+        "SYN-DEV-05-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-05-1": 3,
+        "SYN-DEV-05-2": 2,
+        "SYN-DEV-05-3": 1,
+        "SYN-DEV-05-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-06",
+      "reference_case_id": "development-synthetic-06",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "conflicting_preferences",
+        "distance_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "language:Malay": {
+            "value": "Malay",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "language",
+            "value": "Malay",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-06-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "distance_km": 0.5,
+          "second_languages_offered": "Chinese"
+        },
+        {
+          "school_id": "SYN-DEV-06-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "distance_km": 1.6,
+          "second_languages_offered": "Malay"
+        },
+        {
+          "school_id": "SYN-DEV-06-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "distance_km": 2.7,
+          "second_languages_offered": "Tamil"
+        },
+        {
+          "school_id": "SYN-DEV-06-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-06-1",
+        "SYN-DEV-06-2",
+        "SYN-DEV-06-3",
+        "SYN-DEV-06-4"
+      ],
+      "labels_complete": false,
+      "relevance": {
+        "SYN-DEV-06-1": 1,
+        "SYN-DEV-06-2": 1,
+        "SYN-DEV-06-3": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-06-1": "fail",
+        "SYN-DEV-06-2": "fail",
+        "SYN-DEV-06-3": "fail",
+        "SYN-DEV-06-4": "unknown"
+      }
+    },
+    {
+      "case_id": "development-synthetic-07",
+      "reference_case_id": "development-synthetic-07",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "budget_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1270
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-07-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-07-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-07-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-07-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-07-1",
+        "SYN-DEV-07-2",
+        "SYN-DEV-07-3",
+        "SYN-DEV-07-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-07-1": 3,
+        "SYN-DEV-07-2": 2,
+        "SYN-DEV-07-3": 1,
+        "SYN-DEV-07-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 5200,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-08",
+      "reference_case_id": "development-synthetic-08",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "zero_stage1_results",
+        "programme_context"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 5,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-08-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-08-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-08-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-08-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-08-1",
+        "SYN-DEV-08-2",
+        "SYN-DEV-08-3",
+        "SYN-DEV-08-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-08-1": 1,
+        "SYN-DEV-08-2": 0,
+        "SYN-DEV-08-3": 1,
+        "SYN-DEV-08-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-08-1": "fail",
+        "SYN-DEV-08-2": "fail",
+        "SYN-DEV-08-3": "fail",
+        "SYN-DEV-08-4": "fail"
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 5300,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-09",
+      "reference_case_id": "development-synthetic-09",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "missing_information"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 3,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-09-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-09-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-09-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-09-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-09-1",
+        "SYN-DEV-09-2",
+        "SYN-DEV-09-3",
+        "SYN-DEV-09-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-09-1": 3,
+        "SYN-DEV-09-2": 2,
+        "SYN-DEV-09-3": 1,
+        "SYN-DEV-09-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-09-1": "pass",
+        "SYN-DEV-09-2": "pass",
+        "SYN-DEV-09-3": "unknown",
+        "SYN-DEV-09-4": "fail"
+      }
+    },
+    {
+      "case_id": "development-synthetic-10",
+      "reference_case_id": "development-synthetic-10",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "different_relevance_levels"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 4,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-10-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-10-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-10-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-10-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-10-1",
+        "SYN-DEV-10-2",
+        "SYN-DEV-10-3",
+        "SYN-DEV-10-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-10-1": 3,
+        "SYN-DEV-10-2": 2,
+        "SYN-DEV-10-3": 1,
+        "SYN-DEV-10-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-11",
+      "reference_case_id": "development-synthetic-11",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "distance_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 5,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-11-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 0.5
+        },
+        {
+          "school_id": "SYN-DEV-11-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 1.6
+        },
+        {
+          "school_id": "SYN-DEV-11-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 2.7
+        },
+        {
+          "school_id": "SYN-DEV-11-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-11-1",
+        "SYN-DEV-11-2",
+        "SYN-DEV-11-3",
+        "SYN-DEV-11-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-11-1": 3,
+        "SYN-DEV-11-2": 2,
+        "SYN-DEV-11-3": 1,
+        "SYN-DEV-11-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-12",
+      "reference_case_id": "development-synthetic-12",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "budget_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1320
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-12-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-12-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-12-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-12-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-12-1",
+        "SYN-DEV-12-2",
+        "SYN-DEV-12-3",
+        "SYN-DEV-12-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-12-1": 3,
+        "SYN-DEV-12-2": 2,
+        "SYN-DEV-12-3": 1,
+        "SYN-DEV-12-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-12-1": "pass",
+        "SYN-DEV-12-2": "pass",
+        "SYN-DEV-12-3": "fail",
+        "SYN-DEV-12-4": "fail"
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 5700,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-13",
+      "reference_case_id": "development-synthetic-13",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "programme_context"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-13-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-13-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-13-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-13-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-13-1",
+        "SYN-DEV-13-2",
+        "SYN-DEV-13-3",
+        "SYN-DEV-13-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-13-1": 3,
+        "SYN-DEV-13-2": 2,
+        "SYN-DEV-13-3": 1,
+        "SYN-DEV-13-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 5800,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-14",
+      "reference_case_id": "development-synthetic-14",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 5,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-14-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-14-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-14-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-14-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-14-1",
+        "SYN-DEV-14-2",
+        "SYN-DEV-14-3",
+        "SYN-DEV-14-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-14-1": 3,
+        "SYN-DEV-14-2": 2,
+        "SYN-DEV-14-3": 1,
+        "SYN-DEV-14-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-15",
+      "reference_case_id": "development-synthetic-15",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 3,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "high_priority",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-15-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-15-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-15-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-15-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-15-1",
+        "SYN-DEV-15-2",
+        "SYN-DEV-15-3",
+        "SYN-DEV-15-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-15-1": 3,
+        "SYN-DEV-15-2": 2,
+        "SYN-DEV-15-3": 1,
+        "SYN-DEV-15-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-16",
+      "reference_case_id": "development-synthetic-16",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "missing_information",
+        "stale_evidence_input",
+        "conflicting_preferences",
+        "distance_context_only",
+        "different_relevance_levels"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "language:Malay": {
+            "value": "Malay",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "language",
+            "value": "Malay",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-16-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "last_updated": "2020-01-01",
+          "distance_km": 0.5,
+          "second_languages_offered": "Chinese"
+        },
+        {
+          "school_id": "SYN-DEV-16-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "last_updated": "2020-01-01",
+          "distance_km": 1.6,
+          "second_languages_offered": "Malay"
+        },
+        {
+          "school_id": "SYN-DEV-16-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "weekday_full_day": true,
+          "last_updated": "2020-01-01",
+          "distance_km": 2.7,
+          "second_languages_offered": "Tamil"
+        },
+        {
+          "school_id": "SYN-DEV-16-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "last_updated": "2020-01-01",
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-16-1",
+        "SYN-DEV-16-2",
+        "SYN-DEV-16-3",
+        "SYN-DEV-16-4"
+      ],
+      "labels_complete": false,
+      "relevance": {
+        "SYN-DEV-16-1": 1,
+        "SYN-DEV-16-2": 1,
+        "SYN-DEV-16-3": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-16-1": "unknown",
+        "SYN-DEV-16-2": "unknown",
+        "SYN-DEV-16-3": "unknown",
+        "SYN-DEV-16-4": "unknown"
+      }
+    },
+    {
+      "case_id": "development-synthetic-17",
+      "reference_case_id": "development-synthetic-17",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "budget_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 5,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1370
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-17-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-17-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-17-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-17-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-17-1",
+        "SYN-DEV-17-2",
+        "SYN-DEV-17-3",
+        "SYN-DEV-17-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-17-1": 3,
+        "SYN-DEV-17-2": 2,
+        "SYN-DEV-17-3": 1,
+        "SYN-DEV-17-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 6200,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-18",
+      "reference_case_id": "development-synthetic-18",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "programme_context"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-18-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-18-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-18-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-18-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-18-1",
+        "SYN-DEV-18-2",
+        "SYN-DEV-18-3",
+        "SYN-DEV-18-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-18-1": 3,
+        "SYN-DEV-18-2": 2,
+        "SYN-DEV-18-3": 1,
+        "SYN-DEV-18-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-18-1": "pass",
+        "SYN-DEV-18-2": "pass",
+        "SYN-DEV-18-3": "fail",
+        "SYN-DEV-18-4": "fail"
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 6300,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-19",
+      "reference_case_id": "development-synthetic-19",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-19-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-19-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-19-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-19-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-19-1",
+        "SYN-DEV-19-2",
+        "SYN-DEV-19-3",
+        "SYN-DEV-19-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-19-1": 3,
+        "SYN-DEV-19-2": 2,
+        "SYN-DEV-19-3": 1,
+        "SYN-DEV-19-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-20",
+      "reference_case_id": "development-synthetic-20",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 5,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-20-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-20-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-20-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-20-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-20-1",
+        "SYN-DEV-20-2",
+        "SYN-DEV-20-3",
+        "SYN-DEV-20-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-20-1": 3,
+        "SYN-DEV-20-2": 2,
+        "SYN-DEV-20-3": 1,
+        "SYN-DEV-20-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-20-1": "pass",
+        "SYN-DEV-20-2": "pass",
+        "SYN-DEV-20-3": "fail",
+        "SYN-DEV-20-4": "fail"
+      }
+    },
+    {
+      "case_id": "development-synthetic-21",
+      "reference_case_id": "development-synthetic-21",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "distance_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 3,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "high_priority",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-21-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 0.5
+        },
+        {
+          "school_id": "SYN-DEV-21-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 1.6
+        },
+        {
+          "school_id": "SYN-DEV-21-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "distance_km": 2.7
+        },
+        {
+          "school_id": "SYN-DEV-21-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-21-1",
+        "SYN-DEV-21-2",
+        "SYN-DEV-21-3",
+        "SYN-DEV-21-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-21-1": 3,
+        "SYN-DEV-21-2": 2,
+        "SYN-DEV-21-3": 1,
+        "SYN-DEV-21-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-22",
+      "reference_case_id": "development-synthetic-22",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "budget_context_only",
+        "different_relevance_levels"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 4,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1420
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-22-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-22-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-22-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-22-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-22-1",
+        "SYN-DEV-22-2",
+        "SYN-DEV-22-3",
+        "SYN-DEV-22-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-22-1": 3,
+        "SYN-DEV-22-2": 2,
+        "SYN-DEV-22-3": 1,
+        "SYN-DEV-22-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 6700,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-23",
+      "reference_case_id": "development-synthetic-23",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "missing_information",
+        "programme_context"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 5,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-23-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-23-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-23-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "operator_scheme": "Anchor Operator Scheme",
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-23-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-23-1",
+        "SYN-DEV-23-2",
+        "SYN-DEV-23-3",
+        "SYN-DEV-23-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-23-1": 3,
+        "SYN-DEV-23-2": 2,
+        "SYN-DEV-23-3": 1,
+        "SYN-DEV-23-4": 0
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 6800,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-24",
+      "reference_case_id": "development-synthetic-24",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-24-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-24-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-24-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-24-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-24-1",
+        "SYN-DEV-24-2",
+        "SYN-DEV-24-3",
+        "SYN-DEV-24-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-24-1": 3,
+        "SYN-DEV-24-2": 2,
+        "SYN-DEV-24-3": 1,
+        "SYN-DEV-24-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-24-1": "pass",
+        "SYN-DEV-24-2": "pass",
+        "SYN-DEV-24-3": "fail",
+        "SYN-DEV-24-4": "fail"
+      }
+    },
+    {
+      "case_id": "development-synthetic-25",
+      "reference_case_id": "development-synthetic-25",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-25-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-25-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-25-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-25-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-25-1",
+        "SYN-DEV-25-2",
+        "SYN-DEV-25-3",
+        "SYN-DEV-25-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-25-1": 3,
+        "SYN-DEV-25-2": 2,
+        "SYN-DEV-25-3": 1,
+        "SYN-DEV-25-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-26",
+      "reference_case_id": "development-synthetic-26",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "conflicting_preferences",
+        "distance_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {
+          "max_distance_km": 2.0
+        },
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 4,
+            "desired": true
+          },
+          "language:Malay": {
+            "value": "Malay",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "language",
+            "value": "Malay",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "max_distance_km",
+            "value": 2.0,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "geometry",
+            "warning": "Distance cannot be verified for schools without location data."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-26-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "distance_km": 0.5,
+          "second_languages_offered": "Chinese"
+        },
+        {
+          "school_id": "SYN-DEV-26-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "distance_km": 1.6,
+          "second_languages_offered": "Malay"
+        },
+        {
+          "school_id": "SYN-DEV-26-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "distance_km": 2.7,
+          "second_languages_offered": "Tamil"
+        },
+        {
+          "school_id": "SYN-DEV-26-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "distance_km": 3.8
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-26-1",
+        "SYN-DEV-26-2",
+        "SYN-DEV-26-3",
+        "SYN-DEV-26-4"
+      ],
+      "labels_complete": false,
+      "relevance": {
+        "SYN-DEV-26-1": 1,
+        "SYN-DEV-26-2": 1,
+        "SYN-DEV-26-3": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-26-1": "fail",
+        "SYN-DEV-26-2": "fail",
+        "SYN-DEV-26-3": "fail",
+        "SYN-DEV-26-4": "unknown"
+      }
+    },
+    {
+      "case_id": "development-synthetic-27",
+      "reference_case_id": "development-synthetic-27",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "stale_evidence_input",
+        "budget_context_only"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 3,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_monthly_budget_sgd": 1470
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-27-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme",
+          "last_updated": "2020-01-01",
+          "monthly_fee_sgd": 700,
+          "base_fee": 700
+        },
+        {
+          "school_id": "SYN-DEV-27-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme",
+          "last_updated": "2020-01-01",
+          "monthly_fee_sgd": 950,
+          "base_fee": 950
+        },
+        {
+          "school_id": "SYN-DEV-27-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme",
+          "last_updated": "2020-01-01",
+          "monthly_fee_sgd": 1200,
+          "base_fee": 1200
+        },
+        {
+          "school_id": "SYN-DEV-27-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme",
+          "last_updated": "2020-01-01",
+          "monthly_fee_sgd": 1450,
+          "base_fee": 1450
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-27-1",
+        "SYN-DEV-27-2",
+        "SYN-DEV-27-3",
+        "SYN-DEV-27-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-27-1": 3,
+        "SYN-DEV-27-2": 2,
+        "SYN-DEV-27-3": 1,
+        "SYN-DEV-27-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-27-1": "unknown",
+        "SYN-DEV-27-2": "unknown",
+        "SYN-DEV-27-3": "unknown",
+        "SYN-DEV-27-4": "unknown"
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 7200,
+        "citizenship": "SC",
+        "programme_type": "half_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-28",
+      "reference_case_id": "development-synthetic-28",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "required_preference",
+        "programme_context",
+        "different_relevance_levels"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 4,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 2,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "required",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": [],
+        "scenario_context": {
+          "synthetic_programme_type": "Full Day"
+        }
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-28-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 800
+        },
+        {
+          "school_id": "SYN-DEV-28-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 925
+        },
+        {
+          "school_id": "SYN-DEV-28-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": true,
+          "care_levels": [
+            "Pre-Nursery (3 yrs old)"
+          ],
+          "base_fee": 1050
+        },
+        {
+          "school_id": "SYN-DEV-28-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false,
+          "care_levels": [
+            "Nursery (4 yrs old)"
+          ],
+          "base_fee": 1175
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-28-1",
+        "SYN-DEV-28-2",
+        "SYN-DEV-28-3",
+        "SYN-DEV-28-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-28-1": 3,
+        "SYN-DEV-28-2": 2,
+        "SYN-DEV-28-3": 1,
+        "SYN-DEV-28-4": 0
+      },
+      "hard_constraint_outcomes": {
+        "SYN-DEV-28-1": "pass",
+        "SYN-DEV-28-2": "pass",
+        "SYN-DEV-28-3": "fail",
+        "SYN-DEV-28-4": "fail"
+      },
+      "family": {
+        "dob": "2023-04-12",
+        "admission_date": "2026-04-01",
+        "gross_household_income": 7300,
+        "citizenship": "SC",
+        "programme_type": "full_day",
+        "working_hours_per_month": 56,
+        "household_size": 4,
+        "non_earning_dependants": 1,
+        "special_approval": false
+      }
+    },
+    {
+      "case_id": "development-synthetic-29",
+      "reference_case_id": "development-synthetic-29",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "language:Chinese": {
+            "value": "Chinese",
+            "weight": 5,
+            "desired": true
+          },
+          "operator_scheme": {
+            "value": "Anchor Operator Scheme",
+            "weight": 3,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "language",
+            "value": "Chinese",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "second_languages_offered",
+            "warning": "Evidence confirms that the language is offered, not its teaching intensity or quality."
+          },
+          {
+            "attribute": "operator_scheme",
+            "value": "Anchor Operator Scheme",
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "partially_supported",
+            "school_property": "operator_scheme",
+            "warning": "The dataset does not yet distinguish no operator scheme from missing scheme evidence."
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-29-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-29-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "second_languages_offered": "Chinese",
+          "operator_scheme": "Partner Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-29-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Anchor Operator Scheme"
+        },
+        {
+          "school_id": "SYN-DEV-29-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "second_languages_offered": "Malay",
+          "operator_scheme": "Partner Operator Scheme"
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-29-1",
+        "SYN-DEV-29-2",
+        "SYN-DEV-29-3",
+        "SYN-DEV-29-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-29-1": 3,
+        "SYN-DEV-29-2": 2,
+        "SYN-DEV-29-3": 1,
+        "SYN-DEV-29-4": 0
+      }
+    },
+    {
+      "case_id": "development-synthetic-30",
+      "reference_case_id": "development-synthetic-30",
+      "synthetic": true,
+      "scenario_tags": [
+        "preference_ranking",
+        "missing_information"
+      ],
+      "profile": {
+        "schema_version": 2,
+        "hard_constraints": {},
+        "preferences": {
+          "spark_certified": {
+            "value": true,
+            "weight": 3,
+            "desired": true
+          },
+          "full_day": {
+            "value": true,
+            "weight": 1,
+            "desired": true
+          }
+        },
+        "preference_items": [
+          {
+            "attribute": "spark_certified",
+            "value": true,
+            "importance": "high_priority",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "spark_certified",
+            "warning": null
+          },
+          {
+            "attribute": "full_day",
+            "value": true,
+            "importance": "preferred",
+            "confidence": 1.0,
+            "evidence_class": "supported",
+            "school_property": "weekday_full_day",
+            "warning": null
+          }
+        ],
+        "unsupported_preferences": []
+      },
+      "schools": [
+        {
+          "school_id": "SYN-DEV-30-1",
+          "name": "Synthetic candidate 1",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-30-2",
+          "name": "Synthetic candidate 2",
+          "synthetic": true,
+          "spark_certified": true,
+          "weekday_full_day": false
+        },
+        {
+          "school_id": "SYN-DEV-30-3",
+          "name": "Synthetic candidate 3",
+          "synthetic": true,
+          "weekday_full_day": true
+        },
+        {
+          "school_id": "SYN-DEV-30-4",
+          "name": "Synthetic candidate 4",
+          "synthetic": true,
+          "spark_certified": false,
+          "weekday_full_day": false
+        }
+      ],
+      "reference_ids": [
+        "SYN-DEV-30-1",
+        "SYN-DEV-30-2",
+        "SYN-DEV-30-3",
+        "SYN-DEV-30-4"
+      ],
+      "labels_complete": true,
+      "relevance": {
+        "SYN-DEV-30-1": 3,
+        "SYN-DEV-30-2": 2,
+        "SYN-DEV-30-3": 1,
+        "SYN-DEV-30-4": 0
+      }
+    }
+  ],
+  "eligibility_fee_claims": [],
+  "explanation_claims": [],
+  "human_judge_ratings": [],
+  "judge_configuration": null,
+  "confidence_cases": [],
+  "not_applicable_labels": [],
+  "label_provenance": []
+}

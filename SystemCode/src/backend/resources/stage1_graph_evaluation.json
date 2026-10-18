@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "purpose": "Workstream 2 P1: competency questions and labelled Stage 1 retrieval cases. Gold school_id sets are defined by independent canonical Cypher against the live graph, not by query_builder and not by human relevance judgements. This measures schema expressiveness, Stage 1 fidelity to hard graph constraints, multi-hop path recovery, and provenance completeness.",
+  "competency_questions": [
+    {
+      "id": "cq_town",
+      "parent_question": "Which preschools are in Woodlands?",
+      "schema_expressible": true,
+      "stage1_mode": "match",
+      "graph_rels": ["LOCATED_IN"],
+      "stage1_filters": {"town": "Woodlands"}
+    },
+    {
+      "id": "cq_level",
+      "parent_question": "Which preschools offer Nursery?",
+      "schema_expressible": true,
+      "stage1_mode": "match",
+      "graph_rels": ["SERVES_LEVEL"],
+      "stage1_filters": {"hard_constraints": {"level": "Nursery (4 yrs old)"}}
+    },
+    {
+      "id": "cq_language",
+      "parent_question": "Which preschools record Chinese as a second language?",
+      "schema_expressible": true,
+      "stage1_mode": "match",
+      "graph_rels": ["TEACHES_IN"],
+      "stage1_filters": {"hard_constraints": {"language": "Chinese"}}
+    },
+    {
+      "id": "cq_multihop",
+      "parent_question": "Nursery in Woodlands with required Chinese?",
+      "schema_expressible": true,
+      "stage1_mode": "match",
+      "graph_rels": ["LOCATED_IN", "SERVES_LEVEL", "TEACHES_IN"],
+      "stage1_filters": {
+        "town": "Woodlands",
+        "hard_constraints": {
+          "level": "Nursery (4 yrs old)",
+          "language": "Chinese"
+        }
+      }
+    },
+    {
+      "id": "cq_postal",
+      "parent_question": "Which preschools have postal code 540231?",
+      "schema_expressible": true,
+      "stage1_mode": "property",
+      "graph_rels": [],
+      "stage1_filters": {"town": "540231"}
+    },
+    {
+      "id": "cq_spark",
+      "parent_question": "Which preschools are SPARK certified?",
+      "schema_expressible": true,
+      "stage1_mode": "score_time",
+      "graph_rels": ["HAS_CERTIFICATION"],
+      "stage1_filters": null,
+      "text": "SPARK"
+    },
+    {
+      "id": "cq_pedagogy",
+      "parent_question": "Which preschools are tagged Montessori?",
+      "schema_expressible": true,
+      "stage1_mode": "score_time",
+      "graph_rels": ["USES_PEDAGOGY"],
+      "stage1_filters": null,
+      "text": "Montessori"
+    },
+    {
+      "id": "cq_operator",
+      "parent_question": "Which preschools participate in the Anchor Operator Scheme?",
+      "schema_expressible": true,
+      "stage1_mode": "score_time",
+      "graph_rels": ["PARTICIPATES_IN"],
+      "stage1_filters": null,
+      "text": "anchor operator"
+    },
+    {
+      "id": "cq_distance",
+      "parent_question": "Which preschools are within 3 km of home?",
+      "schema_expressible": false,
+      "stage1_mode": "post_query",
+      "graph_rels": [],
+      "stage1_filters": null,
+      "reason": "Distance is calculated from coordinates after Cypher, not stored as a graph link."
+    },
+    {
+      "id": "cq_atmosphere",
+      "parent_question": "Which preschools have a calm classroom atmosphere?",
+      "schema_expressible": false,
+      "stage1_mode": "unsupported",
+      "graph_rels": [],
+      "stage1_filters": null,
+      "reason": "The catalogue has no atmosphere evidence."
+    }
+  ],
+  "retrieval_cases": [
+    {
+      "id": "town_woodlands",
+      "parent_question": "Preschools in Woodlands",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"town": "Woodlands"},
+      "expected_rels": ["LOCATED_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY", "TEACHES_IN", "SERVES_LEVEL"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) WHERE toLower(toString(t.name)) = toLower($town) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Woodlands"}
+    },
+    {
+      "id": "town_sengkang",
+      "parent_question": "Preschools in Sengkang",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"town": "Sengkang"},
+      "expected_rels": ["LOCATED_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) WHERE toLower(toString(t.name)) = toLower($town) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Sengkang"}
+    },
+    {
+      "id": "town_tampines",
+      "parent_question": "Preschools in Tampines",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"town": "Tampines"},
+      "expected_rels": ["LOCATED_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) WHERE toLower(toString(t.name)) = toLower($town) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Tampines"}
+    },
+    {
+      "id": "level_nursery",
+      "parent_question": "Preschools that offer Nursery",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"hard_constraints": {"level": "Nursery (4 yrs old)"}},
+      "expected_rels": ["SERVES_LEVEL"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY", "LOCATED_IN"],
+      "gold_cypher": "MATCH (p:Preschool)-[:SERVES_LEVEL]->(c:CareLevel) WHERE c.name = $level RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"level": "Nursery (4 yrs old)"},
+      "ablation_cypher": "MATCH (p:Preschool) WHERE ANY(level IN coalesce(p.care_levels, []) WHERE level = $level) RETURN DISTINCT p.school_id AS school_id",
+      "ablation_params": {"level": "Nursery (4 yrs old)"}
+    },
+    {
+      "id": "level_infant",
+      "parent_question": "Preschools that offer infant care",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"hard_constraints": {"level": "Infant (2 to 18 mths)"}},
+      "expected_rels": ["SERVES_LEVEL"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:SERVES_LEVEL]->(c:CareLevel) WHERE c.name = $level RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"level": "Infant (2 to 18 mths)"}
+    },
+    {
+      "id": "level_k1",
+      "parent_question": "Preschools that offer Kindergarten 1",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"hard_constraints": {"level": "Kindergarten 1 (5 yrs old)"}},
+      "expected_rels": ["SERVES_LEVEL"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:SERVES_LEVEL]->(c:CareLevel) WHERE c.name = $level RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"level": "Kindergarten 1 (5 yrs old)"}
+    },
+    {
+      "id": "language_chinese_required",
+      "parent_question": "Must have Chinese",
+      "kind": "graph_hard",
+      "hops": 1,
+      "text": "must have Chinese",
+      "expected_rels": ["TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"language": "Chinese"},
+      "ablation_cypher": "MATCH (p:Preschool) WHERE toLower(toString(p.second_languages_offered)) CONTAINS toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "ablation_params": {"language": "Chinese"}
+    },
+    {
+      "id": "language_malay_required",
+      "parent_question": "Malay is required",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"hard_constraints": {"language": "Malay"}},
+      "expected_rels": ["TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"language": "Malay"}
+    },
+    {
+      "id": "language_tamil_required",
+      "parent_question": "Tamil is required",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"hard_constraints": {"language": "Tamil"}},
+      "expected_rels": ["TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"language": "Tamil"}
+    },
+    {
+      "id": "postal_540231",
+      "parent_question": "Preschools at postal code 540231",
+      "kind": "structured_postal",
+      "hops": 0,
+      "filters": {"town": "540231"},
+      "expected_rels": ["POSTAL_CODE"],
+      "forbidden_rels": ["LOCATED_IN", "HAS_CERTIFICATION"],
+      "gold_cypher": "MATCH (p:Preschool) WHERE p.postal_code = $postal_code RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"postal_code": 540231}
+    },
+    {
+      "id": "woodlands_nursery",
+      "parent_question": "Nursery in Woodlands",
+      "kind": "multi_hop",
+      "hops": 2,
+      "filters": {
+        "town": "Woodlands",
+        "hard_constraints": {"level": "Nursery (4 yrs old)"}
+      },
+      "expected_rels": ["LOCATED_IN", "SERVES_LEVEL"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:SERVES_LEVEL]->(c:CareLevel) WHERE toLower(toString(t.name)) = toLower($town) AND c.name = $level RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Woodlands", "level": "Nursery (4 yrs old)"}
+    },
+    {
+      "id": "sengkang_k2",
+      "parent_question": "K2 in Sengkang",
+      "kind": "multi_hop",
+      "hops": 2,
+      "filters": {
+        "town": "Sengkang",
+        "hard_constraints": {"level": "Kindergarten 2 (6 yrs old)"}
+      },
+      "expected_rels": ["LOCATED_IN", "SERVES_LEVEL"],
+      "forbidden_rels": ["HAS_CERTIFICATION"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:SERVES_LEVEL]->(c:CareLevel) WHERE toLower(toString(t.name)) = toLower($town) AND c.name = $level RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Sengkang", "level": "Kindergarten 2 (6 yrs old)"}
+    },
+    {
+      "id": "woodlands_chinese",
+      "parent_question": "Woodlands, Chinese required",
+      "kind": "multi_hop",
+      "hops": 2,
+      "filters": {
+        "town": "Woodlands",
+        "hard_constraints": {"language": "Chinese"}
+      },
+      "expected_rels": ["LOCATED_IN", "TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(t.name)) = toLower($town) AND toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Woodlands", "language": "Chinese"}
+    },
+    {
+      "id": "nursery_chinese",
+      "parent_question": "Nursery with required Chinese",
+      "kind": "multi_hop",
+      "hops": 2,
+      "filters": {
+        "hard_constraints": {
+          "level": "Nursery (4 yrs old)",
+          "language": "Chinese"
+        }
+      },
+      "expected_rels": ["SERVES_LEVEL", "TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:SERVES_LEVEL]->(c:CareLevel) MATCH (p)-[:TEACHES_IN]->(lang:Language) WHERE c.name = $level AND toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"level": "Nursery (4 yrs old)", "language": "Chinese"}
+    },
+    {
+      "id": "woodlands_nursery_chinese",
+      "parent_question": "Nursery in Woodlands, Chinese required",
+      "kind": "multi_hop",
+      "hops": 3,
+      "filters": {
+        "town": "Woodlands",
+        "hard_constraints": {
+          "level": "Nursery (4 yrs old)",
+          "language": "Chinese"
+        }
+      },
+      "expected_rels": ["LOCATED_IN", "SERVES_LEVEL", "TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:SERVES_LEVEL]->(c:CareLevel) MATCH (p)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(t.name)) = toLower($town) AND c.name = $level AND toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Woodlands", "level": "Nursery (4 yrs old)", "language": "Chinese"}
+    },
+    {
+      "id": "tampines_k1_malay",
+      "parent_question": "K1 in Tampines, Malay required",
+      "kind": "multi_hop",
+      "hops": 3,
+      "filters": {
+        "town": "Tampines",
+        "hard_constraints": {
+          "level": "Kindergarten 1 (5 yrs old)",
+          "language": "Malay"
+        }
+      },
+      "expected_rels": ["LOCATED_IN", "SERVES_LEVEL", "TEACHES_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:SERVES_LEVEL]->(c:CareLevel) MATCH (p)-[:TEACHES_IN]->(lang:Language) WHERE toLower(toString(t.name)) = toLower($town) AND c.name = $level AND toLower(toString(lang.name)) = toLower($language) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Tampines", "level": "Kindergarten 1 (5 yrs old)", "language": "Malay"}
+    },
+    {
+      "id": "spark_preference",
+      "parent_question": "I want a SPARK preschool",
+      "kind": "score_time",
+      "hops": 0,
+      "text": "SPARK",
+      "expected_rels": [],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {},
+      "ablation_cypher": "MATCH (p:Preschool)-[:HAS_CERTIFICATION]->(:Certification {name: 'SPARK'}) RETURN DISTINCT p.school_id AS school_id",
+      "ablation_params": {}
+    },
+    {
+      "id": "montessori_preference",
+      "parent_question": "Looking for Montessori",
+      "kind": "score_time",
+      "hops": 0,
+      "text": "Montessori",
+      "expected_rels": [],
+      "forbidden_rels": ["USES_PEDAGOGY", "HAS_CERTIFICATION"],
+      "gold_cypher": "MATCH (p:Preschool) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {},
+      "ablation_cypher": "MATCH (p:Preschool)-[:USES_PEDAGOGY]->(ped:Pedagogy) WHERE toLower(toString(ped.name)) CONTAINS toLower($pedagogy) RETURN DISTINCT p.school_id AS school_id",
+      "ablation_params": {"pedagogy": "Montessori"}
+    },
+    {
+      "id": "woodlands_spark",
+      "parent_question": "SPARK preschool in Woodlands",
+      "kind": "hybrid_graph_plus_pref",
+      "hops": 1,
+      "filters": {"town": "Woodlands"},
+      "text": "SPARK",
+      "expected_rels": ["LOCATED_IN"],
+      "forbidden_rels": ["HAS_CERTIFICATION", "USES_PEDAGOGY"],
+      "gold_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) WHERE toLower(toString(t.name)) = toLower($town) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"town": "Woodlands"},
+      "ablation_cypher": "MATCH (p:Preschool)-[:LOCATED_IN]->(t:Town) MATCH (p)-[:HAS_CERTIFICATION]->(:Certification {name: 'SPARK'}) WHERE toLower(toString(t.name)) = toLower($town) RETURN DISTINCT p.school_id AS school_id",
+      "ablation_params": {"town": "Woodlands"}
+    },
+    {
+      "id": "play_based_legacy",
+      "parent_question": "Legacy pedagogy key Play-based",
+      "kind": "graph_hard",
+      "hops": 1,
+      "filters": {"pedagogy": "Play-based"},
+      "expected_rels": ["USES_PEDAGOGY"],
+      "forbidden_rels": ["HAS_CERTIFICATION"],
+      "gold_cypher": "MATCH (p:Preschool)-[:USES_PEDAGOGY]->(ped:Pedagogy) WHERE toLower(toString(ped.name)) CONTAINS toLower($pedagogy) RETURN DISTINCT p.school_id AS school_id",
+      "gold_params": {"pedagogy": "Play-based"}
+    }
+  ]
+}

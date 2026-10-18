@@ -58,7 +58,9 @@ class StructuredConversationToolsTests(unittest.TestCase):
         updated.data["staged_profile"]["hard_constraints"].clear()
         result = service.invoke("search_rank_compare_schools", {})
         self.assertEqual([r["school_id"] for r in result.data["records"]], ["CENTRE:A"])
-        self.assertEqual(set(result.data["records"][0]), {"school_id", "name", "match_score"})
+        self.assertEqual(set(result.data["records"][0]), {
+            "school_id", "name", "match_score", "profile_confidence", "combined_score",
+        })
         self.assertEqual(result.state_revision, 1)
         self.assertEqual(result.data["profile_used"]["hard_constraints"]["language"], "Chinese")
         self.assertEqual(self.context.model_dump(), before)
@@ -209,6 +211,32 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
         self.assertFalse(service.staged_profile.get("pending_contradiction"))
 
+    def test_conflicts_are_staged_for_soft_boolean_preferences_too(self):
+        service = self.service()
+        first = service.invoke("update_preferences", {"set": [
+            {"attribute": "transport", "value": True, "importance": "preferred"},
+        ]})
+        self.assertEqual(first.status, "ok")
+        conflict = service.invoke("update_preferences", {"set": [
+            {"attribute": "transport", "value": False, "importance": "preferred"},
+        ]})
+        self.assertEqual(conflict.status, "needs_input")
+        self.assertEqual(service.staged_profile["preferences"]["transport"]["value"], True)
+        self.assertEqual(service.staged_profile["pending_contradiction"]["attribute"], "transport")
+        self.assertIn("keep yes or use no", service.staged_profile["pending_contradiction"]["question"])
+        resolved = service.invoke("reset_continue_preferences", {
+            "operation": "resolve_contradiction", "choice": "use_incoming",
+        })
+        self.assertEqual(resolved.missing_inputs, ["choice_in_later_turn"])
+        self.context.profile = service.export_validated_state(response_validated=True)
+        later = self.service()
+        applied = later.invoke("reset_continue_preferences", {
+            "operation": "resolve_contradiction", "choice": "use_incoming",
+        })
+        self.assertEqual(applied.status, "ok")
+        self.assertEqual(later.staged_profile["preferences"]["transport"]["value"], False)
+        self.assertFalse(later.staged_profile.get("pending_contradiction"))
+
     def test_pending_strength_relaxation_and_reset(self):
         for pending, request, expected in (
             ({"pending": {"kind": "language", "value": "Chinese"}},
@@ -237,6 +265,12 @@ class StructuredConversationToolsTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             tools["read_school_facts"].invoke({"school_ids": ["CENTRE:A"], "operation": "invented"})
         self.assertEqual(service.staged_profile, original)
+
+    def test_nearby_tool_is_reserved_for_closest_without_ranking_attributes(self):
+        descriptions = {tool.name: tool.description for tool in self.service().registered_tools()}
+        self.assertIn("Named attributes require update_preferences", descriptions["find_nearby_schools"])
+        self.assertIn("after update_preferences", descriptions["search_rank_compare_schools"])
+        self.assertIn("SPARK within a distance", descriptions["search_rank_compare_schools"])
 
     def test_lazy_reads_missing_inputs_access_and_bounds(self):
         loader = Mock(return_value=None)

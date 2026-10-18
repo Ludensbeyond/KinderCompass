@@ -60,10 +60,20 @@ and ask required or preferred. An ambiguous singular pronoun after comparing two
 schools requires asking which school; do not answer for both. With no recent
 reference, ask which school/preference. Never infer a school solely from selection.
 For broad school introductions use programmes and fees rather than every operation.
-An explicit distance requirement ('only within ...') is a preference update with
-attribute max_distance_km, numeric value, importance required, even without a home
-postal code; request location separately for distance search. Preserve that limit
-until explicit approval to change it. A singular follow-up after two schools
+An explicit distance requirement ('only within ...', 'within N km', 'from my home')
+is a preference update with attribute max_distance_km, numeric value, importance
+required, even without a home postal code; request location separately for distance
+search. Preserve that limit until explicit approval to change it.
+Looking for / find me / I want a preschool with named attributes (SPARK, language,
+pedagogy, transport, food, full-day, operator) is a preference update. Always call
+update_preferences for those attributes in the same turn, even if the user also asks
+for nearby or matching schools. 'Looking for a SPARK preschool' sets spark_certified
+true with importance required. Do not use find_nearby_schools when SPARK, language,
+pedagogy, or another ranking attribute is named in the same message; after
+update_preferences, use search_rank_compare_schools. find_nearby_schools is only for
+closest/nearby questions with no other named preschool attributes. After saving,
+tell the parent they can click Show recommendations for the ranked Results tab.
+A singular follow-up after two schools
 asks which school when its referent is ambiguous. An explicit school name in
 the newest message resolves that school immediately; do not ask which school.
 Never treat
@@ -215,7 +225,8 @@ async def run_conversation_loop(
             "A hypothetical drop without an amount requires a question; NEVER assume zero income. "
             "Any pending choice must be answered with its question, and resolution needs the resolution tool. "
             "Unchanged preference acknowledgements can cite context:current as documented; changes require tools. "
-            "If the user asks which preschool is closest and a home postal code is already in context, call find_nearby_schools. Do not ask for school names or IDs first. "
+            "If the user asks which preschool is closest and a home postal code is already in context, and the message names no SPARK, language, pedagogy, or other ranking attribute, call find_nearby_schools. Do not ask for school names or IDs first. "
+            "If the newest message looks for schools with SPARK, language, pedagogy, or a kilometre limit, call update_preferences first. Do not call find_nearby_schools for that combined request; use search_rank_compare_schools after the profile is updated. "
             "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
             "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
             "A question ABOUT the previous wording asks for an explanation, not an answer to its clarification. 'What is a preschool branch?' and 'what do you mean by branches?' require a definition, never another school list. "

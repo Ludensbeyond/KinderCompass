@@ -27,15 +27,21 @@ ProgrammeId = Literal[
 class FamilyDetails(BaseModel):
     dob: dt.date
     admission_date: dt.date
-    gross_household_income: float = Field(ge=0)
+    gross_household_income: float = Field(ge=0, allow_inf_nan=False)
     citizenship: Literal["SC", "SPR", "Others"] = "SC"
     programme_type: Literal[
         "full_day", "half_day", "flexi_care_1", "flexi_care_2", "flexi_care_3"
     ] = "full_day"
-    working_hours_per_month: float = Field(default=56, ge=0)
+    working_hours_per_month: float = Field(default=56, ge=0, allow_inf_nan=False)
     household_size: int = Field(default=1, ge=1)
     non_earning_dependants: int = Field(default=0, ge=0)
     special_approval: bool = False
+
+    @model_validator(mode="after")
+    def dependants_fit_household(self):
+        if self.non_earning_dependants > self.household_size:
+            raise ValueError("Non-earning dependants cannot exceed household size")
+        return self
 
 
 class SearchRequest(BaseModel):

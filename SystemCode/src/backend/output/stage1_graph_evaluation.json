@@ -1,0 +1,827 @@
+{
+  "evaluation": "stage1_graph_p1",
+  "gold_definition": "Independent canonical Cypher school_id sets on the live graph. This is Stage 1 fidelity to the schema, not human relevance labelling.",
+  "offline": {
+    "offline": true,
+    "passed": true,
+    "competency_questions": {
+      "total": 10,
+      "schema_expressible": 8,
+      "coverage": 0.8,
+      "passed": 10,
+      "failed_ids": [],
+      "cases": [
+        {
+          "id": "cq_town",
+          "schema_expressible": true,
+          "stage1_mode": "match",
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN"
+          ]
+        },
+        {
+          "id": "cq_level",
+          "schema_expressible": true,
+          "stage1_mode": "match",
+          "passed": true,
+          "cypher_rels": [
+            "SERVES_LEVEL"
+          ]
+        },
+        {
+          "id": "cq_language",
+          "schema_expressible": true,
+          "stage1_mode": "match",
+          "passed": true,
+          "cypher_rels": [
+            "TEACHES_IN"
+          ]
+        },
+        {
+          "id": "cq_multihop",
+          "schema_expressible": true,
+          "stage1_mode": "match",
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ]
+        },
+        {
+          "id": "cq_postal",
+          "schema_expressible": true,
+          "stage1_mode": "property",
+          "passed": true,
+          "cypher_rels": []
+        },
+        {
+          "id": "cq_spark",
+          "schema_expressible": true,
+          "stage1_mode": "score_time",
+          "passed": true,
+          "cypher_rels": []
+        },
+        {
+          "id": "cq_pedagogy",
+          "schema_expressible": true,
+          "stage1_mode": "score_time",
+          "passed": true,
+          "cypher_rels": []
+        },
+        {
+          "id": "cq_operator",
+          "schema_expressible": true,
+          "stage1_mode": "score_time",
+          "passed": true,
+          "cypher_rels": []
+        },
+        {
+          "id": "cq_distance",
+          "schema_expressible": false,
+          "stage1_mode": "post_query",
+          "passed": true,
+          "cypher_rels": []
+        },
+        {
+          "id": "cq_atmosphere",
+          "schema_expressible": false,
+          "stage1_mode": "unsupported",
+          "passed": true,
+          "cypher_rels": []
+        }
+      ]
+    },
+    "retrieval_shape": {
+      "total": 20,
+      "passed": 20,
+      "failed_ids": [],
+      "multi_hop": 6,
+      "cases": [
+        {
+          "id": "town_woodlands",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "town_sengkang",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "town_tampines",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "level_nursery",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "SERVES_LEVEL"
+          ],
+          "path_rels": [
+            "SERVES_LEVEL"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "level_infant",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "SERVES_LEVEL"
+          ],
+          "path_rels": [
+            "SERVES_LEVEL"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "level_k1",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "SERVES_LEVEL"
+          ],
+          "path_rels": [
+            "SERVES_LEVEL"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "language_chinese_required",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "language_malay_required",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "language_tamil_required",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "postal_540231",
+          "kind": "structured_postal",
+          "hops": 0,
+          "passed": true,
+          "cypher_rels": [],
+          "path_rels": [
+            "POSTAL_CODE"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "woodlands_nursery",
+          "kind": "multi_hop",
+          "hops": 2,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL"
+          ],
+          "path_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "sengkang_k2",
+          "kind": "multi_hop",
+          "hops": 2,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL"
+          ],
+          "path_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "woodlands_chinese",
+          "kind": "multi_hop",
+          "hops": 2,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN",
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "nursery_chinese",
+          "kind": "multi_hop",
+          "hops": 2,
+          "passed": true,
+          "cypher_rels": [
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "woodlands_nursery_chinese",
+          "kind": "multi_hop",
+          "hops": 3,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "tampines_k1_malay",
+          "kind": "multi_hop",
+          "hops": 3,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN",
+            "SERVES_LEVEL",
+            "TEACHES_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "spark_preference",
+          "kind": "score_time",
+          "hops": 0,
+          "passed": true,
+          "cypher_rels": [],
+          "path_rels": [],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "montessori_preference",
+          "kind": "score_time",
+          "hops": 0,
+          "passed": true,
+          "cypher_rels": [],
+          "path_rels": [],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "woodlands_spark",
+          "kind": "hybrid_graph_plus_pref",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "LOCATED_IN"
+          ],
+          "path_rels": [
+            "LOCATED_IN"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        },
+        {
+          "id": "play_based_legacy",
+          "kind": "graph_hard",
+          "hops": 1,
+          "passed": true,
+          "cypher_rels": [
+            "USES_PEDAGOGY"
+          ],
+          "path_rels": [
+            "USES_PEDAGOGY"
+          ],
+          "missing_rels": [],
+          "forbidden_rels_present": []
+        }
+      ]
+    }
+  },
+  "live": {
+    "live": true,
+    "preschool_count": 1867,
+    "passed": true,
+    "failed_ids": [],
+    "macro": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "multi_hop_success_rate": 1.0,
+    "provenance_complete_rate": 1.0,
+    "cases": [
+      {
+        "id": "town_woodlands",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 86,
+          "gold": 86,
+          "true_positives": 86
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "town_sengkang",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 80,
+          "gold": 80,
+          "true_positives": 80
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "town_tampines",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 106,
+          "gold": 106,
+          "true_positives": 106
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "level_nursery",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1727,
+          "gold": 1727,
+          "true_positives": 1727
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1727,
+          "gold": 1727,
+          "true_positives": 1727,
+          "keeps_unknown": false
+        },
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "level_infant",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 886,
+          "gold": 886,
+          "true_positives": 886
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "level_k1",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1719,
+          "gold": 1719,
+          "true_positives": 1719
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "language_chinese_required",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1719,
+          "gold": 1719,
+          "true_positives": 1719
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": {
+          "precision": 0.9994,
+          "recall": 1.0,
+          "f1": 0.9997,
+          "predicted": 1720,
+          "gold": 1719,
+          "true_positives": 1719,
+          "keeps_unknown": false
+        },
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "language_malay_required",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 571,
+          "gold": 571,
+          "true_positives": 571
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "language_tamil_required",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 303,
+          "gold": 303,
+          "true_positives": 303
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "postal_540231",
+        "kind": "structured_postal",
+        "hops": 0,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1,
+          "gold": 1,
+          "true_positives": 1
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "woodlands_nursery",
+        "kind": "multi_hop",
+        "hops": 2,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 86,
+          "gold": 86,
+          "true_positives": 86
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "sengkang_k2",
+        "kind": "multi_hop",
+        "hops": 2,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 72,
+          "gold": 72,
+          "true_positives": 72
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "woodlands_chinese",
+        "kind": "multi_hop",
+        "hops": 2,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 80,
+          "gold": 80,
+          "true_positives": 80
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "nursery_chinese",
+        "kind": "multi_hop",
+        "hops": 2,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1643,
+          "gold": 1643,
+          "true_positives": 1643
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "woodlands_nursery_chinese",
+        "kind": "multi_hop",
+        "hops": 3,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 80,
+          "gold": 80,
+          "true_positives": 80
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "tampines_k1_malay",
+        "kind": "multi_hop",
+        "hops": 3,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 44,
+          "gold": 44,
+          "true_positives": 44
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "spark_preference",
+        "kind": "score_time",
+        "hops": 0,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1867,
+          "gold": 1867,
+          "true_positives": 1867
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": {
+          "precision": 1.0,
+          "recall": 0.5276,
+          "f1": 0.6907,
+          "predicted": 985,
+          "gold": 1867,
+          "true_positives": 985,
+          "keeps_unknown": true
+        },
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "montessori_preference",
+        "kind": "score_time",
+        "hops": 0,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 1867,
+          "gold": 1867,
+          "true_positives": 1867
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": {
+          "precision": 1.0,
+          "recall": 0.0412,
+          "f1": 0.0792,
+          "predicted": 77,
+          "gold": 1867,
+          "true_positives": 77,
+          "keeps_unknown": true
+        },
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "woodlands_spark",
+        "kind": "hybrid_graph_plus_pref",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 86,
+          "gold": 86,
+          "true_positives": 86
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": {
+          "precision": 1.0,
+          "recall": 0.6744,
+          "f1": 0.8056,
+          "predicted": 58,
+          "gold": 86,
+          "true_positives": 58,
+          "keeps_unknown": true
+        },
+        "false_positives": [],
+        "false_negatives": []
+      },
+      {
+        "id": "play_based_legacy",
+        "kind": "graph_hard",
+        "hops": 1,
+        "passed": true,
+        "metrics": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "predicted": 15,
+          "gold": 15,
+          "true_positives": 15
+        },
+        "provenance_complete": 1.0,
+        "multi_hop_success": true,
+        "ablation": null,
+        "false_positives": [],
+        "false_negatives": []
+      }
+    ]
+  },
+  "passed": true
+}

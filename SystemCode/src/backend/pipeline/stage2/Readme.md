@@ -41,7 +41,7 @@ format is an array of preschool objects:
   {
     "centre_code": "ST0001",
     "name": "Example Preschool",
-    "base_fee": 1200.0,
+    "base_fee": 610.0,
     "operator_scheme": "Anchor Operator Scheme",
     "care_levels": [
       "Pre-Nursery (3 yrs old)",
@@ -149,11 +149,23 @@ An eligible preschool is enriched with the Stage 2 fields:
     "pedagogy": "Play-based",
     "eligible": true,
     "eligible_level": "Pre-Nursery (3 yrs old)",
-    "additional_subsidy": 250.0,
-    "net_monthly_fee": 350.0
+    "fee_before_subsidy": 610.0,
+    "basic_subsidy": 300.0,
+    "maximum_additional_subsidy": 440.0,
+    "additional_subsidy": 440.0,
+    "additional_subsidy_applied": 285.0,
+    "minimum_copayment": 25.0,
+    "net_monthly_fee": 25.0
   }
 ]
 ```
+
+`maximum_additional_subsidy` is the policy-table cap. `additional_subsidy` is
+retained as a backward-compatible alias for that cap. `additional_subsidy_applied`
+is the amount applied by the estimator, capped so the fee does not fall below
+the table's minimum co-payment. The net fee uses the listed fee, basic subsidy,
+applied additional subsidy, and minimum co-payment. These are estimates based
+on reported family inputs, not ECDA approval.
 
 When `--include-ineligible` is used, an ineligible result resembles:
 

@@ -36,6 +36,21 @@ class Stage2PolicyTests(unittest.TestCase):
         self.assertEqual(result["net_monthly_fee"], 160)
         self.assertEqual(result["policy_source"]["policy_id"], "ecda-preschool-subsidies-2025-01-01")
 
+    def test_minimum_copayment_caps_net_fee_when_subsidies_exceed_fee(self):
+        result = evaluate_preschool_eligibility(
+            dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+            ghi=4500, base_fee=610, basic_subsidy=300,
+            citizenship="SC", programme_type="full_day", working_hours_per_month=56,
+        )
+        self.assertEqual(result["fee_before_subsidy"], 610)
+        self.assertEqual(result["basic_subsidy"], 300)
+        self.assertEqual(result["additional_subsidy"], 440)
+        self.assertEqual(result["maximum_additional_subsidy"], 440)
+        self.assertEqual(result["additional_subsidy_applied"], 285)
+        self.assertEqual(result["minimum_copayment"], 25)
+        self.assertEqual(result["net_monthly_fee"], 25)
+        self.assertEqual(610 - 300 - result["additional_subsidy_applied"], result["net_monthly_fee"])
+
     def test_exact_half_day_variant_does_not_use_cheaper_sibling_fee(self):
         level = "Pre-Nursery (3 yrs old)"
         menu = [
@@ -128,6 +143,20 @@ class Stage2PolicyTests(unittest.TestCase):
         policy = load_policy()
         self.assertEqual(policy["authority"], "Early Childhood Development Agency (ECDA)")
         self.assertEqual(policy["effective_from"], "2025-01-01")
+
+    def test_family_fee_and_income_inputs_reject_invalid_values(self):
+        common = dict(
+            dob=dt.date(2023, 6, 10), admission_date=dt.date(2026, 6, 10),
+            ghi=4500, base_fee=610, basic_subsidy=300,
+        )
+        for overrides in (
+            {"ghi": float("nan")}, {"ghi": float("inf")},
+            {"working_hours_per_month": -1}, {"working_hours_per_month": float("inf")},
+            {"base_fee": -1}, {"basic_subsidy": -1},
+            {"household_size": 2, "non_earning_dependants": 3},
+        ):
+            with self.subTest(overrides=overrides), self.assertRaises(ValueError):
+                evaluate_preschool_eligibility(**(common | overrides))
 
 
 if __name__ == "__main__":

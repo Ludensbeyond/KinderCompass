@@ -18,6 +18,12 @@ EVIDENCE_PROVENANCE = {
     "max_distance_km": {"source": "OneMap and preschool coordinates", "method": "calculated", "reliability": "calculated"},
 }
 
+GRAPH_RETRIEVAL_RELS = {
+    "language": "TEACHES_IN",
+    "care_level": "SERVES_LEVEL",
+    "pedagogy": "USES_PEDAGOGY",
+}
+
 
 def _canonical_attribute(attribute: str) -> str:
     return "language" if attribute.startswith("language:") else attribute
@@ -37,29 +43,68 @@ def freshness(last_updated: Any, today: dt.date | None = None) -> str:
     return "current" if age_days <= 365 else "stale"
 
 
-def value_state(actual: Any, available: bool) -> str:
-    if not available:
+def value_state(actual: Any, available: bool | float, evidence_state: str) -> str:
+    if float(available or 0) <= 0:
         return "unknown"
+    if evidence_state != "verified":
+        return {
+            "derived": "inferred_value",
+            "calculated": "calculated_value",
+            "partially_supported": "partially_supported_value",
+        }.get(evidence_state, "recorded_value")
     if isinstance(actual, bool):
         return "confirmed_yes" if actual else "confirmed_no"
     return "confirmed_value"
 
 
-def evidence_details(attribute: str, school: dict[str, Any], actual: Any, available: bool) -> dict[str, Any]:
+def retrieval_steps(school: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalise a Cypher retrieval_path into a list of relationship steps."""
+    path = school.get("retrieval_path") or []
+    if not isinstance(path, list):
+        return []
+    steps = []
+    for step in path:
+        if not isinstance(step, dict) or not step.get("rel"):
+            continue
+        steps.append({
+            "rel": str(step["rel"]),
+            "label": step.get("label"),
+            "name": step.get("name"),
+        })
+    return steps
+
+
+def evidence_details(attribute: str, school: dict[str, Any], actual: Any, available: bool | float) -> dict[str, Any]:
     """Return stable provenance metadata for one scored attribute."""
     canonical = _canonical_attribute(attribute)
     provenance = EVIDENCE_PROVENANCE.get(canonical, {
         "source": "Unknown source", "method": "unknown", "reliability": "unknown",
     })
     method = provenance["method"]
-    state = "unknown" if not available else "derived" if method.startswith("derived") else "calculated" if method == "calculated" else "verified"
+    strength = float(available or 0)
+    state = (
+        "unknown" if strength <= 0 else
+        "derived" if method.startswith("derived") else
+        "calculated" if method == "calculated" else
+        "partially_supported" if provenance["reliability"] == "partial" else
+        "verified" if provenance["reliability"] == "direct" else
+        "recorded"
+    )
     source_date = school.get("last_updated")
-    return {
+    details = {
         "evidence_state": state,
-        "value_state": value_state(actual, available),
+        "value_state": value_state(actual, available, state),
         "source": provenance["source"],
         "source_method": method,
         "source_reliability": provenance["reliability"],
+        "availability": strength,
         "source_date": source_date,
         "freshness": freshness(source_date),
     }
+    steps = retrieval_steps(school)
+    if steps:
+        details["retrieval_path"] = steps
+        expected_rel = GRAPH_RETRIEVAL_RELS.get(canonical)
+        if expected_rel and any(step["rel"] == expected_rel for step in steps):
+            details["retrieval_method"] = "graph_traversal"
+    return details

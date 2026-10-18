@@ -84,6 +84,12 @@ class RepositoryBoundaryTests(unittest.IsolatedAsyncioTestCase):
                 )
             )[0]
             self.assertEqual(result["fee_before_subsidy"], 610)
+            self.assertEqual(result["basic_subsidy"], 300)
+            self.assertEqual(result["maximum_additional_subsidy"], 440)
+            self.assertEqual(result["additional_subsidy"], 440)  # backward-compatible maximum
+            self.assertEqual(result["additional_subsidy_applied"], 285)
+            self.assertEqual(result["minimum_copayment"], 25)
+            self.assertEqual(result["net_monthly_fee"], 25)
 
     async def test_api_rejects_legacy_client_supplied_school_objects(self):
         async with ASGITestClient(main.app) as client:

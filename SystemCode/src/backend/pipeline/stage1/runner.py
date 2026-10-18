@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from stage1.kg_client import get_driver, run_query, verify_connectivity
 from stage1.nlp_mapper import map_text_to_filters
 from stage1.query_builder import build_stage1_query
-from stage1.scorer import rank_schools
+from stage1.scorer import individually_relaxable_required_preferences, rank_schools
 from stage1.proximity import (
     geocode_postal_code,
     load_locations,
@@ -65,10 +65,15 @@ def run_from_profile(filters: dict, town: str | None = None, output_path: str | 
         trace = {"database_candidates_after_hard_constraints": len(candidates)}
         if requested_radius is not None:
             locations = load_locations(repo_root / "SystemCode/data/raw/PreSchoolsLocation.geojson")
-            candidates = filter_within_radius(candidates, origin, locations, radius_km=requested_radius)
+            candidates, distance_trace = filter_within_radius(
+                candidates, origin, locations, radius_km=requested_radius, include_trace=True
+            )
+            trace.update(distance_trace)
         trace["after_distance_filter"] = len(candidates)
         fully_ranked = rank_schools(filters, candidates, limit=len(candidates))
         trace["after_required_preference_enforcement"] = len(fully_ranked)
+        if not fully_ranked and candidates:
+            trace["individually_relaxable_required_preferences"] = individually_relaxable_required_preferences(filters, candidates)
         results = fully_ranked[:20]
         trace["stage1_shortlist"] = len(results)
         trace["required_preference_exclusions"] = len(candidates) - len(fully_ranked)
