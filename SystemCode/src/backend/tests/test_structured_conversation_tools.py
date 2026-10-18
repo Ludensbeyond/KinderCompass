@@ -127,6 +127,32 @@ class StructuredConversationToolsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     service.export_validated_state(response_validated=True)
 
+    def test_distinct_examples_are_selected_before_limit_without_changing_centre_search(self):
+        path = self.schools.catalogue_path
+        path.write_text(json.dumps([
+            {"school_id": "CENTRE:A", "name": "Same Preschool", "centre_address": "10 Alpha Road", "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:B", "name": "Same Preschool", "centre_address": "20 Beta Road", "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:C", "name": "Same-PreSchool", "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:D", "name": "Other Preschool", "centre_address": "30 Gamma Road", "second_languages_offered": "Chinese"},
+            {"school_id": "CENTRE:E", "name": "Malay Preschool", "second_languages_offered": "Malay"},
+        ]))
+        self.schools = SchoolRepository(path)
+        self.context = self.context.model_copy(update={"profile": {"hard_constraints": {"language": "Chinese"}}})
+        centres = self.service().invoke("search_rank_compare_schools", {"limit": 2})
+        examples = self.service().invoke("search_rank_compare_schools", {"limit": 2, "presentation": "distinct_names"})
+        self.assertEqual([r["school_id"] for r in centres.data["records"]], ["CENTRE:A", "CENTRE:B"])
+        self.assertEqual([r["school_id"] for r in examples.data["records"]], ["CENTRE:A", "CENTRE:D"])
+        self.assertEqual(examples.data["records"][0]["centre_address"], "10 Alpha Road")
+        self.assertEqual(examples.data["total_matches"], 4)
+        self.assertEqual(examples.data["displayed_count"], 2)
+        self.assertFalse(examples.data["truncated"])
+        self.assertTrue(centres.data["truncated"])
+
+    def test_comparison_cannot_hide_same_named_branches(self):
+        from SystemCode.src.backend.agents.structured_contracts import SearchArguments
+        with self.assertRaises(ValidationError):
+            SearchArguments(operation="compare", school_ids=["CENTRE:A", "CENTRE:B"], presentation="distinct_names")
+
     def test_pending_choice_preserves_direction_and_blocks_other_mutations(self):
         service = self.service()
         result = service.invoke("update_preferences", {"set": [

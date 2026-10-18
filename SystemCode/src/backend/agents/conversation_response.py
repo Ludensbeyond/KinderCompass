@@ -78,6 +78,11 @@ unit numbers and punctuation. Support the name/address sentence with that
 record's centre_address scalar. Do not shorten or reformat address numbers.
 If you cannot include supported addresses, mention the common name once rather
 than repeating identical names. Prefer a short list of three examples.
+For broad preschool guidance, use unnumbered advice and concise qualitative
+explanations. Do not introduce framework years, age ranges or subsidy thresholds
+unless the user asks about them. Do not convert spelled-out source numbers into
+digits. Every sourced sentence must keep its [chunk_id] within its exact claim
+span, including when accompanied by an unsourced conversational question.
 """
 
 
@@ -111,10 +116,12 @@ VALIDATION_CATEGORIES = frozenset({
     "unknown_claim_support", "unsupported_citation_marker", "unsupported_reported_number",
     "unsupported_result_status", "wrong_claim_value", "wrong_reported_number",
     "unknown_validation_error",
+    "duplicate_school_listing",
 })
 
 
 REPAIR_GUIDANCE = {
+    "duplicate_school_listing": "Do not repeat identical bare preschool names in a list. Mention the organisation once, or include supported addresses to distinguish its locations. Keep the existing verified records and claims.",
     "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict. Include this question alongside supported guidance.",
     "wrong_reported_number": "Split claims into shorter exact spans so each span contains only its supported number. Remove other numbers from that span and support them separately.",
     "invalid_response_kind": "Use grounded when claims are present; conversation and clarification require an empty claims list.",
@@ -186,6 +193,11 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             citations[citation.citation_id] = citation
     if response.kind == "grounded" and not response.claims:
         raise ResponseValidationError("missing_claim_support")
+    known_names = {name.casefold() for name in names.values()}
+    listed_names = [line.strip().casefold() for line in re.findall(r"(?m)^\s*[-*]\s+([^\n]+)$", response.answer)
+                    if line.strip().casefold() in known_names]
+    if len(listed_names) != len(set(listed_names)):
+        raise ResponseValidationError("duplicate_school_listing")
     staged = next((r.data.get("staged_profile") for r in reversed(results)
                    if "staged_profile" in r.data), current)
     if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")):

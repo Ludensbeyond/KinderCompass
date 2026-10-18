@@ -1,5 +1,46 @@
 # Backend conversation progress
 
+## Completed maintenance — conversation relevance, 2026-10-17
+
+Completed the user-authorized correction for guidance versus catalogue examples,
+definitions and opt-in follow-up context. Model-selected distinct-name search
+groups cosmetic name variants before limiting examples; centre search/ranking/
+comparison retain their records. Bare repeated school bullets receive bounded
+repair. The browser now exposes independent chat/preference consent. Documented
+the minimal history integration in Step 2 before implementation; separate forget
+routes preserve the other store and protect in-flight writes. Local preference
+edits clear ephemeral state to avoid false stale-profile conflicts.
+See [implementation and evaluation](conversation-relevance.md).
+
+Verification:
+
+- Final provider capture and explicit answer/tool/state review: **8/8 cases pass**,
+  `/tmp/kindercompass-relevance-reviewed-live.json`, SHA-bound review
+  `/tmp/kindercompass-relevance-review.json`. The reported guidance receives a
+  cited checklist, both definitions explain a centre/location, examples show
+  distinct names, selected branches keep addresses, and mixed requests answer
+  both parts. Earlier captures exposed number/citation formatting failures,
+  punctuation variants and an unnecessary fee call; corrected before final
+  capture. No general model-quality or complete semantic entailment pass claimed.
+- Affected tests: **49 in 2.370s, OK**, outside sandbox,
+  `/tmp/kindercompass-relevance-focused-final.log`. Covers diversity before limit,
+  Chinese filtering, centre/comparison preservation, duplicate repair, real
+  history integration, independent forgetting and revoked in-flight writes.
+- Full discovery: **543 in 47.056s; 542 pass, one unchanged scoring failure**,
+  `/tmp/kindercompass-relevance-backend-final.log`. The earlier isolated failure
+  remains `test_unknown_preference_keeps_match_below_one_hundred`; no scoring
+  change made. The final guidance-only prompt refinement also passes focused
+  checks and the live capture.
+- Frontend production build passes; `/tmp/kindercompass-relevance-frontend-final.log`.
+  Playwright on the built UI passes opt-in/follow-up payloads, independent opt-out,
+  local preference edits and absence of browser errors with mocked API responses;
+  `/tmp/kindercompass-relevance-browser.log`. Sandbox worker/browser/server
+  restrictions required outside-sandbox checks. Diff/whitespace review passes.
+
+Maintenance complete; next remains rollout observation. No deployment, legacy
+retirement, persistent transcript storage or unrelated scoring change. No commit
+claimed while required discovery retains its pre-existing failure.
+
 ## Rollout investigation — family summaries and school requests, 2026-10-17
 
 The user's `I couldn't verify` message means response validation exhausted its

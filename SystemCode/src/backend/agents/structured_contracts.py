@@ -93,9 +93,13 @@ class SearchArguments(ToolArguments):
     operation: Literal["search", "rank", "compare"] = "search"
     school_ids: list[Identifier] = Field(default_factory=list, max_length=50)
     limit: int = Field(default=10, ge=1, le=20)
+    presentation: Literal["centres", "distinct_names"] = Field(
+        default="centres", description="Use distinct_names for examples of preschool organisations; centres for individual locations.")
 
     @model_validator(mode="after")
     def scope_is_valid(self):
+        if self.presentation == "distinct_names" and self.operation != "search":
+            raise ValueError("distinct names presentation is only available for search")
         if len(self.school_ids) != len(set(self.school_ids)):
             raise ValueError("school IDs must be unique")
         if self.operation in {"rank", "compare"} and not self.school_ids:

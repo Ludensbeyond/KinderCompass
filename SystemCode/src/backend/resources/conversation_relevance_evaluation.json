@@ -1,0 +1,69 @@
+{
+  "dataset_id": "conversation-relevance-2026-10-17",
+  "cases": [
+    {
+      "case_id": "reported_guidance",
+      "message": "tell me about singapore pre-school i need to take note of",
+      "required_tools": ["search_general_guidance"],
+      "forbidden_tools": ["search_rank_compare_schools", "update_preferences", "calculate_fees_scenario"],
+      "review": "Give practical considerations using available guidance, or acknowledge a source gap; do not substitute school listings."
+    },
+    {
+      "case_id": "guidance_paraphrase",
+      "message": "What should I know before enrolling my child in a preschool in Singapore?",
+      "required_tools": ["search_general_guidance"],
+      "forbidden_tools": ["search_rank_compare_schools", "update_preferences", "calculate_fees_scenario"],
+      "review": "Answer the guidance request before asking a narrowing question."
+    },
+    {
+      "case_id": "reported_definition",
+      "message": "what is Singapore preschool branches",
+      "required_tools": [],
+      "forbidden_tools": ["search_rank_compare_schools", "read_school_facts", "update_preferences"],
+      "review": "Explain branch as an individual preschool centre/location; do not repeat a school list."
+    },
+    {
+      "case_id": "contextual_definition",
+      "message": "what do you mean by branches?",
+      "recent_exchanges": [
+        {
+          "user": "Give me some Singapore preschools",
+          "assistant": "Here are some preschool branches. What would help you narrow the options?"
+        }
+      ],
+      "required_tools": [],
+      "forbidden_tools": ["search_rank_compare_schools", "read_school_facts", "update_preferences"],
+      "review": "Explain the preceding wording instead of treating this as an answer to the narrowing question."
+    },
+    {
+      "case_id": "varied_school_examples",
+      "message": "give me some singapore pre-school",
+      "required_tools": ["search_rank_compare_schools"],
+      "distinct_names": true,
+      "review": "Give several distinct repository preschool names, without asserting suitability or eligibility."
+    },
+    {
+      "case_id": "chinese_school_examples",
+      "message": "Show me some preschool options",
+      "profile": {"hard_constraints": {"language": "Chinese"}},
+      "required_tools": ["search_rank_compare_schools"],
+      "distinct_names": true,
+      "review": "Preserve required Chinese and show distinct examples from matching centre records."
+    },
+    {
+      "case_id": "individual_branches",
+      "message": "Show me the locations of these E-Bridge centres",
+      "selected_school_ids": ["CENTRE:EB0001", "CENTRE:EB0002"],
+      "required_tools": [],
+      "any_tools": ["read_school_facts", "search_rank_compare_schools"],
+      "review": "Keep both selected centres and distinguish them by their authoritative addresses."
+    },
+    {
+      "case_id": "guidance_and_examples",
+      "message": "Explain what matters when choosing a preschool, and give me some Singapore preschool examples.",
+      "required_tools": ["search_general_guidance", "search_rank_compare_schools"],
+      "distinct_names": true,
+      "review": "Answer both parts with sourced guidance and distinct school examples."
+    }
+  ]
+}

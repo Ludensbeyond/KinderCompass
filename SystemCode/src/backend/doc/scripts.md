@@ -1,5 +1,10 @@
 # `scripts/`
 
+`evaluate_conversation_relevance.py` captures guidance, definitions, follow-ups
+and distinct school examples with the configured provider and synthetic family
+inputs. It writes only an explicitly selected report and requires semantic
+review. See [the relevance evaluation](conversation-relevance.md#relevance-evaluation).
+
 `scripts/` contains offline operational tools, not request-time application
 code. These commands inspect Neo4j, audit evidence and preference coverage,
 evaluate recommendations and RAG answers, build webpage inventories and

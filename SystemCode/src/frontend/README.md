@@ -5,6 +5,12 @@ workflow. The UI collects family details and preschool preferences, displays
 ranked and costed recommendations, compares selected centres, and plots
 home-to-preschool distances on an interactive map.
 
+Compass chat offers one option, “Remember my conversation and preferences”.
+Recent chat expires after 30 minutes of inactivity; structured preferences are
+saved for up to 180 days. Turning the option off clears both stores. Existing
+preference-only consent can restore preferences but does not automatically enable
+chat retention. See the [conversation guide](../backend/doc/conversation-relevance.md).
+
 ## Quick start
 
 The recommended Windows workflow starts the frontend and FastAPI backend

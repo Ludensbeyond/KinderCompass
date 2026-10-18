@@ -139,6 +139,75 @@ class LlmFirstHttpTests(unittest.IsolatedAsyncioTestCase):
                     self.assertFalse(context["recent_exchanges"])
         self.memory.save.assert_not_called()
 
+    async def test_guidance_then_definition_uses_recent_dialogue_without_saving_preferences(self):
+        passage = "When choosing a preschool, compare fees, curriculum, language and care hours."
+        retriever = Mock()
+        retriever.search.return_value = [{"chunk_id": "GENERAL:choosing", "text": passage,
+            "citation": {"citation_id": "GENERAL:choosing", "evidence_scope": "general",
+                         "url": "https://example.org/guide", "title": "Choosing a preschool",
+                         "retrieved_at": "2026-10-17T00:00:00Z"}}]
+        guidance = passage + " [GENERAL:choosing]"
+        model = ScriptedModel(AIMessage(content="", tool_calls=[call("search_general_guidance", {
+            "query": "what to take note of when choosing a Singapore preschool"})]),
+            final(guidance, [claim(guidance, passage, path="/data/passages/0/text", school=None,
+                                   citations=["GENERAL:choosing"])]))
+        with patch.object(self.service, "_knowledge_retriever", return_value=retriever):
+            first = await self.turn(model, message="tell me about singapore pre-school i need to take note of",
+                                    anonymous_session_id=self.session, remember_conversation=True)
+        definition = "A preschool branch means one centre or location operated by a preschool organisation."
+        def explain(messages):
+            context = json.loads(messages[1].content)
+            self.assertEqual(context["recent_exchanges"][0]["assistant"], guidance)
+            self.assertEqual(messages[-3].content, guidance)
+            return final(definition)
+        second = await self.turn(ScriptedModel(explain), message="what is Singapore preschool branches",
+                                 profile=first["profile"], anonymous_session_id=self.session, remember_conversation=True)
+        self.assertEqual(second["answer_method"], "llm_first")
+        self.assertEqual(second["question"], definition)
+        self.assertEqual(len(self.history._sessions[self.session].exchanges), 2)
+        self.memory.save.assert_not_called()
+
+    async def test_forgetting_only_conversation_preserves_saved_preferences_and_clears_context(self):
+        from SystemCode.src.backend import main
+        first = await self.turn(ScriptedModel(final("Let's talk about preschool branches.")),
+                                anonymous_session_id=self.session, remember_conversation=True)
+        lease = self.history.begin(self.session, retain=True)
+        with (patch.object(main, "CONVERSATION_HISTORY_SERVICE", self.history),
+              patch.object(main, "CONVERSATION_MEMORY_SERVICE", self.memory)):
+            async with ASGITestClient(main.app, timeout_seconds=3) as client:
+                response = await client.post("/api/conversation/forget", json={"anonymous_session_id": self.session})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "forgotten"})
+        self.memory.forget.assert_not_called()
+        with self.assertRaises(ConversationHistoryConflict):
+            self.history.commit(lease, message="late", answer="late", profile=first["profile"])
+        model = ScriptedModel(final("What would you like to discuss?"))
+        await self.turn(model, anonymous_session_id=self.session, remember_conversation=False,
+                        profile={"hard_constraints": {"language": "Chinese"}})
+        self.assertFalse(json.loads(model.messages[0][1].content)["recent_exchanges"])
+
+    async def test_preference_opt_out_retains_dialogue_and_revokes_pending_write(self):
+        from SystemCode.src.backend import main
+        first = await self.turn(ScriptedModel(final("A branch means one preschool location.")),
+                                anonymous_session_id=self.session, remember_conversation=True,
+                                remember_preferences=True)
+        lease = self.history.begin(self.session, retain=True)
+        with (patch.object(main, "CONVERSATION_HISTORY_SERVICE", self.history),
+              patch.object(main, "CONVERSATION_MEMORY_SERVICE", self.memory)):
+            async with ASGITestClient(main.app, timeout_seconds=3) as client:
+                response = await client.post("/api/memory/preferences/forget", json={"anonymous_session_id": self.session})
+        self.assertEqual(response.status_code, 200)
+        self.memory.forget.assert_called_once_with(uuid.UUID(self.session))
+        late_save = Mock()
+        with self.assertRaises(ConversationHistoryConflict):
+            self.history.commit(lease, message="late", answer="late", profile=first["profile"], before_commit=late_save)
+        late_save.assert_not_called()
+        model = ScriptedModel(final("Yes, a centre is a location."))
+        await self.turn(model, message="So it means a centre?", profile=first["profile"],
+                        anonymous_session_id=self.session, remember_conversation=True)
+        self.assertEqual(json.loads(model.messages[0][1].content)["recent_exchanges"][0]["assistant"],
+                         "A branch means one preschool location.")
+
     async def test_overlap_and_forget_during_turn_cannot_commit(self):
         from SystemCode.src.backend import main
         started, release = threading.Event(), threading.Event()

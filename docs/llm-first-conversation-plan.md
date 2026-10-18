@@ -3,6 +3,15 @@
 Date: 2026-10-10
 Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
+Completed authorized maintenance (2026-10-17): distinguish guidance, definitions
+and school options; provide distinct names without changing centre ranking;
+expose independent opt-in chat history and preference retention. Final configured
+provider capture/review: 8/8 focused cases pass. Affected tests: 49 pass; frontend
+build and browser checks pass. Full discovery: 543 tests, 542 pass and the
+unchanged scoring expectation fails. See [implementation and evidence](../SystemCode/src/backend/doc/conversation-relevance.md)
+and [progress](../SystemCode/src/backend/doc/agents.md). Next remains rollout
+observation; no deployment or legacy retirement included.
+
 Rollout maintenance, 2026-10-17: investigated user-reported validation failures.
 Family-summary support was missing despite family inputs reaching the model.
 Model and validator now share bounded current family/postal/preference support;

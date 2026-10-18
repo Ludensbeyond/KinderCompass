@@ -434,6 +434,10 @@ selection, dependent tools and bounded execution for the new flow.
 The [Step 5 response contract](doc/llm-first-responses.md) records model-authored
 wording, claim/value/citation checks, bounded repair and failure rollback.
 
+The [conversation relevance guide](doc/conversation-relevance.md) describes
+guidance versus school examples, distinct-name presentation, the combined
+frontend memory control, and the focused provider evaluation.
+
 The [Step 6 staged HTTP contract](doc/llm-first-http.md) records the additive
 history consent, session commit behavior, compatibility checks and live capture.
 Step 6 is complete under the authorized school-demo evaluation profile;

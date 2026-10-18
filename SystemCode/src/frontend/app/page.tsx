@@ -297,7 +297,7 @@ export default function Home() {
   const [understood, setUnderstood] = useState<string[]>([]);
   const [readyToSearch, setReadyToSearch] = useState(false);
   const [anonymousSessionId, setAnonymousSessionId] = useState("");
-  const [rememberPreferences, setRememberPreferences] = useState(false);
+  const [rememberDetails, setRememberDetails] = useState(false);
   const [memoryStatus, setMemoryStatus] = useState("");
 
   const mapPoints = useMemo<MapPoint[]>(() => {
@@ -320,16 +320,18 @@ export default function Home() {
     const value = existing ?? window.crypto.randomUUID();
     if (!existing) window.localStorage.setItem(key, value);
     setAnonymousSessionId(value);
-    if (window.localStorage.getItem("kindercompass-remember-preferences") === "true") {
-      setRememberPreferences(true);
+    const combinedConsent = window.localStorage.getItem("kindercompass-remember-conversation-and-preferences") === "true";
+    setRememberDetails(combinedConsent);
+    if (combinedConsent || window.localStorage.getItem("kindercompass-remember-preferences") === "true") {
       void post<{ found: boolean; profile?: PreferenceProfile; understood: string[] }>("/api/memory/restore", {
         anonymous_session_id: value,
       }).then((result) => {
         if (!result.found || !result.profile) return;
         setPreferenceProfile(result.profile);
+        if (!combinedConsent) setMemoryStatus("Saved preferences restored. Enable this option to remember future conversations and preferences.");
         setUnderstood(result.understood);
         setReadyToSearch(Boolean(Object.keys(result.profile.hard_constraints).length || Object.keys(result.profile.preferences).length));
-        setMessages((items) => [...items, { role: "assistant", text: "I restored your saved preschool preferences and unresolved decision state. Family details and previous chat messages were not stored." }]);
+        setMessages((items) => [...items, { role: "assistant", text: "I restored your saved preschool preferences and unresolved decision state. Family form details are not saved with preferences." }]);
       }).catch(() => setMemoryStatus("Saved preferences could not be restored."));
     }
   }, []);
@@ -400,8 +402,9 @@ export default function Home() {
         excluded_school_ids: excluded,
         family: familyDetails,
         home_postal_code: homePostalCode,
-        anonymous_session_id: rememberPreferences ? anonymousSessionId : undefined,
-        remember_preferences: rememberPreferences,
+        anonymous_session_id: rememberDetails ? anonymousSessionId : undefined,
+        remember_preferences: rememberDetails,
+        remember_conversation: rememberDetails,
       });
       setPreferenceProfile(result.profile); setUnderstood(result.understood);
       const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
@@ -426,6 +429,7 @@ export default function Home() {
         ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
       });
       if (searchResult.centres.length === 0) {
+        if (rememberDetails) await clearConversationContext();
         setPreferenceProfile(searchResult.profile);
         setReadyToSearch(false);
         setEligible([]); setSelected([]); setRoutes({});
@@ -474,25 +478,35 @@ export default function Home() {
     setSelected((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
   }
 
-  async function changePreferenceMemory(enabled: boolean) {
+  async function changeMemory(enabled: boolean) {
     setMemoryStatus("");
-    if (!anonymousSessionId) return;
+    if (!anonymousSessionId || busy) return;
+    setBusy(true);
     try {
       if (enabled) {
-        window.localStorage.setItem("kindercompass-remember-preferences", "true");
-        setRememberPreferences(true);
+        await clearConversationContext();
         if (preferenceProfile) {
           await post("/api/memory/save", { anonymous_session_id: anonymousSessionId, profile: preferenceProfile });
         }
-        setMemoryStatus("Structured preferences will be remembered for up to 180 days.");
+        window.localStorage.setItem("kindercompass-remember-conversation-and-preferences", "true");
+        window.localStorage.removeItem("kindercompass-remember-preferences");
+        setRememberDetails(true);
+        setMemoryStatus("Conversation and preferences will be remembered.");
       } else {
         await post("/api/memory/forget", { anonymous_session_id: anonymousSessionId });
+        window.localStorage.removeItem("kindercompass-remember-conversation-and-preferences");
         window.localStorage.removeItem("kindercompass-remember-preferences");
-        setRememberPreferences(false);
-        setMemoryStatus("Saved preferences were forgotten.");
+        setRememberDetails(false);
+        setMemoryStatus("Saved conversation and preferences cleared.");
       }
     } catch (caught) {
       setMemoryStatus((caught as Error).message);
+    } finally { setBusy(false); }
+  }
+
+  async function clearConversationContext() {
+    if (anonymousSessionId) {
+      await post("/api/conversation/forget", { anonymous_session_id: anonymousSessionId });
     }
   }
 
@@ -538,13 +552,20 @@ export default function Home() {
     setError("");
   }
 
-  function updateImportance(attribute: string, value: unknown, importance: PreferenceImportance) {
-    setPreferenceProfile((profile) => profile ? {
-      ...profile,
-      preference_items: profile.preference_items?.map((item) =>
-        item.attribute === attribute && item.value === value ? { ...item, importance } : item
-      ),
-    } : profile);
+  async function updateImportance(attribute: string, value: unknown, importance: PreferenceImportance) {
+    if (busy) return;
+    setBusy(true); setError("");
+    try {
+      if (rememberDetails) await clearConversationContext();
+      setPreferenceProfile((profile) => profile ? {
+        ...profile,
+        preference_items: profile.preference_items?.map((item) =>
+          item.attribute === attribute && item.value === value ? { ...item, importance } : item
+        ),
+      } : profile);
+    } catch (caught) {
+      setError((caught as Error).message);
+    } finally { setBusy(false); }
   }
 
   return (
@@ -557,7 +578,7 @@ export default function Home() {
       <div className="workspace">
         <aside className="chatPanel">
           <div className="sectionTitle"><span className="bot">✦</span><div><h1>Compass chat</h1><p>Describe the preschool you need</p></div></div>
-          {understood.length > 0 && <details className="preferenceSummary"><summary><strong>Understood preferences</strong><span>{understood.length}</span></summary><div className="preferenceContent"><div className="preferenceChips">{understood.map((item) => <span key={item}>{item}</span>)}</div>{preferenceProfile?.preference_items?.some((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)) && <div className="importanceControls"><strong>Adjust ranking importance</strong>{preferenceProfile.preference_items.filter((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)).map((item) => <label key={`${item.attribute}-${String(item.value)}`}><span>{item.attribute.replaceAll("_", " ")}</span><select value={item.importance} onChange={(event) => updateImportance(item.attribute, item.value, event.target.value as PreferenceImportance)}><option value="required">Required</option><option value="high_priority">High priority</option><option value="preferred">Preferred</option><option value="nice_to_have">Nice to have</option></select></label>)}</div>}<small>Send another message to add or correct these preferences.</small></div></details>}
+          {understood.length > 0 && <details className="preferenceSummary"><summary><strong>Understood preferences</strong><span>{understood.length}</span></summary><div className="preferenceContent"><div className="preferenceChips">{understood.map((item) => <span key={item}>{item}</span>)}</div>{preferenceProfile?.preference_items?.some((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)) && <div className="importanceControls"><strong>Adjust ranking importance</strong>{preferenceProfile.preference_items.filter((item) => !["care_level", "max_distance_km"].includes(item.attribute) && !(item.attribute === "language" && preferenceProfile.hard_constraints.language)).map((item) => <label key={`${item.attribute}-${String(item.value)}`}><span>{item.attribute.replaceAll("_", " ")}</span><select value={item.importance} disabled={busy} onChange={(event) => void updateImportance(item.attribute, item.value, event.target.value as PreferenceImportance)}><option value="required">Required</option><option value="high_priority">High priority</option><option value="preferred">Preferred</option><option value="nice_to_have">Nice to have</option></select></label>)}</div>}<small>Send another message to add or correct these preferences.</small></div></details>}
           <div className="messages" aria-live="polite">
             {messages.map((message, index) => <div className={`message ${message.role}`} key={`${message.role}-${index}`}><span>{message.text}</span>{message.evidenceCategory && <small className={`evidenceLabel ${message.evidenceCategory}`}>Evidence: {message.evidenceCategory.replaceAll("_", " ")}</small>}{message.citations?.length ? <div className="messageSources"><strong>Sources</strong>{message.citations.map((citation, sourceIndex) => <a href={citation.url} target="_blank" rel="noreferrer" key={citation.chunk_id}>[{sourceIndex + 1}] {citation.title}<small>{citation.evidence_scope === "general" ? "General guidance" : "School evidence"}{citation.authority ? ` · ${citation.authority}` : ""}{citation.effective_from ? ` · Effective ${sourceDateLabel(citation.effective_from)}` : ""} · Retrieved {sourceDateLabel(citation.retrieved_at)}</small></a>)}</div> : null}{message.answerId && <div className="answerRating"><small>Was this useful?</small><button className={message.usefulness === "helpful" ? "selected" : ""} onClick={() => void rateChatAnswer(message.answerId!, true)} aria-label="Helpful answer">Yes</button><button className={message.usefulness === "not_helpful" ? "selected" : ""} onClick={() => void rateChatAnswer(message.answerId!, false)} aria-label="Not helpful answer">No</button></div>}</div>)}
             {busy && <div className="message assistant typing">Thinking…</div>}
@@ -568,8 +589,8 @@ export default function Home() {
             <button className="primary" disabled={!familyDetails || busy}>Send <span>↑</span></button>
           </form>
           <div className="memoryControl">
-            <label><input type="checkbox" checked={rememberPreferences} onChange={(event) => void changePreferenceMemory(event.target.checked)} /><span>Remember my structured preferences on this device</span></label>
-            <small>Saves compact preferences and unresolved decisions—not chat text, postal code, income, or child details. {memoryStatus}</small>
+            <label><input type="checkbox" checked={rememberDetails} disabled={busy || !anonymousSessionId} onChange={(event) => void changeMemory(event.target.checked)} /><span>Remember my conversation and preferences</span></label>
+            <small>Recent chat expires after 30 minutes of inactivity; preschool preferences are saved for up to 180 days. Chat may include family details you mention. Turning this off clears both. {memoryStatus}</small>
           </div>
         </aside>
 

@@ -229,6 +229,17 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(validate_response(final(answer, claims).content, (result,),
                          service.initial_context).answer, answer)
 
+    async def test_repeated_bare_school_names_repair_without_replaying_search(self):
+        service = self.service("Give me preschool options")
+        supported = claim("School A", "School A", path="/data/records/0/name")
+        bad = "Here are preschool options:\n- School A\n- School A"
+        good = "One preschool option is School A. What matters most to you?"
+        model = ScriptedModel(AIMessage(content="", tool_calls=[call("search_rank_compare_schools", {"limit": 3})]),
+                              final(bad, [supported]), final(good, [supported]))
+        response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", good, 1))
+        self.assertEqual(response.validation_errors, ("duplicate_school_listing",))
+
     def evidence(self):
         return StructuredToolResult(
             result_id="result:1", tool_name="search_school_evidence", status="ok",

@@ -207,7 +207,7 @@ class ConversationToolService:
             "search_general_guidance": "Retrieve cited preschool definitions and policy guidance. If unavailable, do not explain domain facts from model knowledge.",
             "find_nearby_schools": "Calculate proximity using postal_code or current home location. Missing location returns needs_input; ask for postal code.",
             "calculate_fees_scenario": "Calculate estimated fees/eligibility using current family and optional hypothetical overrides; never persist overrides. Missing scenario income must be clarified first.",
-            "search_rank_compare_schools": "Search/rank with current preferences or compare all supplied IDs. School records and scores are authoritative; do not claim distance without calculated distance.",
+            "search_rank_compare_schools": "Find actual preschool options, not general guidance or definitions. Search with presentation distinct_names for varied preschool names; centres for individual branches/locations. Rank with current preferences or compare all supplied IDs. Do not claim distance without calculated distance.",
         }
         transaction = self
         class TransactionTool(StructuredTool):
@@ -359,14 +359,26 @@ class ConversationToolService:
             ranked = self._rank(records)
             if ranked is None:
                 return "needs_input", {}, ["home_postal_code"], []
-            shown = [_public_school(record) for record in ranked[:request.limit]]
-        for item, record in zip(shown, ranked):
+            candidates = ranked
+            if request.presentation == "distinct_names":
+                candidates, seen_names = [], set()
+                for record in ranked:
+                    # Catalogue spelling varies in punctuation and spacing.
+                    # Keep the representative's repository name unchanged.
+                    key = "".join(c for c in record["name"].casefold() if c.isalnum())
+                    if key not in seen_names:
+                        seen_names.add(key)
+                        candidates.append(record)
+            shown = [_public_school(record) for record in candidates[:request.limit]]
+        selected_records = ranked if request.operation == "compare" else candidates
+        for item, record in zip(shown, selected_records):
             if record.get("centre_address"):
                 item["centre_address"] = record["centre_address"]
         return ("ok" if ranked else "no_evidence", {
             "records": shown, "operation": request.operation,
             "profile_used": deepcopy(self._profile), "total_matches": len(ranked),
-            "truncated": len(ranked) > request.limit, "source": "generated_school_catalogue",
+            "presentation": request.presentation, "displayed_count": len(shown),
+            "truncated": len(selected_records) > request.limit, "source": "generated_school_catalogue",
         }, [], [])
 
     def _calculate(self, request: CalculationArguments):

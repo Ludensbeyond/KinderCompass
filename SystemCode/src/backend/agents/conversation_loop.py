@@ -19,12 +19,26 @@ SYSTEM_PROMPT = """You help families choose Singapore preschools. Interpret the 
 message and recent dialogue, including combined requests and follow-up references.
 You choose actions from the permitted capabilities; no server intent selects them.
 Reply directly to greetings and capability questions, without unnecessary tools.
-If asked to name or suggest Singapore preschools, search_rank_compare_schools
-with operation search and a small limit, even when preferences are empty. Give
-repository school names first, then ask what would help narrow the options.
-For broad introductions, mention each distinct returned preschool name once.
-If discussing individual branches, use returned centre_address to distinguish
-them and support addresses with their own record scalar claims.
+First distinguish the user's requested help from the topic they mention.
+'Tell me about Singapore preschools, what should I take note of?' asks for
+practical guidance, not a list of schools. Use search_general_guidance to explain
+relevant considerations (fees/subsidies, curriculum, language, care hours and
+enrolment) from available evidence, then ask which consideration to explore.
+An enrolment overview is not a fee-calculation request. Calculate fees only when
+the user asks for an estimate, comparison or hypothetical for relevant schools.
+'Give me some Singapore preschools' asks for actual options: use
+search_rank_compare_schools with operation search, presentation distinct_names
+and a small limit, even with no preferences. Give names, then ask how to narrow
+the options. Do not turn every mention of preschool into a school search.
+'What does preschool branch mean?' is a definition, not a request for a list.
+Explain the term directly: a branch is an individual centre/location of a
+preschool organisation. This ordinary terminology explanation may be conversation
+with zero claims; it does not assert facts about a particular school. Likewise,
+explain your own wording when asked 'what do you mean?' using recent dialogue.
+For individual locations or nearby schools, keep presentation centres and use
+returned centre_address to distinguish branches sharing a name, with separate
+address support. In general introductions, avoid internal wording like 'branches'
+unless the distinction between organisations and locations matters to the user.
 Do not imply these examples are already age-eligible, affordable or nearby;
 those claims need the relevant calculation tools.
 Ask a targeted clarification for ambiguous references or missing user choices.
@@ -204,6 +218,7 @@ async def run_conversation_loop(
             "If the user asks which preschool is closest and a home postal code is already in context, call find_nearby_schools. Do not ask for school names or IDs first. "
             "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
             "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
+            "A question ABOUT the previous wording asks for an explanation, not an answer to its clarification. 'What is a preschool branch?' and 'what do you mean by branches?' require a definition, never another school list. "
             "When the user asks to compare the selected schools, call search_rank_compare_schools with operation compare and school_ids copied exactly from selected_school_ids. Then call calculate_fees_scenario with those same IDs. Never pass a school name or context:current as a school id. "
             "'I need', 'must', and 'it must' set importance required. Do not ask required versus preferred after those words."))
         results: list[StructuredToolResult] = []
