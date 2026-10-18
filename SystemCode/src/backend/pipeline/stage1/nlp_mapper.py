@@ -156,11 +156,16 @@ def map_text_to_filters(text: str) -> dict:
         preferences["operator_scheme"] = _preference("Partner Operator Scheme", 3)
         recognized.append("partner operator")
     if "transport" in lowered:
-        avoids = any(phrase in lowered for phrase in ("no transport", "without transport", "don't need transport", "do not need transport"))
+        avoids = any(phrase in lowered for phrase in (
+            "no transport", "without transport", "don't need transport", "do not need transport",
+            "don't want transport", "do not want transport",
+        ))
         preferences["transport"] = _preference(True, 3, not avoids)
         recognized.append("transport")
     if "halal" in lowered or "no pork" in lowered:
-        preferences["food"] = _preference("halal", 4)
+        food_value = "halal" if "halal" in lowered else "no_pork"
+        avoids = any(phrase in lowered for phrase in ("not halal", "non-halal", "don't need halal", "do not need halal"))
+        preferences["food"] = _preference(food_value, 4, not avoids)
         recognized.append("halal food")
     if "full day" in lowered or "full-day" in lowered:
         preferences["full_day"] = _preference(True, 4)

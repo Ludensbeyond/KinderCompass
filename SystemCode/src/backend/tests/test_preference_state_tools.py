@@ -115,16 +115,20 @@ class PreferenceStateToolTests(unittest.TestCase):
         self.assertNotIn("pending_contradiction", repaired.profile)
 
         constrained = merge_preference_profile(None, "within 2 km")
-        constrained["pending_relaxation"] = propose_constraint_relaxation(constrained)
+        constrained["pending_relaxation"] = propose_constraint_relaxation(constrained, trace={
+            "distance_outside_radius": 1, "nearest_outside_distance_km": 2.95,
+        })
         relaxed = by_name(create_preference_state_tools(
             context("apply relaxation", constrained), candidate_facets={},
         ))[CONTINUE_PENDING_PREFERENCE_FLOW_TOOL_NAME].invoke({})
-        self.assertEqual(relaxed.profile["hard_constraints"]["max_distance_km"], 3)
+        self.assertEqual(relaxed.profile["hard_constraints"]["max_distance_km"], 3.0)
         self.assertNotIn("pending_relaxation", relaxed.profile)
 
     def test_pending_flow_takes_precedence_over_reset_and_requires_pending_state(self):
         constrained = merge_preference_profile(None, "within 2 km")
-        constrained["pending_relaxation"] = propose_constraint_relaxation(constrained)
+        constrained["pending_relaxation"] = propose_constraint_relaxation(constrained, trace={
+            "distance_outside_radius": 1, "nearest_outside_distance_km": 2.95,
+        })
         result = by_name(create_preference_state_tools(
             context("clear preferences", constrained), candidate_facets={},
         ))[RESET_PREFERENCES_TOOL_NAME].invoke({})

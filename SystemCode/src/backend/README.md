@@ -6,6 +6,11 @@ ranks preschool data from Neo4j, evaluates eligibility and estimated cost,
 calculates home-to-preschool distances, and provides grounded guidance from
 curated web evidence.
 
+The current evidence-state and ranking contract is documented in
+[`doc/recommendation-evidence-contract.md`](doc/recommendation-evidence-contract.md).
+It defines match support, inferred/partial/stale evidence, empty-search
+diagnostics, and unrounded Stage 1 ordering.
+
 ## Quick start
 
 The recommended Windows workflow starts the backend and frontend together. From

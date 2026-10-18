@@ -98,7 +98,7 @@ ALLOWED_VALUES = {
     "transport": {True, False},
     "full_day": {True, False},
     "operator_scheme": {"Anchor Operator Scheme", "Partner Operator Scheme"},
-    "food": {"halal"},
+    "food": {"halal", "no_pork"},
     "pedagogy": {"Montessori", "Play-based", "Bilingual", "Reggio Emilia"},
     "max_distance_km": set(),
     "hands_on_learning": {True},

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 from collections.abc import Iterable, Mapping
 from numbers import Real
 from pathlib import Path
@@ -102,10 +103,20 @@ def evaluate_preschool_eligibility(
     special_approval: bool = False, service_type: str | None = None,
 ) -> dict[str, Any]:
     """Estimate placement, programme fee, and potential subsidy from reported facts."""
-    if float(ghi) < 0:
-        raise ValueError("Gross household income cannot be negative")
-    if household_size < 1 or non_earning_dependants < 0:
+    if isinstance(ghi, bool) or not math.isfinite(float(ghi)) or float(ghi) < 0:
+        raise ValueError("Gross household income must be finite and non-negative")
+    if (
+        isinstance(working_hours_per_month, bool)
+        or not math.isfinite(float(working_hours_per_month))
+        or float(working_hours_per_month) < 0
+    ):
+        raise ValueError("Working hours per month must be a finite non-negative number")
+    if household_size < 1 or non_earning_dependants < 0 or non_earning_dependants > household_size:
         raise ValueError("Household size and dependant counts are invalid")
+    if base_fee is not None and (isinstance(base_fee, bool) or not math.isfinite(float(base_fee)) or float(base_fee) < 0):
+        raise ValueError("Base fee must be a finite non-negative amount")
+    if basic_subsidy is not None and (isinstance(basic_subsidy, bool) or not math.isfinite(float(basic_subsidy)) or float(basic_subsidy) < 0):
+        raise ValueError("Basic subsidy must be a finite non-negative amount")
 
     months = age_in_months(dob, admission_date)
     eligible_level, scheme = placement_for_age(months)
@@ -151,7 +162,9 @@ def evaluate_preschool_eligibility(
         return {"eligible": True, "status": "estimated", "eligible_level": eligible_level,
                 "age_on_admission_months": months, "scheme": "none", "programme": programme,
                 "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
-                "fee_before_subsidy": fee, "basic_subsidy": 0.0, "additional_subsidy": 0.0,
+                "fee_before_subsidy": fee, "basic_subsidy": 0.0,
+                "additional_subsidy": 0.0, "maximum_additional_subsidy": 0.0,
+                "additional_subsidy_applied": 0.0,
                 "minimum_copayment": 0.0, "net_monthly_fee": fee,
                 "reasons": ["The reported child citizenship is not eligible for this ECDA subsidy estimate."],
                 "warnings": warnings, "policy_source": source, "selected_service": service}
@@ -171,19 +184,30 @@ def evaluate_preschool_eligibility(
     pci_qualified = household_size >= 5 and non_earning_dependants >= 3
     pci = round(float(ghi) / household_size, 2)
     band = _income_band(policy, float(ghi), pci, pci_qualified) if working else None
-    additional, minimum_copayment = (band[scheme][programme] if band else (0, 0))
-    net = max(float(minimum_copayment), fee - applied_basic - float(additional))
+    maximum_additional, minimum_copayment = (band[scheme][programme] if band else (0, 0))
+    # ECDA publishes a maximum AS and a minimum co-payment. Only the amount
+    # needed to reach that floor is applied, capped at the published maximum.
+    additional_applied = min(
+        float(maximum_additional),
+        max(0.0, fee - applied_basic - float(minimum_copayment)),
+    )
+    net = max(float(minimum_copayment), fee - applied_basic - additional_applied)
     return {
         "eligible": True, "status": "estimated", "eligible_level": eligible_level,
         "age_on_admission_months": months, "scheme": scheme, "programme": programme,
         "programme_id": programme_id_for_service(service.get("type_of_service")) if service else programme_type,
         "fee_before_subsidy": fee, "base_fee": fee, "basic_subsidy": applied_basic,
-        "additional_subsidy": float(additional), "minimum_copayment": float(minimum_copayment),
+        # Keep the historical field as the policy maximum; consumers should
+        # use the explicit fields below for new integrations.
+        "additional_subsidy": float(maximum_additional),
+        "maximum_additional_subsidy": float(maximum_additional),
+        "additional_subsidy_applied": additional_applied,
+        "minimum_copayment": float(minimum_copayment),
         "net_monthly_fee": round(net, 2), "working_status": status_key,
         "income_assessment_method": "per_capita_income" if pci_qualified else "household_income",
         "per_capita_income": pci, "reasons": [
             f"Child age at admission is {months} completed months.",
-            f"The {status_key.replace('_', '-')} {programme.replace('_', ' ')} policy table was applied.",
+            f"The estimate uses the {status_key.replace('_', '-')} {programme.replace('_', ' ')} subsidy rates in the cited ECDA table.",
         ], "warnings": warnings, "policy_source": source, "selected_service": service,
     }
 

@@ -26,6 +26,8 @@ from .location_service import LocationService
 _FEE_KEYS = (
     "school_id", "name", "eligible", "status", "eligible_level", "programme_id",
     "fee_before_subsidy", "net_monthly_fee", "basic_subsidy", "additional_subsidy",
+    "maximum_additional_subsidy",
+    "additional_subsidy_applied",
     "minimum_copayment", "reason", "preferred_programme_available",
 )
 
@@ -52,7 +54,14 @@ def _public_comparison(record: dict) -> dict:
         item["match_breakdown"] = [
             {
                 "attribute": row.get("attribute"),
+                "preference": row.get("preference"),
+                "school_value": row.get("school_value"),
                 "status": row.get("status"),
+                "evidence_state": row.get("evidence_state"),
+                "source": row.get("source"),
+                "source_reliability": row.get("source_reliability"),
+                "freshness": row.get("freshness"),
+                "availability": row.get("availability"),
                 "importance": row.get("importance"),
                 "contribution": row.get("contribution"),
                 "possible_contribution": row.get("possible_contribution"),
@@ -68,6 +77,10 @@ def _public_school(record: dict) -> dict:
     item = {"school_id": record.get("school_id"), "name": record.get("name")}
     if record.get("match_score") is not None:
         item["match_score"] = record["match_score"]
+    if record.get("profile_confidence") is not None:
+        item["profile_confidence"] = record["profile_confidence"]
+    if record.get("combined_score") is not None:
+        item["combined_score"] = record["combined_score"]
     if record.get("distance_km") is not None:
         item["distance_km"] = record["distance_km"]
         if record["distance_km"] == 0:
@@ -250,24 +263,32 @@ class ConversationToolService:
         if any(self._profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")):
             return "needs_input", {}, ["pending_decision_resolution"], []
         candidate = deepcopy(self._profile)
-        # A replacement of a positive required choice requires an explicit resolution.
+        # A conflicting update is never silently applied, even when the prior
+        # preference was soft or the attribute is not language/pedagogy.
         for choice in request.set:
             old = next((i for i in self._profile.get("preference_items", [])
-                        if i["attribute"] == choice.attribute and i["importance"] == "required"), None)
+                        if i["attribute"] == choice.attribute), None)
             if choice.importance is None:
                 if old and (old["value"] != choice.value or not choice.desired):
-                    raise ValueError("replacement of a required choice needs explicit strength")
+                    raise ValueError("a conflicting preference change needs explicit strength and confirmation")
                 continue
-            if choice.attribute in {"language", "pedagogy"} and old and (
-                old["value"] != choice.value or not choice.desired
-            ):
-                if choice.attribute == "language" and (choice.importance != "required" or not choice.desired):
-                    raise ValueError("resolve the required language before downgrading or negating it")
+            existing_preference = self._profile.get("preferences", {}).get(
+                f"language:{old['value']}" if choice.attribute == "language" and old else choice.attribute,
+                {},
+            ) if old else {}
+            old_desired = existing_preference.get("desired", True)
+            if old and (old["value"] != choice.value or old_desired != choice.desired):
+                old_label = "yes" if old["value"] is True else "no" if old["value"] is False else str(old["value"])
+                incoming_label = "yes" if choice.value is True else "no" if choice.value is False else str(choice.value)
                 candidate["pending_contradiction"] = {
                     "attribute": choice.attribute, "existing": old["value"],
                     "incoming": choice.value,
                     "typed_incoming": choice.model_dump(),
                     "incoming_preference": {"value": choice.value, "weight": 5 if choice.importance == "required" else 4, "desired": choice.desired},
+                    "question": (
+                        f"Your current {choice.attribute.replace('_', ' ')} preference is {old_label}, "
+                        f"and this change says {incoming_label}. Should I keep {old_label} or use {incoming_label}?"
+                    ),
                 }
                 return self._stage(candidate, ["pending_contradiction"])
         for attribute in request.remove:
@@ -350,10 +371,11 @@ class ConversationToolService:
         except SchoolNotFoundError:
             return "needs_input", {}, ["school_ids"], []
         if request.operation == "compare":
-            from ..pipeline.stage1.scorer import score_school
-            if self._context.home_postal_code:
-                records = self.locations.attach_distances(records, self._context.home_postal_code)
-            ranked = [score_school(self._profile, record) for record in records]
+            ranked = self._rank(records)
+            if ranked is None:
+                return "needs_input", {}, ["home_postal_code"], []
+            comparison_order = {school_id: index for index, school_id in enumerate(request.school_ids)}
+            ranked.sort(key=lambda record: comparison_order.get(record.get("school_id"), len(comparison_order)))
             shown = [_public_comparison(record) for record in ranked[:request.limit]]
         else:
             ranked = self._rank(records)

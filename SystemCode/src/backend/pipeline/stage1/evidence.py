@@ -43,9 +43,15 @@ def freshness(last_updated: Any, today: dt.date | None = None) -> str:
     return "current" if age_days <= 365 else "stale"
 
 
-def value_state(actual: Any, available: bool) -> str:
-    if not available:
+def value_state(actual: Any, available: bool | float, evidence_state: str) -> str:
+    if float(available or 0) <= 0:
         return "unknown"
+    if evidence_state != "verified":
+        return {
+            "derived": "inferred_value",
+            "calculated": "calculated_value",
+            "partially_supported": "partially_supported_value",
+        }.get(evidence_state, "recorded_value")
     if isinstance(actual, bool):
         return "confirmed_yes" if actual else "confirmed_no"
     return "confirmed_value"
@@ -68,21 +74,30 @@ def retrieval_steps(school: dict[str, Any]) -> list[dict[str, Any]]:
     return steps
 
 
-def evidence_details(attribute: str, school: dict[str, Any], actual: Any, available: bool) -> dict[str, Any]:
+def evidence_details(attribute: str, school: dict[str, Any], actual: Any, available: bool | float) -> dict[str, Any]:
     """Return stable provenance metadata for one scored attribute."""
     canonical = _canonical_attribute(attribute)
     provenance = EVIDENCE_PROVENANCE.get(canonical, {
         "source": "Unknown source", "method": "unknown", "reliability": "unknown",
     })
     method = provenance["method"]
-    state = "unknown" if not available else "derived" if method.startswith("derived") else "calculated" if method == "calculated" else "verified"
+    strength = float(available or 0)
+    state = (
+        "unknown" if strength <= 0 else
+        "derived" if method.startswith("derived") else
+        "calculated" if method == "calculated" else
+        "partially_supported" if provenance["reliability"] == "partial" else
+        "verified" if provenance["reliability"] == "direct" else
+        "recorded"
+    )
     source_date = school.get("last_updated")
     details = {
         "evidence_state": state,
-        "value_state": value_state(actual, available),
+        "value_state": value_state(actual, available, state),
         "source": provenance["source"],
         "source_method": method,
         "source_reliability": provenance["reliability"],
+        "availability": strength,
         "source_date": source_date,
         "freshness": freshness(source_date),
     }

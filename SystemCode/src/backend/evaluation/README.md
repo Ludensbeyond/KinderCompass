@@ -2,30 +2,25 @@
 
 ## Ranking score semantics
 
-Stage 1 keeps its existing weighted match calculation and importance
-multipliers. For each supported preference with positive effective weight,
-verified matches and mismatches are known evidence. Unknown values earn no
-match credit and are omitted from the match-score denominator, matching the
-original Stage 1 definition. They remain in the total preference weight used
-for completeness. Thus an unknown
-required preference is retained where existing policy allows it, but lowers
-completeness; a verified required mismatch is excluded before sorting.
+Stage 1 keeps its weighted match calculation, importance multipliers, and
+geometric-mean combined score. See the [recommendation evidence contract](../doc/recommendation-evidence-contract.md)
+for the distinction between direct, inferred, partial, stale, and unknown
+evidence. Confirmed required mismatches are excluded; inferred, partial, stale,
+and unknown values do not count as confirmed matches or mismatches. Score
+calculations and sorting use full precision; returned score fields are rounded
+for display. Exact ties use ascending stable school ID.
 
-`profile_confidence` remains a 0–1 fraction for compatibility and means only
-`known effective preference weight / total effective preference weight`.
-It does not use source reliability, freshness, or probability calibration.
-`combined_score` is the percentage-scale geometric mean
-`sqrt(match_score * (100 * profile_confidence))`. Schools sort by combined
-score, then match score, completeness, and ascending stable school ID.
+`profile_confidence` remains in the API for compatibility and is displayed as
+evidence completeness. It is not a calibrated probability or factual reliability
+measure. The combined score is
+`sqrt(match_score * (100 * profile_confidence))`.
 
 Unsupported preferences are stored outside the scored preference map and do
 not enter either denominator. Zero-weight preferences also do not enter the
 denominators. If there are no applicable positive-weight supported
 preferences, match score and completeness are both defined as 100, giving a
-neutral combined score of 100. Empty or missing attribute values are unknown;
-known false values are mismatches. Pedagogy values remain usable evidence when
-present even though the provenance metadata marks that attribute as derived;
-source quality is not used as confidence.
+neutral combined score of 100. Empty or ambiguous attribute values are unknown;
+known false values are mismatches only when the evidence supports the comparison.
 
 Run from the repository root:
 

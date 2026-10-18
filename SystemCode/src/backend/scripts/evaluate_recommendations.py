@@ -25,6 +25,7 @@ BASE = {
     "provision_of_transport": None,
     "second_languages_offered": None,
     "operator_scheme": None,
+    "second_languages_offered": None,
     "food_offered": None,
     "weekday_full_day": None,
 }
@@ -42,15 +43,15 @@ def evaluate() -> dict[str, Any]:
     """Evaluate synthetic scenarios without postal codes, income, dates, or chat logs."""
     scenarios = []
 
-    required_profile = map_text_to_filters("Montessori is required")
+    required_profile = map_text_to_filters("SPARK is required")
     required_ranked = rank_schools(required_profile, [
-        school("MATCH", pedagogy="Montessori"),
-        school("FAIL", pedagogy="Play-based"),
+        school("MATCH", spark_certified="Yes"),
+        school("FAIL", spark_certified="No"),
         school("UNKNOWN"),
     ])
     required_ids = [item["school_id"] for item in required_ranked]
     violations = sum(item["school_id"] == "FAIL" for item in required_ranked)
-    scenarios.append(_result("required_preference_enforcement", violations == 0 and "MATCH" in required_ids and "UNKNOWN" in required_ids, {
+    scenarios.append(_result("required_preference_enforcement", violations == 0 and "MATCH" in required_ids and "UNKNOWN" in required_ids and "FAIL" not in required_ids, {
         "result_ids": required_ids,
         "required_constraint_violations": violations,
     }))

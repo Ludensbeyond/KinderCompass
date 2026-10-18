@@ -26,7 +26,7 @@ load_dotenv(POC_ENV, override=True)
 from stage1.runner import run_from_profile  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
 from stage1.proximity import geocode_postal_code  # noqa: E402
-from stage1.dialogue_manager import propose_constraint_relaxation  # noqa: E402
+from stage1.dialogue_manager import describe_empty_search, propose_constraint_relaxation  # noqa: E402
 from SystemCode.src.backend.domain.models import (  # noqa: E402
     ChatFeedbackRequest, ChatFeedbackResponse, ChatFeedbackSummaryResponse,
     ConversationMemoryRequest, ConversationMemoryResponse, DistanceRequest, DistanceResponse,
@@ -110,12 +110,13 @@ def search(request: SearchRequest) -> dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     trace_id = str(uuid.uuid4())
-    relaxation = propose_constraint_relaxation(profile) if not centres else None
+    relaxation = propose_constraint_relaxation(profile, trace=stage_trace) if not centres else None
     if relaxation:
         profile = {**profile, "pending_relaxation": relaxation}
     response_message = (
         relaxation["question"] if relaxation
         else f"I found {len(centres)} centres matching those preferences."
+        if centres else describe_empty_search(stage_trace)
     )
     return {
         "message": response_message,

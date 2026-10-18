@@ -333,6 +333,13 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(unknown["match_breakdown"][0]["value_state"], "unknown")
         self.assertEqual(unknown["match_breakdown"][0]["evidence_state"], "unknown")
 
+    def test_phase8_partial_food_value_is_not_labelled_confirmed(self):
+        profile = map_text_to_filters("halal")
+        scored = score_school(profile, {**SCHOOL, "food_offered": "Halal meals", "last_updated": "2026-01-01"})
+        self.assertEqual(scored["match_breakdown"][0]["evidence_state"], "partially_supported")
+        self.assertEqual(scored["match_breakdown"][0]["value_state"], "partially_supported_value")
+        self.assertEqual(scored["match_breakdown"][0]["status"], "partially_supported")
+
     def test_phase8_marks_pedagogy_as_derived(self):
         profile = map_text_to_filters("Montessori")
         scored = score_school(profile, {**SCHOOL, "pedagogy": "Montessori", "last_updated": "2026-01-01"})
@@ -837,16 +844,18 @@ class PipelineTests(unittest.TestCase):
         ranked = rank_schools(profile, [tradeoff, matching])
         self.assertEqual(ranked[0]["school_id"], SCHOOL["school_id"])
         self.assertGreater(ranked[0]["match_score"], ranked[1]["match_score"])
-        self.assertIn("pedagogy", ranked[0]["strengths"])
+        self.assertNotIn("pedagogy", ranked[0]["strengths"])
+        self.assertEqual(ranked[0]["match_breakdown"][0]["status"], "inferred")
         self.assertIn("spark certified", ranked[1]["tradeoffs"])
 
-    def test_unknown_preference_keeps_match_below_one_hundred(self):
+    def test_inferred_pedagogy_is_not_confirmed_match_and_remains_separate_from_unknown(self):
         profile = map_text_to_filters("Montessori with transport")
         school = {**SCHOOL, "pedagogy": "Montessori", "provision_of_transport": None}
         scored = score_school(profile, school)
-        self.assertGreater(scored["match_score"], 0.0)
-        self.assertLess(scored["match_score"], 100.0)
-        self.assertTrue(any(item["status"] == "unknown" for item in scored["match_breakdown"]))
+        self.assertEqual(scored["match_score"], 0.0)
+        self.assertEqual(scored["profile_confidence"], 0.37)
+        self.assertEqual(scored["match_breakdown"][0]["status"], "inferred")
+        self.assertEqual(scored["match_breakdown"][1]["status"], "unknown")
 
     def test_stage1_missing_evidence_reduces_confidence(self):
         profile = map_text_to_filters("SPARK")
@@ -862,7 +871,9 @@ class PipelineTests(unittest.TestCase):
         mismatch = {**SCHOOL, "school_id": "B", "pedagogy": "Play-based"}
         unknown = {**SCHOOL, "school_id": "C", "pedagogy": None}
         ranked = rank_schools(profile, [mismatch, unknown, matching])
-        self.assertEqual({item["school_id"] for item in ranked}, {SCHOOL["school_id"], "C"})
+        self.assertEqual({item["school_id"] for item in ranked}, {SCHOOL["school_id"], "B", "C"})
+        inferred = next(item for item in ranked if item["school_id"] == "B")
+        self.assertEqual(inferred["match_breakdown"][0]["status"], "inferred")
 
     def test_phase6_importance_changes_ranking_contributions(self):
         profile = map_text_to_filters("SPARK with transport")
@@ -966,6 +977,25 @@ class PipelineTests(unittest.TestCase):
         )
         self.assertEqual([item["centre_code"] for item in result], ["NEAR"])
         self.assertLess(result[0]["distance_km"], 1.0)
+
+    def test_proximity_trace_distinguishes_unknown_coordinates_from_outside_radius(self):
+        origin = {"latitude": 1.3, "longitude": 103.8}
+        candidates = [
+            {"school_id": "NEAR", "centre_code": "NEAR"},
+            {"school_id": "FAR", "centre_code": "FAR"},
+            {"school_id": "UNKNOWN", "centre_code": "UNKNOWN"},
+        ]
+        nearby, trace = filter_within_radius(
+            candidates, origin,
+            {"NEAR": origin, "FAR": {"latitude": 1.32, "longitude": 103.8}},
+            radius_km=1.0, include_trace=True,
+        )
+        self.assertEqual([item["school_id"] for item in nearby], ["NEAR"])
+        self.assertEqual(trace, {
+            "distance_missing_coordinates": 1,
+            "distance_outside_radius": 1,
+            "nearest_outside_distance_km": 2.224,
+        })
 
     def test_stage1_location_uses_numeric_postal_code(self):
         query, params = build_stage1_query({"town": "540231"})
