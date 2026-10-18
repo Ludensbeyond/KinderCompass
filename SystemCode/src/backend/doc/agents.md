@@ -1,5 +1,23 @@
 # Backend conversation progress
 
+## Completed maintenance — response repair allowance, 2026-10-18
+
+Increased the user-requested LLM-first response repair default and maximum from
+two to four. All repairs use existing evidence and share the eight-model-call
+and 30-second turn budgets; they cannot replay tools or mutations. Telemetry
+retains up to five allowlisted validation-error categories for the original
+answer plus four repairs. More attempts can increase latency and provider cost;
+this change does not establish live answer-quality improvement.
+
+Verification: focused loop/response/rollout tests **52 pass in 2.381s**
+(`/tmp/kindercompass-repair-focused.log`), including fourth-repair success with
+one mutation/export, exhaustion rollback and lower configured repair limits.
+Required discovery: **546 tests in 42.920s; 545 pass**, with only the documented
+unchanged `test_unknown_preference_keeps_match_below_one_hundred` failure
+(`/tmp/kindercompass-repair-backend.log`). Sandbox worker-thread checks stalled;
+outside-sandbox runs completed. Whitespace review passes. No deployment or
+commit; next remains rollout observation.
+
 ## Completed maintenance — conversation relevance, 2026-10-17
 
 Completed the user-authorized correction for guidance versus catalogue examples,

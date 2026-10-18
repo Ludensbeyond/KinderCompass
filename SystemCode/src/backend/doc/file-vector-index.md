@@ -1,5 +1,27 @@
 # Persistent parent-guide index (step 3)
 
+The 18 October 2026 age-level extension adds `preschool-age-levels` and
+`primary-age-levels`, bringing the current corpus to 25 chunks. The preschool
+mapping cites PCF Sparkletots' enrolment FAQ and retains the enrolment-year,
+Playgroup-from-18-months and 1 January qualifications. Primary ages cite MOE's
+P1 birth-date eligibility; P2/P3 ages are explicitly typical annual progression,
+with `evidence_category=unknown`. The same guidance is in the curated fallback,
+which preserves that category. Primary age questions may retrieve this passage;
+primary admission priority and guarantees remain excluded.
+
+The extension reuses the existing vectors and embeds only changed passages.
+Focused checks cover the original four-year-old question, both fallback modes,
+cohort qualifications, source separation and non-authoritative primary guidance.
+The builder validates artifacts before updating `CURRENT`. Restart a running
+backend worker after a rebuild so its cached retriever loads the new corpus.
+
+Extension validation: the active build contains 25 validated passages. A live
+vector query for “my kid is 4 years old. which school should he go to” returns
+the preschool age-level passage, as do lexical and curated queries. All 56
+focused tests pass. Full backend discovery passes 544 of 545 tests; the remaining
+`test_unknown_preference_keeps_match_below_one_hundred` failure also reproduces
+in an untouched `HEAD` source snapshot and is unrelated to this extension.
+
 The explicit offline builder uses `pipeline/parent_guide_chunking.py` for reviewed
 selections, `pipeline/parent_guide_embeddings.py` for injectable batched embeddings,
 and `repositories/parent_guide_index.py` for validated artifact loading. It does

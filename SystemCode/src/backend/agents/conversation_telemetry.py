@@ -96,7 +96,7 @@ class TurnTelemetry:
             "executed_tool_calls": getattr(response, "tool_calls", 0),
             "validation_succeeded": getattr(response, "status", None) == "ok",
             "failure_reason": reason if reason in allowed else ("request_or_commit_failure" if response is None else None),
-            "validation_errors": [category for category in validation_errors[:3]
+            "validation_errors": [category for category in validation_errors[:5]
                                   if isinstance(category, str) and category in VALIDATION_CATEGORIES],
             "input_tokens": self.input_tokens, "cached_input_tokens": self.cached_tokens,
             "output_tokens": self.output_tokens, "usage_complete": complete_usage,

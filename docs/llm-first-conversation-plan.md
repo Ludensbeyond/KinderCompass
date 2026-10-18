@@ -3,6 +3,14 @@
 Date: 2026-10-10
 Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
+Completed authorized maintenance (2026-10-18): increased response repairs from
+two to four, within the existing eight-model-call and 30-second turn budgets.
+Telemetry retains five validation errors. Focused tests: 52 pass; required
+discovery: 546 tests, 545 pass with only the documented unchanged scoring
+failure. No live quality improvement or deployment claimed. See
+[progress and verification](../SystemCode/src/backend/doc/agents.md#completed-maintenance--response-repair-allowance-2026-10-18).
+Next remains rollout observation.
+
 Completed authorized maintenance (2026-10-17): distinguish guidance, definitions
 and school options; provide distinct names without changing centre ranking;
 expose independent opt-in chat history and preference retention. Final configured

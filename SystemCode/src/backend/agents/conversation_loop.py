@@ -92,7 +92,7 @@ class LoopLimits(BaseModel):
     elapsed_seconds: float = Field(default=30.0, gt=0, le=120)
     context_bytes: int = Field(default=128_000, ge=1, le=256_000)
     model_output_bytes: int = Field(default=16_000, ge=1, le=32_000)
-    repair_calls: int = Field(default=2, ge=0, le=2)
+    repair_calls: int = Field(default=4, ge=0, le=4)
 
 
 class ModelToolCall(BaseModel):

@@ -48,7 +48,7 @@ exhausted attempts; no answer text, family values or provider errors are logged.
 ## Repair, state and failures
 
 Invalid final structures, values or citations receive fixed-category feedback
-and up to two model repair attempts using the existing evidence. Repair cannot
+and up to four model repair attempts using the existing evidence. Repair cannot
 execute tools or mutations. Attempts share the original model-call, elapsed-time,
 context and output bounds; no retry resets a turn budget. The 800-character
 limit applies to final wording; the existing 16,000-byte model-message limit

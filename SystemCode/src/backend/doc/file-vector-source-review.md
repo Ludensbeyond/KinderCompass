@@ -1,5 +1,19 @@
 # Parent-guide source review and configuration (step 1)
 
+On 18 October 2026, the age-level extension verified the readable
+[PCF Sparkletots FAQ](https://pcfsparkletots.org.sg/faqs/) for Playgroup, N1, N2,
+K1 and K2. It records actual fetch hashes and timestamps in `sources.json` and
+approves the new section 11 age table independently of the original blocked
+ECDA source. Preschool labels remain qualified by enrolment year, centre entry
+criteria and PCF's 1 January cohort exception. The original ECDA staffing-ratio
+exclusion remains.
+
+[MOE P1 registration](https://www.moe.gov.sg/primary/p1-registration) verifies
+the following-year intake and exact birth-date window. The added P2/P3 ages
+are labelled typical annual progression rather than admission entitlements;
+that mapping uses `evidence_category=unknown`. Other section 11 admission and
+editorial exclusions remain. The original first-corpus review follows below.
+
 The review in `SystemCode/data/vectors/parent_guide/sources.json` inventories
 all 11 guide sections, 9 Markdown tables and 49 unique HTTPS sources. It records
 actual fetch timestamps and response hashes separately from the guide's

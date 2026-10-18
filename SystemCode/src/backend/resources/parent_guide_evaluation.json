@@ -327,7 +327,7 @@
       "expected_mapping_ids": [
         "mk-registration-dates"
       ],
-      "acceptable_answer": "23\u201331 March 2026; window has passed, contact MK about vacancies.",
+      "acceptable_answer": "23–31 March 2026; window has passed, contact MK about vacancies.",
       "required_terms": [
         "23 to 31 March 2026",
         "window has passed"
@@ -539,6 +539,43 @@
       "expected_intent": "ask_combined_evidence",
       "expected_tools": [
         "search_selected_school_evidence",
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "preschool-age-levels",
+      "section": 11,
+      "question": "What preschool enrolment level is usual for a child aged 4?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "preschool-age-levels"
+      ],
+      "acceptable_answer": "A child turning 4 in the enrolment year usually attends N2; confirm birth date, enrolment year and centre criteria.",
+      "required_terms": [
+        "Nursery 2 (N2)",
+        "enrolment year",
+        "1 January"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
+        "search_general_knowledge"
+      ]
+    },
+    {
+      "case_id": "primary-age-levels",
+      "section": 11,
+      "question": "What enrolment age is usual for Primary 2?",
+      "kind": "answerable",
+      "expected_mapping_ids": [
+        "primary-age-levels"
+      ],
+      "acceptable_answer": "P2 usually corresponds to age 8 after normal progression from P1; actual placement can vary.",
+      "required_terms": [
+        "typical annual progression",
+        "1 January"
+      ],
+      "expected_intent": "ask_general_knowledge",
+      "expected_tools": [
         "search_general_knowledge"
       ]
     }

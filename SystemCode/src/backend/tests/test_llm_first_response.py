@@ -291,6 +291,26 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.validation_errors, ("wrong_reported_number",))
         export.assert_called_once()
 
+    async def test_fourth_repair_can_succeed_without_replaying_mutation(self):
+        service = self.service()
+        bad = final("Unsupported $999.")
+        good = "Chinese is now required."
+        model = ScriptedModel(
+            AIMessage(content="", tool_calls=[call("update_preferences", {"set": [
+                {"attribute": "language", "value": "Chinese", "importance": "required"}]})]),
+            *([bad] * 4),
+            final(good, [claim(good, "Chinese", path="/data/staged_profile/hard_constraints/language", school=None)]),
+        )
+        with patch.object(service, "invoke", wraps=service.invoke) as invoke, \
+                patch.object(service, "export_validated_state", wraps=service.export_validated_state) as export:
+            response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer), ("ok", good))
+        self.assertEqual((response.model_calls, response.tool_calls), (6, 1))
+        self.assertEqual(response.validation_errors, ("unsupported_reported_number",) * 4)
+        self.assertEqual(response.profile["hard_constraints"]["language"], "Chinese")
+        invoke.assert_called_once()
+        export.assert_called_once()
+
     async def test_model_authored_preference_acknowledgement_uses_latest_staged_state(self):
         service = self.service()
         answer = "Chinese is now required."
@@ -340,7 +360,8 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
     async def test_failure_and_exhausted_repairs_discard_staged_changes_no_fallback(self):
         for limits, tail in (
             (LoopLimits(), [RuntimeError("private provider detail")]),
-            (LoopLimits(), [final("Wrong $999.")] * 3),
+            (LoopLimits(), [final("Wrong $999.")] * 5),
+            (LoopLimits(repair_calls=2), [final("Wrong $999.")] * 3),
             (LoopLimits(repair_calls=0), [final("Wrong $999.")]),
             (LoopLimits(model_calls=2), [final("Wrong $999.")]),
             (LoopLimits(), [final("Wrong $999."), AIMessage(content="", tool_calls=[call("reset_continue_preferences", {"operation": "reset"}, "call:2")])]),
@@ -356,7 +377,8 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((response.status, response.answer), ("unavailable", expected))
             self.assertIsNone(response.profile)
             if response.failure_reason == "response_validation":
-                self.assertTrue(response.validation_errors)
+                self.assertEqual(response.validation_errors, ("unsupported_reported_number",) * len(tail))
+                self.assertEqual(len(model.messages), 1 + len(tail))
             self.assertNotIn("private", response.answer)
             self.assertEqual(service.staged_profile, before)
             self.assertLessEqual(len(model.messages), limits.model_calls)
@@ -369,7 +391,7 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         bad = final("The centre has CCTV.", kind="grounded")
         response = await self.run_response(service, ScriptedModel(
             AIMessage(content="", tool_calls=[call("search_general_guidance", {"query": "CCTV"})]),
-            bad, bad, bad,
+            *([bad] * 5),
         ))
         self.assertEqual(response.failure_reason, "response_validation")
         self.assertEqual(response.answer, UNVERIFIED_ANSWER)

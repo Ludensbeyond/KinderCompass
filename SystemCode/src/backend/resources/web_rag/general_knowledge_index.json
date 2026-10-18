@@ -157,6 +157,28 @@
       "source_type": "government_policy_announcement",
       "effective_from": "2027-01-01",
       "retrieved_at": "2026-08-14"
+    },
+    {
+      "chunk_id": "GENERAL:preschool-age-levels:0",
+      "topic": "preschool age levels",
+      "text": "| Age child turns during the enrolment year | Usual school level |\n|---|---|\n| 2 years old | Playgroup |\n| 3 years old | Nursery 1 (N1) / Pre-Nursery |\n| 4 years old | Nursery 2 (N2) / Nursery |\n| 5 years old | Kindergarten 1 (K1) |\n| 6 years old | Kindergarten 2 (K2) |\n\nFor a four-year-old child turning 4 during the enrolment year, the usual school level they should go to is Nursery 2 (N2). Levels generally follow the age your child turns during the calendar year, rather than their age on the day you ask. Preschool programme names and entry criteria may vary between centres; confirm the child's birth date and intended enrolment year. Playgroup commonly starts from 18 months. PCF Sparkletots places children born on 1 January in the previous birth-year cohort.",
+      "source_url": "https://pcfsparkletots.org.sg/faqs/",
+      "title": "Usual school levels by age",
+      "authority": "PCF Sparkletots",
+      "source_type": "operator_enrolment_guidance",
+      "retrieved_at": "2026-10-18T00:11:14.043875+00:00",
+      "evidence_category": "authoritative_fact"
+    },
+    {
+      "chunk_id": "GENERAL:primary-age-levels:0",
+      "topic": "primary age levels",
+      "text": "| Age child turns during the enrolment year | Usual school level |\n|---|---|\n\n| 7 years old | Primary 1 (P1) |\n| 8 years old | Primary 2 (P2) |\n| 9 years old | Primary 3 (P3) |\n\nPrimary 1 (P1) usually starts in the year a child turns 7. Primary 2 (P2) at age 8 and Primary 3 (P3) at age 9 describe typical annual progression from P1, rather than guaranteed placement. Check MOE's actual birth-date window for P1 admission, including its 1 January boundary; deferment and other admission pathways can change placement.",
+      "source_url": "https://www.moe.gov.sg/primary/p1-registration",
+      "title": "Usual school levels by age",
+      "authority": "Singapore Ministry of Education",
+      "source_type": "qualified_primary_progression_guidance",
+      "retrieved_at": "2026-10-18T00:09:38.967556+00:00",
+      "evidence_category": "unknown"
     }
   ]
 }
