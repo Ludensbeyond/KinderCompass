@@ -132,3 +132,11 @@ class ConversationHistoryService:
             self._sessions.pop(self._id(session_id), None)
             if after_forget:
                 after_forget()
+
+    def forget_saved_preferences(self, session_id: UUID | str, *, delete: Callable[[], None]) -> None:
+        """Preserve completed dialogue but prevent a pending turn saving again."""
+        with self._lock:
+            session = self._sessions.get(self._id(session_id))
+            if session is not None:
+                session.token = None
+            delete()

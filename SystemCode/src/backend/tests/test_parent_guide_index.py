@@ -3,6 +3,7 @@
 import copy
 import io
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -46,6 +47,7 @@ class ParentGuideIndexTests(unittest.TestCase):
         shutil.copy(DEFAULT_VECTOR_PATH / "sources.json", self.path / "sources.json")
         shutil.copy(DEFAULT_VECTOR_PATH.parent / "Singapore_Preschool_Parent_Guide.md", self.root)
         self.provider = FakeProvider()
+        self.chunk_count = len(load_parent_guide_chunks())
 
     def build(self, **kwargs):
         return build_parent_guide_index(self.path, self.provider, **kwargs)
@@ -59,11 +61,11 @@ class ParentGuideIndexTests(unittest.TestCase):
 
     def test_build_reload_in_fresh_process_without_reembedding(self):
         summary = self.build(batch_size=5, timeout_seconds=3)
-        self.assertEqual(summary["embedded_count"], 23)
-        self.assertEqual(len(self.provider.calls), 5)
+        self.assertEqual(summary["embedded_count"], self.chunk_count)
+        self.assertEqual(len(self.provider.calls), math.ceil(self.chunk_count / 5))
         self.assertTrue(all(len(texts) <= 5 and timeout == 3 for texts, timeout in self.provider.calls))
         index = load_active_index(self.path, expected_embedding=self.provider.settings)
-        self.assertEqual(index.embeddings.shape, (23, 4))
+        self.assertEqual(index.embeddings.shape, (self.chunk_count, 4))
         self.assertEqual(index.embeddings.dtype, np.float32)
         self.assertFalse(index.embeddings.flags.writeable)
         np.testing.assert_allclose(np.linalg.norm(index.embeddings, axis=1), 1, atol=1e-6)
@@ -76,14 +78,14 @@ class ParentGuideIndexTests(unittest.TestCase):
         code = "from SystemCode.src.backend.repositories.parent_guide_index import load_active_index; import sys; print(len(load_active_index(sys.argv[1]).chunks))"
         result = subprocess.run([os.sys.executable, "-c", code, str(self.path)], cwd=REPOSITORY_ROOT,
                                 capture_output=True, text=True, check=True)
-        self.assertEqual(result.stdout.strip(), "23")
+        self.assertEqual(result.stdout.strip(), str(self.chunk_count))
 
     def test_unchanged_build_reuses_all_vectors_and_retains_previous_build(self):
         first = self.build()
         matrix = load_active_index(self.path).embeddings.copy()
         self.provider.embed = Mock(side_effect=AssertionError("Must reuse vectors"))
         second = self.build()
-        self.assertEqual(second["reused_count"], 23)
+        self.assertEqual(second["reused_count"], self.chunk_count)
         self.assertNotEqual(first["build_id"], second["build_id"])
         self.assertTrue((self.path / "builds" / first["build_id"]).is_dir())
         np.testing.assert_array_equal(load_active_index(self.path).embeddings, matrix)
@@ -104,7 +106,7 @@ class ParentGuideIndexTests(unittest.TestCase):
         summary = self.build()
         changed = sum(chunk.section_heading == heading for chunk in load_parent_guide_chunks())
         self.assertEqual(summary["embedded_count"], changed)
-        self.assertEqual(summary["reused_count"], 23 - changed)
+        self.assertEqual(summary["reused_count"], self.chunk_count - changed)
 
     def test_model_dimensions_version_and_chunking_mismatch_require_rebuild(self):
         self.build()
@@ -117,8 +119,8 @@ class ParentGuideIndexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Incompatible"):
             load_active_index(self.path, expected_chunking=ChunkingSettings(target_characters=1700))
         self.provider.settings = EmbeddingSettings("test", "other-model", 4, "1")
-        self.assertEqual(self.build()["embedded_count"], 23)
-        self.assertEqual(self.build(settings=ChunkingSettings(target_characters=1700))["embedded_count"], 23)
+        self.assertEqual(self.build()["embedded_count"], self.chunk_count)
+        self.assertEqual(self.build(settings=ChunkingSettings(target_characters=1700))["embedded_count"], self.chunk_count)
 
     def test_provider_failure_leaves_active_index_usable(self):
         first = self.build()
@@ -150,7 +152,7 @@ class ParentGuideIndexTests(unittest.TestCase):
                 load_active_index(self.path)
             (build / name).write_bytes(original)
         (build / "embeddings.npy").write_bytes(b"corrupt")
-        self.assertEqual(self.build()["embedded_count"], 23)
+        self.assertEqual(self.build()["embedded_count"], self.chunk_count)
 
     def test_invalid_ids_rows_and_counts_rejected_even_with_updated_hashes(self):
         self.build()
@@ -172,7 +174,7 @@ class ParentGuideIndexTests(unittest.TestCase):
         self.rewrite_artifact("embeddings.npy", b"")
         with self.assertRaisesRegex(ValueError, "Malformed"):
             load_active_index(self.path)
-        self.assertEqual(self.build()["embedded_count"], 23)
+        self.assertEqual(self.build()["embedded_count"], self.chunk_count)
 
     def test_invalid_matrix_dimensions_norms_dtype_and_pickle_rejected(self):
         self.build()
@@ -210,7 +212,7 @@ class ParentGuideIndexTests(unittest.TestCase):
                 load_active_index(self.path)
         (build / "manifest.json").write_bytes(json_bytes(original))
         summary = json.loads((build / "summary.json").read_bytes())
-        summary["reused_count"] = 23
+        summary["reused_count"] = self.chunk_count
         self.rewrite_artifact("summary.json", json_bytes(summary))
         with self.assertRaisesRegex(ValueError, "summary"):
             load_active_index(self.path)

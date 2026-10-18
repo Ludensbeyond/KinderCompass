@@ -59,6 +59,24 @@ class ParentGuideRetrievalTests(unittest.TestCase):
                 self.assertEqual(r.search(question), [])
         self.provider.embed.assert_not_called()
 
+    def test_age_level_guidance_in_lexical_and_curated_retrieval(self):
+        r = ParentGuideRetriever(replace(self.config, mode=GeneralKnowledgeRetrievalMode.LEXICAL))
+        question = 'my kid is 4 years old. which school should he go to'
+        matches = r.search(question)
+        self.assertIn('preschool-age-levels', self.mappings(r, matches))
+        self.assertIn('Nursery 2 (N2)', '\n'.join(m.text for m in matches))
+        self.assertIn('1 January', '\n'.join(m.text for m in matches))
+        path = DEFAULT_VECTOR_PATH.parents[2] / 'src/backend/resources/web_rag/general_knowledge_index.json'
+        curated = CuratedGeneralKnowledgeRetriever(json.loads(path.read_text()))
+        matches = curated.search(question)
+        self.assertIn('GENERAL:preschool-age-levels:0', [m.chunk_id for m in matches])
+        primary = r.search('What age is Primary 2?')
+        self.assertEqual(self.mappings(r, primary), ['primary-age-levels'])
+        self.assertEqual(primary[0].evidence_category, 'unknown')
+        matches = curated.search('What age is Primary 2?')
+        primary = next(m for m in matches if m.chunk_id == 'GENERAL:primary-age-levels:0')
+        self.assertEqual(primary.evidence_category, 'unknown')
+
     def test_cosine_ranking_typed_citations_and_three_result_bound(self):
         self.query_vector("montessori-emphasis")
         r = ParentGuideRetriever(self.config, provider=self.provider)

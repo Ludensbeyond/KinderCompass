@@ -35,10 +35,30 @@ known school names are excluded from numeric scanning. Conversation and
 clarification output may have no factual claims, for conversational wording and
 questions. Grounded replies require claims.
 
+Current user inputs have internal support result `context:current`, built by the
+same helper for model context and validation. Allowed paths include restricted
+preferences, typed `/data/family/...` fields and `/data/home_postal_code`. These
+support summaries of entered inputs, not school facts, calculated age,
+eligibility or completed changes. Family/postal inputs remain unchanged during
+preference staging; preference claims from an earlier revision still fail.
+Search-record addresses can support separate school-attributed claims. Fixed
+validation-error categories are retained for telemetry on successful repairs and
+exhausted attempts; no answer text, family values or provider errors are logged.
+
+For a successful current-revision search with a saved distance limit, each
+school mentioned through a validated search-record claim must include supported
+distance evidence. Bare lists receive `missing_distance_claim` feedback and
+bounded repair without replaying tools. When the postal code resolves to the
+school's recorded location, the existing `same_location_as_postal_code` boolean
+can support that explanation. Unresolved `pending_school_inputs` require a
+question alongside any supported acknowledgement. These checks inspect typed
+tool results, not user-message keywords; model interpretation is still evaluated
+separately.
+
 ## Repair, state and failures
 
 Invalid final structures, values or citations receive fixed-category feedback
-and up to two model repair attempts using the existing evidence. Repair cannot
+and up to four model repair attempts using the existing evidence. Repair cannot
 execute tools or mutations. Attempts share the original model-call, elapsed-time,
 context and output bounds; no retry resets a turn budget. The 800-character
 limit applies to final wording; the existing 16,000-byte model-message limit

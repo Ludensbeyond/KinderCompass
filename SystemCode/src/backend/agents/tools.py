@@ -108,6 +108,7 @@ class CuratedGeneralKnowledgeRetriever:
             GeneralKnowledgeEvidence(
                 chunk_id=str(match["chunk_id"]),
                 text=str(match["text"]),
+                evidence_category=match.get("evidence_category", "authoritative_fact"),
                 citation=PublicCitation(
                     citation_id=str(match["citation"]["chunk_id"]),
                     evidence_scope="general",

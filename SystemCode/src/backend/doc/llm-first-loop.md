@@ -37,6 +37,11 @@ Result size retains the Step 3 64,000-byte bound. Intermediate model content,
 tool arguments and call history count toward total context. A final-iteration
 tool request fails before executing an action that cannot receive a final reply.
 
+Response validation allows four repair calls by default (configurable from zero
+to four). The original answer and every repair count toward the eight model
+invocations and the same 30-second deadline; reaching either limit may prevent
+using the full repair allowance.
+
 Binding, model calls and synchronous tools run under the remaining overall
 deadline in worker threads. No loop retry resets that budget. Timeout,
 cancellation, invalid calls/arguments, duplicate call IDs, forbidden tools,

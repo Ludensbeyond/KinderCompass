@@ -51,8 +51,14 @@ def _periods(chunk):
 def _question_topic(question):
     """Use explicit subject words to constrain reviewed section metadata."""
     value = question.casefold()
+    # Age/level guidance does not establish primary admission priority or rights.
+    primary_level = re.search(r"\b(?:primary\s*(?:[123]|one|two|three)|p[123])\b", value)
+    if primary_level and re.search(r"\bage[sd]?\b|\byears?[ -]old\b|\bturns?\s+\d", value) and not re.search(
+        r"\badmission|\bpriority|\bregistration|\bguarantee|\bsecure|\bballot|\bphase", value
+    ):
+        return {"primary-age-levels"}
     # Excluded subjects must not borrow support from adjacent reviewed topics.
-    if re.search(r"\b(?:primary\s*(?:1|one)|p1|cctv|livestream|waitlist)\b", value):
+    if primary_level or re.search(r"\b(?:cctv|livestream|waitlist)\b", value):
         return set()
     if re.search(r"\bkifas\b", value) and "kcare" not in value:
         return {"kifas-2026-scope"}

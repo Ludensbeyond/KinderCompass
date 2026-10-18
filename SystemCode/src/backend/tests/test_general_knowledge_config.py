@@ -56,7 +56,7 @@ class ParentGuideProvenanceTests(unittest.TestCase):
         self.assertEqual(mapping["document_sha256"], hashlib.sha256(raw).hexdigest())
         lines = raw.decode().splitlines()
         self.assertEqual(len(mapping["sections"]), 11)
-        self.assertEqual(sum(len(section["tables"]) for section in mapping["sections"]), 9)
+        self.assertEqual(sum(len(section["tables"]) for section in mapping["sections"]), 10)
         sources = {source["source_id"]: source for source in mapping["sources"]}
         self.assertEqual(len(sources), len(mapping["sources"]))
         for section in mapping["sections"]:

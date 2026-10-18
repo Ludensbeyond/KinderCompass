@@ -3,6 +3,54 @@
 Date: 2026-10-10
 Status: Steps 1–7 complete under school-demo acceptance; rollout observation next
 
+Implemented authorized maintenance (2026-10-18): preserve distance and unresolved
+kindergarten/language requirements across clarification. The minimal Step 2
+integration was recorded before implementation: `pending_school_inputs` travels
+in the existing preference-profile dict, without transcript retention or a
+frontend contract change. Explicit choices clear missing fields; later same-value
+strength can resolve with other choices. Tools reject guessed K1/K2 values from
+`1km` or bare confirmation, block incomplete matching searches and expose
+programme/language evidence. Distance-filtered lists require supported numeric
+distances. Required discovery: **609 tests in 50.415s, OK**. Final synthetic
+provider replay: **8/9 served, 7/9 targeted task checks pass**; one list exhausts
+format repairs and one missing-postal request asks the wrong clarification.
+No general live-quality pass, deployment or commit claimed. See
+[implementation and verification](../SystemCode/src/backend/doc/agents.md#implemented-maintenance--matching-school-clarification-2026-10-18).
+Next remains rollout observation, including these remaining model-reliability
+issues.
+
+Completed authorized maintenance (2026-10-18): increased response repairs from
+two to four, within the existing eight-model-call and 30-second turn budgets.
+Telemetry retains five validation errors. Focused tests: 52 pass; required
+discovery: 546 tests, 545 pass with only the documented unchanged scoring
+failure. No live quality improvement or deployment claimed. See
+[progress and verification](../SystemCode/src/backend/doc/agents.md#completed-maintenance--response-repair-allowance-2026-10-18).
+Next remains rollout observation.
+
+Completed authorized maintenance (2026-10-17): distinguish guidance, definitions
+and school options; provide distinct names without changing centre ranking;
+expose independent opt-in chat history and preference retention. Final configured
+provider capture/review: 8/8 focused cases pass. Affected tests: 49 pass; frontend
+build and browser checks pass. Full discovery: 543 tests, 542 pass and the
+unchanged scoring expectation fails. See [implementation and evidence](../SystemCode/src/backend/doc/conversation-relevance.md)
+and [progress](../SystemCode/src/backend/doc/agents.md). Next remains rollout
+observation; no deployment or legacy retirement included.
+
+Rollout maintenance, 2026-10-17: investigated user-reported validation failures.
+Family-summary support was missing despite family inputs reaching the model.
+Model and validator now share bounded current family/postal/preference support;
+broad-school requests are instructed to search first. Optional branch addresses
+and fixed validation-error telemetry improve presentation and diagnosis. The
+post-fix synthetic sequence served all four messages. Actual-catalogue claim
+formatting remains inconsistent; no general live quality gate pass is claimed.
+Affected tests: 62 pass; an unchanged scoring expectation fails independently.
+Final full discovery: 537 tests, 536 pass and that one scoring failure, 44.102s
+(`/tmp/kindercompass-chat-verified-regression.log`).
+See the [investigation record](../SystemCode/src/backend/doc/agents.md#rollout-investigation--family-summaries-and-school-requests-2026-10-17).
+This user-requested maintenance does not begin a new architecture step or retire
+rollback; rollout observation remains next. Browser transcript history is still
+absent.
+
 ## Objective
 
 Every valid chat message should reach the LLM before any application decision

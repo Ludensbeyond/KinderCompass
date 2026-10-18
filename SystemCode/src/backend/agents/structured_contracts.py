@@ -39,13 +39,18 @@ class PreferenceChoice(ToolArguments):
 class PreferencePatch(ToolArguments):
     set: list[PreferenceChoice] = Field(default_factory=list, max_length=15)
     remove: list[str] = Field(default_factory=list, max_length=15)
+    missing_school_inputs: list[Literal["care_level", "language"]] = Field(
+        default_factory=list, max_length=2,
+        description="Unresolved requirements in a matching-school request. Save before clarification; never guess a value.")
 
     @model_validator(mode="after")
     def unique_supported_fields(self):
         from ..pipeline.stage1.preference_schema import ATTRIBUTE_CATALOG
         fields = [c.attribute for c in self.set] + self.remove
-        if not fields or len(fields) != len(set(fields)):
+        if (not fields and not self.missing_school_inputs) or len(fields) != len(set(fields)):
             raise ValueError("patch must contain unique attributes")
+        if len(self.missing_school_inputs) != len(set(self.missing_school_inputs)):
+            raise ValueError("missing school inputs must be unique")
         if sum(c.importance is None for c in self.set) > 1:
             raise ValueError("only one unresolved importance choice can be staged")
         if any(field not in ATTRIBUTE_CATALOG for field in fields):
@@ -93,9 +98,13 @@ class SearchArguments(ToolArguments):
     operation: Literal["search", "rank", "compare"] = "search"
     school_ids: list[Identifier] = Field(default_factory=list, max_length=50)
     limit: int = Field(default=10, ge=1, le=20)
+    presentation: Literal["centres", "distinct_names"] = Field(
+        default="centres", description="Use distinct_names for examples of preschool organisations; centres for individual locations.")
 
     @model_validator(mode="after")
     def scope_is_valid(self):
+        if self.presentation == "distinct_names" and self.operation != "search":
+            raise ValueError("distinct names presentation is only available for search")
         if len(self.school_ids) != len(set(self.school_ids)):
             raise ValueError("school IDs must be unique")
         if self.operation in {"rank", "compare"} and not self.school_ids:

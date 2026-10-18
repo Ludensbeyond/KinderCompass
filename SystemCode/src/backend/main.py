@@ -217,6 +217,19 @@ def forget_conversation_memory(request: ConversationMemoryRequest) -> dict[str, 
     return {"status": "forgotten"}
 
 
+@app.post("/api/conversation/forget", response_model=ForgetConversationMemoryResponse)
+def forget_recent_conversation(request: ConversationMemoryRequest) -> dict[str, str]:
+    CONVERSATION_HISTORY_SERVICE.forget(request.anonymous_session_id)
+    return {"status": "forgotten"}
+
+
+@app.post("/api/memory/preferences/forget", response_model=ForgetConversationMemoryResponse)
+def forget_only_saved_preferences(request: ConversationMemoryRequest) -> dict[str, str]:
+    CONVERSATION_HISTORY_SERVICE.forget_saved_preferences(request.anonymous_session_id, delete=lambda:
+        CONVERSATION_MEMORY_SERVICE.forget(request.anonymous_session_id))
+    return {"status": "forgotten"}
+
+
 @app.post("/api/chat-feedback", response_model=ChatFeedbackResponse)
 def chat_feedback(request: ChatFeedbackRequest) -> dict[str, str]:
     try:

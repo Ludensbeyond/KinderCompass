@@ -25,7 +25,8 @@ class ParentGuideChunkingTests(unittest.TestCase):
     def test_parser_inventories_sections_tables_and_preserves_lists(self):
         blocks = parse_markdown(self.markdown)
         self.assertEqual(len({block.section_heading for block in blocks if block.section_heading}), 11)
-        self.assertEqual(sum(block.kind == "table" for block in blocks), 9)
+        self.assertEqual(sum(block.kind == "table" for block in blocks),
+                         sum(len(section['tables']) for section in self.provenance['sections']))
         checklist = next(block for block in blocks if block.text.startswith("- Child identification"))
         self.assertEqual(checklist.kind, "list")
         self.assertEqual(checklist.subsection_heading, "Step 4 Accept the place and prepare documents")
@@ -42,6 +43,19 @@ class ParentGuideChunkingTests(unittest.TestCase):
             self.assertEqual(chunk.content_sha256, hashlib.sha256(chunk.embedding_text.encode()).hexdigest())
             self.assertIn(chunk.section_heading, chunk.embedding_text)
             json.dumps(chunk.to_dict())
+
+    def test_age_levels_keep_cohort_notes_and_separate_primary_source(self):
+        preschool = self.by_mapping('preschool-age-levels')[0]
+        primary = self.by_mapping('primary-age-levels')[0]
+        self.assertIn('| 4 years old | Nursery 2 (N2) / Nursery |', preschool.text)
+        self.assertIn('enrolment year', preschool.text)
+        self.assertIn('18 months', preschool.text)
+        self.assertIn('1 January', preschool.text)
+        self.assertNotIn('Primary 1', preschool.text)
+        self.assertIn('| 9 years old | Primary 3 (P3) |', primary.text)
+        self.assertIn('rather than guaranteed placement', primary.text)
+        self.assertEqual(primary.evidence_category, 'unknown')
+        self.assertNotEqual(preschool.citation['url'], primary.citation['url'])
 
     def test_sentence_and_column_selections_exclude_unreviewed_claims(self):
         self.assertNotIn("Nurturing", self.by_mapping("eydf-framework")[0].text)

@@ -136,6 +136,19 @@ class RolloutTests(unittest.IsolatedAsyncioTestCase):
 
 
 class TelemetryTests(unittest.TestCase):
+    def test_validation_categories_are_logged_without_private_error_text(self):
+        telemetry = TurnTelemetry('llm-first')
+        with self.assertLogs('kindercompass.llm_first', level='INFO') as logs:
+            telemetry.emit(Mock(status='unavailable', failure_reason='response_validation', tool_calls=0,
+                                validation_errors=('invalid_response_kind', 'invalid_support_path',
+                                                   'wrong_claim_value', 'wrong_reported_number',
+                                                   'missing_citation_marker', 'SECRET FAMILY')))
+        event = json.loads(logs.output[-1].split('llm_first_observation ')[1])
+        self.assertEqual(event['validation_errors'], ['invalid_response_kind', 'invalid_support_path',
+                                                     'wrong_claim_value', 'wrong_reported_number',
+                                                     'missing_citation_marker'])
+        self.assertNotIn('SECRET', str(logs.output))
+
     def test_cost_and_logging_exclude_model_content_arguments_and_errors(self):
         with patch.dict(os.environ, {'OPENAI_WEB_RAG_MODEL': 'gpt-4o-mini'}):
             telemetry = TurnTelemetry('llm-first')

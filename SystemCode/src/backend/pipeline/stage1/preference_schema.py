@@ -212,6 +212,11 @@ def validate_preference_profile(profile: dict[str, Any]) -> None:
         raise ValueError("Preference profile must be an object")
     if profile.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"Preference profile must use schema version {SCHEMA_VERSION}")
+    missing = profile.get("pending_school_inputs", [])
+    if (not isinstance(missing, list) or len(missing) > 2
+            or any(not isinstance(field, str) or field not in {"care_level", "language"} for field in missing)
+            or len(missing) != len(set(missing))):
+        raise ValueError("Pending school inputs must be unique supported field names")
     for item in profile.get("preference_items", []):
         validate_preference_item(item)
         if item["evidence_class"] == "unsupported":

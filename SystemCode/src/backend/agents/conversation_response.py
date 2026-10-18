@@ -13,6 +13,7 @@ from .contracts import AnswerText, Identifier, InitialConversationContext, Publi
 from .structured_contracts import StructuredToolResult
 from .conversation_loop import ConversationLoopError, LoopLimits, run_conversation_loop
 from ..services.conversation_tool_service import ConversationToolService
+from ..services.conversation_context_service import current_state_support
 
 
 FINAL_RESPONSE_PROMPT = """Return final content as JSON with answer (at most 800
@@ -60,6 +61,36 @@ path /data/profile/... and the exact scalar from initial context. This supports
 remembered state only, never school facts or proposed mutations. A changed state
 must reference a successful mutation tool result. If a pending contradiction is
 resolved, actually call reset_continue_preferences; wording alone does not resolve it.
+For questions about entered family details, use context:current and scalar paths
+/data/family/dob, /data/family/admission_date, /data/family/gross_household_income,
+and the other actual family fields in current_state_support. Home postal code uses
+/data/home_postal_code. These are user-provided inputs, not verified school facts
+or eligibility results. Use kind grounded for summaries with claims, even though
+the subject is conversational. Report dates as supplied, without deriving age.
+Use readable labels and wording for family inputs: SC is Singapore citizen, SPR
+is Singapore permanent resident, full_day is full-day care, half_day is half-day
+care, and booleans are yes/no. Claim values still use the exact supplied scalar.
+For a simple school list, each school name may be its own claim span supported by
+that record's /name; keep facts in separate claims. Use unnumbered bullets so list
+positions do not become unsupported numerical facts.
+For matching schools with a saved distance limit, every listed centre needs its
+own calculated /distance_km claim, repeating the full school name. A bare-name
+list is incomplete. Report the exact supplied distance; do not round it. For a
+zero distance with same_location_as_postal_code, explain that the postal code
+resolves to the centre's recorded location instead of saying it is zero km away;
+support that explanation with /same_location_as_postal_code. Care levels use
+/care_levels/0 (or the correct list index); language uses /second_languages_offered.
+These verify offered programmes/languages, not eligibility or teaching quality.
+For branches sharing a name, copy centre_address exactly as returned, including
+unit numbers and punctuation. Support the name/address sentence with that
+record's centre_address scalar. Do not shorten or reformat address numbers.
+If you cannot include supported addresses, mention the common name once rather
+than repeating identical names. Prefer a short list of three examples.
+For broad preschool guidance, use unnumbered advice and concise qualitative
+explanations. Do not introduce framework years, age ranges or subsidy thresholds
+unless the user asks about them. Do not convert spelled-out source numbers into
+digits. Every sourced sentence must keep its [chunk_id] within its exact claim
+span, including when accompanied by an unsourced conversational question.
 """
 
 
@@ -84,8 +115,24 @@ class ResponseValidationError(ValueError):
     """Feedback consists only of fixed categories, never source or provider text."""
 
 
+VALIDATION_CATEGORIES = frozenset({
+    "conflicting_citation", "cross_school_attribution", "cross_school_citation",
+    "invalid_response_kind", "invalid_response_structure", "invalid_support_path",
+    "invented_citation", "missing_citation_marker", "missing_claim_support",
+    "missing_gap_support", "missing_passage_citation", "missing_pending_question",
+    "missing_school_attribution", "stale_state_claim", "support_must_be_scalar",
+    "unknown_claim_support", "unsupported_citation_marker", "unsupported_reported_number",
+    "unsupported_result_status", "wrong_claim_value", "wrong_reported_number",
+    "unknown_validation_error",
+    "duplicate_school_listing",
+    "missing_distance_claim",
+})
+
+
 REPAIR_GUIDANCE = {
-    "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict. Include this question alongside supported guidance.",
+    "missing_distance_claim": "For every listed matching centre, include its exact calculated distance in a separate sentence with the full school name and a claim for that record's /distance_km. For same_location_as_postal_code true, explain that the postal code resolves to the centre's recorded location and cite that boolean. Keep the saved radius and existing verified results; do not call tools.",
+    "duplicate_school_listing": "Do not repeat identical bare preschool names in a list. Mention the organisation once, or include supported addresses to distinguish its locations. Keep the existing verified records and claims.",
+    "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict; ask for the remaining pending_school_inputs (kindergarten level or language). Include this question alongside supported guidance.",
     "wrong_reported_number": "Split claims into shorter exact spans so each span contains only its supported number. Remove other numbers from that span and support them separately.",
     "invalid_response_kind": "Use grounded when claims are present; conversation and clarification require an empty claims list.",
     "support_must_be_scalar": "Index list values, e.g. /data/records/0/facts/care_levels/0, not /data/records/0/facts/care_levels.",
@@ -137,17 +184,9 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     by_id = {r.result_id: r for r in results}
     from ..pipeline.stage1.preference_schema import sync_preference_schema
     current = sync_preference_schema(context.profile)
-    # The public profile can contain legacy conversational metadata; expose only
-    # validated preference values here, never arbitrary client-supplied facts.
-    preference_snapshot = {
-        "hard_constraints": {k: v for k, v in current.get("hard_constraints", {}).items()
-                             if k in {"language", "level", "max_distance_km"}},
-        "preference_items": current.get("preference_items", []),
-        "unsupported_preferences": current.get("unsupported_preferences", []),
-    }
-    by_id["context:current"] = StructuredToolResult(
-        result_id="context:current", tool_name="update_preferences", status="ok",
-        data={"profile": preference_snapshot}, catalogue_version=context.catalogue_version, state_revision=0)
+    # Share the exact support snapshot supplied to the model. Arbitrary profile
+    # metadata cannot become school facts, and family values remain user inputs.
+    by_id["context:current"] = current_state_support(context)
     citations = {}
     names = {s.school_id: s.name for s in context.selected_schools}
     for result in results:
@@ -164,9 +203,14 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             citations[citation.citation_id] = citation
     if response.kind == "grounded" and not response.claims:
         raise ResponseValidationError("missing_claim_support")
+    known_names = {name.casefold() for name in names.values()}
+    listed_names = [line.strip().casefold() for line in re.findall(r"(?m)^\s*[-*]\s+([^\n]+)$", response.answer)
+                    if line.strip().casefold() in known_names]
+    if len(listed_names) != len(set(listed_names)):
+        raise ResponseValidationError("duplicate_school_listing")
     staged = next((r.data.get("staged_profile") for r in reversed(results)
                    if "staged_profile" in r.data), current)
-    if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation")):
+    if staged and any(staged.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation", "pending_school_inputs")):
         if "?" not in response.answer:
             raise ResponseValidationError("missing_pending_question")
     if response.kind in {"conversation", "clarification"} and response.claims:
@@ -199,7 +243,9 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             claim.path.startswith(("/data/staged_profile/", "/data/unresolved_decisions/")))
         if result.status != "ok" and claim.path != "/status" and not staged_support:
             raise ResponseValidationError("unsupported_result_status")
-        if result.tool_name in {"update_preferences", "reset_continue_preferences",
+        unchanged_family_input = claim.result_id == "context:current" and (
+            claim.path.startswith("/data/family/") or claim.path == "/data/home_postal_code")
+        if not unchanged_family_input and result.tool_name in {"update_preferences", "reset_continue_preferences",
                                 "search_rank_compare_schools", "calculate_fees_scenario"} and result.state_revision != latest_revision:
             raise ResponseValidationError("stale_state_claim")
         if school_id != claim.school_id:
@@ -243,6 +289,29 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     from collections import Counter
     if Counter(_numbers(clean_answer)) - Counter(covered_numbers):
         raise ResponseValidationError("unsupported_reported_number")
+    # A successful constrained search must not become a bare list during prose
+    # composition. Inspect validated school-record claims, not user keywords.
+    for result in results:
+        if (result.tool_name != "search_rank_compare_schools" or result.status != "ok"
+                or result.state_revision != latest_revision
+                or not result.data.get("profile_used", {}).get("hard_constraints", {}).get("max_distance_km")):
+            continue
+        for index, record in enumerate(result.data.get("records", [])):
+            prefix = f"/data/records/{index}/"
+            claims = [c for c in response.claims if c.result_id == result.result_id
+                      and c.school_id == record.get("school_id")]
+            if not any(c.path.startswith(prefix) for c in claims):
+                continue
+            distance = record.get("distance_km")
+            numeric_distance = any(
+                c.path == prefix + "distance_km" and distance is not None
+                and Decimal(str(distance)) in _numbers(c.span.replace(record.get("name", ""), ""))
+                and re.search(r"\b(?:km|kilometres?|kilometers?)\b", c.span, re.IGNORECASE)
+                for c in claims)
+            same_location = record.get("same_location_as_postal_code") is True and any(
+                c.path == prefix + "same_location_as_postal_code" for c in claims)
+            if not (numeric_distance or same_location):
+                raise ResponseValidationError("missing_distance_claim")
     return response
 
 
@@ -269,6 +338,7 @@ class ConversationResponse:
     model_calls: int = 0
     tool_calls: int = 0
     failure_reason: str | None = None
+    validation_errors: tuple[str, ...] = ()
 
 
 async def run_validated_conversation(context: InitialConversationContext,
@@ -277,8 +347,14 @@ async def run_validated_conversation(context: InitialConversationContext,
                                      shadow: bool = False, **kwargs) -> ConversationResponse:
     """Export once after validation; persistence/HTTP/history remain Step 6."""
     validated: list[ModelResponse] = []
+    validation_errors: list[str] = []
     def validate(content, results):
-        validated.append(validate_response(content, results, context))
+        try:
+            validated.append(validate_response(content, results, context))
+        except ResponseValidationError as error:
+            category = str(error)
+            validation_errors.append(category if category in VALIDATION_CATEGORIES else "unknown_validation_error")
+            raise
     try:
         candidate = await run_conversation_loop(
             context, tools, model=model, limits=limits, final_validator=validate,
@@ -290,7 +366,8 @@ async def run_validated_conversation(context: InitialConversationContext,
         citations = {c.citation_id: c for r in candidate.results for c in r.citations if c.citation_id in used}
         return ConversationResponse(response.answer, "ok", profile,
                                     tuple(citations.values()), tuple(response.claims),
-                                    candidate.model_calls, candidate.tool_calls)
+                                    candidate.model_calls, candidate.tool_calls,
+                                    validation_errors=tuple(validation_errors))
     except asyncio.CancelledError:
         tools.abort()
         raise
@@ -299,4 +376,5 @@ async def run_validated_conversation(context: InitialConversationContext,
         reason = error.reason if isinstance(error, ConversationLoopError) else "response_error"
         evidence = error.evidence if isinstance(error, ConversationLoopError) else "unknown"
         answer = user_message_for_loop_failure(reason, evidence)
-        return ConversationResponse(answer, "unavailable", failure_reason=reason)
+        return ConversationResponse(answer, "unavailable", failure_reason=reason,
+                                    validation_errors=tuple(validation_errors))

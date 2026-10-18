@@ -8,6 +8,27 @@ replace those dependencies in Step 3.
 
 ## History and boundary decision (recorded before implementation)
 
+### Authorized frontend integration, 2026-10-17 (recorded before implementation)
+
+Expose a separate, unchecked conversation checkbox in the chat panel. It is
+session-only UI consent, independent of the existing preference-storage checkbox.
+The browser sends the existing `remember_conversation` field and anonymous UUID
+when either consent is enabled. Only successful turns after opting in enter the
+existing six-exchange, 30-minute-idle RAM history; no browser transcript upload
+or new persistent transcript store is introduced.
+
+Add `/api/conversation/forget` using the existing UUID request and forgotten-status
+response. It clears only ephemeral history/state; persistent saved preferences
+remain intact. Starting or disabling conversation retention clears prior context;
+the checkbox explains expiry and that chat text can contain family information.
+The existing `/api/memory/forget` continues clearing both stores. UI preference
+opt-out uses `/api/memory/preferences/forget`: revoke any in-flight lease and
+delete saved preferences under the session lock while retaining completed chat
+exchanges. Neither checkbox silently revokes consent for the other store.
+UI preference
+edits outside chat clear ephemeral state before submitting changed profiles, so
+the existing stale-profile protection remains effective without false conflicts.
+
 Reuse the existing anonymous UUID as a session capability. Possession of the
 UUID grants access to that session; it is not an authenticated identity. The
 new-flow HTTP integration will add an explicit `remember_conversation` boolean

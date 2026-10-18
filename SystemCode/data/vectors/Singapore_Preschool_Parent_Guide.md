@@ -359,3 +359,22 @@ Must my child attend nursery before K1? Prior nursery attendance is not a univer
 Before accepting, confirm five things: the place, the daily care plan, the full cost, the assistance application and the exit terms. Keep the centre’s written answers with your enrolment documents.
 
 **Sources and further reading** [MOE curriculum principles](https://www.moe.gov.sg/preschool/moe-kindergarten/curriculum-and-learning-environment/curriculum) • [MK and P1 admission](https://go.gov.sg/oa-registration-guide) • [P1 registration](https://www.moe.gov.sg/primary/p1-registration) • [Choosing and contracting](https://www.ecda.gov.sg/parents/choosing-a-preschool/choosing-a-preschool-for-your-child)
+
+### Usual school levels by age
+
+| Age child turns during the enrolment year | Usual school level |
+|---|---|
+| 2 years old | Playgroup |
+| 3 years old | Nursery 1 (N1) / Pre-Nursery |
+| 4 years old | Nursery 2 (N2) / Nursery |
+| 5 years old | Kindergarten 1 (K1) |
+| 6 years old | Kindergarten 2 (K2) |
+| 7 years old | Primary 1 (P1) |
+| 8 years old | Primary 2 (P2) |
+| 9 years old | Primary 3 (P3) |
+
+For a four-year-old child turning 4 during the enrolment year, the usual school level they should go to is Nursery 2 (N2). Levels generally follow the age your child turns during the calendar year, rather than their age on the day you ask. Preschool programme names and entry criteria may vary between centres; confirm the child's birth date and intended enrolment year. Playgroup commonly starts from 18 months. PCF Sparkletots places children born on 1 January in the previous birth-year cohort.
+
+Primary 1 (P1) usually starts in the year a child turns 7. Primary 2 (P2) at age 8 and Primary 3 (P3) at age 9 describe typical annual progression from P1, rather than guaranteed placement. Check MOE's actual birth-date window for P1 admission, including its 1 January boundary; deferment and other admission pathways can change placement.
+
+**Sources and further reading** [PCF Sparkletots enrolment levels](https://pcfsparkletots.org.sg/faqs/) • [MOE P1 registration and birth-date eligibility](https://www.moe.gov.sg/primary/p1-registration)

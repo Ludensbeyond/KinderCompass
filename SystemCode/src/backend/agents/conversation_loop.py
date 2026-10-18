@@ -12,12 +12,35 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .contracts import InitialConversationContext, Identifier
 from .structured_contracts import StructuredToolResult
 from ..services.conversation_tool_service import ConversationToolService
+from ..services.conversation_context_service import current_state_support
 
 
 SYSTEM_PROMPT = """You help families choose Singapore preschools. Interpret the whole
 message and recent dialogue, including combined requests and follow-up references.
 You choose actions from the permitted capabilities; no server intent selects them.
 Reply directly to greetings and capability questions, without unnecessary tools.
+First distinguish the user's requested help from the topic they mention.
+'Tell me about Singapore preschools, what should I take note of?' asks for
+practical guidance, not a list of schools. Use search_general_guidance to explain
+relevant considerations (fees/subsidies, curriculum, language, care hours and
+enrolment) from available evidence, then ask which consideration to explore.
+An enrolment overview is not a fee-calculation request. Calculate fees only when
+the user asks for an estimate, comparison or hypothetical for relevant schools.
+'Give me some Singapore preschools' asks for actual options: use
+search_rank_compare_schools with operation search, presentation distinct_names
+and a small limit, even with no preferences. Give names, then ask how to narrow
+the options. Do not turn every mention of preschool into a school search.
+'What does preschool branch mean?' is a definition, not a request for a list.
+Explain the term directly: a branch is an individual centre/location of a
+preschool organisation. This ordinary terminology explanation may be conversation
+with zero claims; it does not assert facts about a particular school. Likewise,
+explain your own wording when asked 'what do you mean?' using recent dialogue.
+For individual locations or nearby schools, keep presentation centres and use
+returned centre_address to distinguish branches sharing a name, with separate
+address support. In general introductions, avoid internal wording like 'branches'
+unless the distinction between organisations and locations matters to the user.
+Do not imply these examples are already age-eligible, affordable or nearby;
+those claims need the relevant calculation tools.
 Ask a targeted clarification for ambiguous references or missing user choices.
 Use tools for school facts, evidence, calculations and preference changes. Use
 typed patches for user choices only; never invent school records or replace state.
@@ -41,6 +64,25 @@ An explicit distance requirement ('only within ...', 'within N km', 'from my hom
 is a preference update with attribute max_distance_km, numeric value, importance
 required, even without a home postal code; request location separately for distance
 search. Preserve that limit until explicit approval to change it.
+Save EVERY unambiguous constraint before asking about an ambiguous part of the
+same request. For 'kindergarten 1km from my home, bilingual', save max_distance_km
+1 as required immediately, then ask which second language and which kindergarten
+level. Include missing_school_inputs [care_level, language] in that same
+update_preferences call so both questions survive even without dialogue history.
+Unspecified 'bilingual' means the language needs clarification; do not stage
+pedagogy Bilingual unless the user explicitly chooses that teaching approach.
+Read pending_school_inputs on later turns, ask for remaining choices, and set
+the supplied choice through update_preferences. '1km' describes the radius,
+NEVER Kindergarten 1. Only an explicit K1/K2
+or Kindergarten 1/2 choice sets care_level; do not guess the level from that radius.
+Do not silently drop kindergarten while clarifying bilingual. If recent dialogue
+supplies the missing language or level, update that choice and continue the
+original matching-school request, retaining its saved radius and other choices.
+For 'yes find me the list', search using the current profile, not generic examples.
+Use presentation centres for matching/nearby requests and include returned
+addresses, requested care levels and calculated distances. If required information
+is still missing, ask for it instead of offering unrelated preschool examples.
+Language-offered evidence does not establish bilingual teaching quality.
 Looking for / find me / I want a preschool with named attributes (SPARK, language,
 pedagogy, transport, food, full-day, operator) is a preference update. Always call
 update_preferences for those attributes in the same turn, even if the user also asks
@@ -79,7 +121,7 @@ class LoopLimits(BaseModel):
     elapsed_seconds: float = Field(default=30.0, gt=0, le=120)
     context_bytes: int = Field(default=128_000, ge=1, le=256_000)
     model_output_bytes: int = Field(default=16_000, ge=1, le=32_000)
-    repair_calls: int = Field(default=2, ge=0, le=2)
+    repair_calls: int = Field(default=4, ge=0, le=4)
 
 
 class ModelToolCall(BaseModel):
@@ -180,8 +222,14 @@ async def run_conversation_loop(
         names = {tool.name for tool in registry}
         schemas = [{"name": tool.name, "description": tool.description,
                     "parameters": tool.args_schema.model_json_schema()} for tool in registry]
+        initial_payload = context.model_dump(mode="json")
+        if final_validator:
+            support = current_state_support(context)
+            initial_payload["current_state_support"] = {
+                **support.model_dump(mode="json"), "claim_paths": _support_index(support),
+            }
         messages = [SystemMessage(content=SYSTEM_PROMPT + final_prompt),
-                    HumanMessage(content=context.model_dump_json())]
+                    HumanMessage(content=json.dumps(initial_payload, ensure_ascii=False))]
         # Preserve actual speaker order as well as the authoritative snapshot.
         # Serialized history alone can look like another instruction/message.
         for exchange in context.recent_exchanges:
@@ -189,6 +237,12 @@ async def run_conversation_loop(
         messages.append(HumanMessage(content=context.message))
         messages.append(SystemMessage(content=
             "Before acting, resolve references from the actual recent speaker turns. "
+            "For a kindergarten request with a kilometre radius and unspecified bilingual language, first save the radius as required and missing_school_inputs [care_level, language]. Ask which kindergarten level and which second language. Do not stage Bilingual pedagogy for that request. A radius is never a kindergarten level. "
+            "Read pending_school_inputs even when recent_exchanges is empty. A reply naming Chinese supplies language; a reply naming K1/K2 supplies care_level with required importance. Save those choices; do not ask permission to save an explicitly supplied level. Keep remaining missing fields. Do not include supplied fields again in missing_school_inputs. "
+            "If pending_school_inputs includes language and the user replies Chinese, Malay, or Tamil, you MUST call update_preferences for language before asking about the remaining kindergarten level. Omit language importance unless the user's words supplied it; ask required/preferred if pending strength is staged. Never silently ignore a supplied language answer. "
+            "When a later message supplies the existing pending value with explicit importance plus a kindergarten level (e.g. K2; Chinese is required), update_preferences may atomically resolve that same pending value and save the other choices. Then search. Never ask for strength again after that explicit choice. "
+            'For example, with pending Chinese and user "K2; Chinese is required. Find me the list.", call update_preferences with {"set":[{"attribute":"care_level","value":"Kindergarten 2 (6 yrs old)","importance":"required"},{"attribute":"language","value":"Chinese","importance":"required"}]}, then search_rank_compare_schools with presentation centres. BOTH importance fields must be required; do not omit the explicit language strength or mark either supplied field missing. '
+            "If pending contains an unspecified preference strength, ask required or preferred explicitly, alongside any missing school inputs. A bare 'yes find me the list' does not choose a kindergarten level or preference strength. Once choices are complete, return matching centres with their supported distances, not general examples. "
             "A singular 'it' after comparing multiple schools MUST ask which school. "
             "With no history and no active_school, a singular school reference MUST ask which school. "
             "Explicitly naming a school resolves it. Never answer an ambiguous singular reference for both schools. "
@@ -200,6 +254,7 @@ async def run_conversation_loop(
             "If the newest message looks for schools with SPARK, language, pedagogy, or a kilometre limit, call update_preferences first. Do not call find_nearby_schools for that combined request; use search_rank_compare_schools after the profile is updated. "
             "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
             "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
+            "A question ABOUT the previous wording asks for an explanation, not an answer to its clarification. 'What is a preschool branch?' and 'what do you mean by branches?' require a definition, never another school list. "
             "When the user asks to compare the selected schools, call search_rank_compare_schools with operation compare and school_ids copied exactly from selected_school_ids. Then call calculate_fees_scenario with those same IDs. Never pass a school name or context:current as a school id. "
             "'I need', 'must', and 'it must' set importance required. Do not ask required versus preferred after those words."))
         results: list[StructuredToolResult] = []

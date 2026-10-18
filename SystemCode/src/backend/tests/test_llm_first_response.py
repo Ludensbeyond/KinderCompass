@@ -11,6 +11,7 @@ from SystemCode.src.backend.agents.conversation_response import (
     run_validated_conversation, validate_response,
 )
 from SystemCode.src.backend.agents.structured_contracts import StructuredToolResult
+from SystemCode.src.backend.repositories.school_repository import SchoolRepository
 from SystemCode.src.backend.tests import test_llm_first_loop as fixtures
 
 ScriptedModel = fixtures.ScriptedModel
@@ -55,6 +56,48 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNotNone(response.profile)
             with self.assertRaises(ValueError):
                 service.export_validated_state(response_validated=True)
+
+    async def test_distance_filtered_bare_list_repairs_without_replaying_search(self):
+        service = self.service("yes find me the list", profile={"hard_constraints": {
+            "max_distance_km": 1, "language": "Chinese"}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        name = claim("School A", "School A", path="/data/records/0/name")
+        answer = "School A is 0.5 km from home."
+        response = await self.run_response(service, ScriptedModel(
+            AIMessage(content="", tool_calls=[call("search_rank_compare_schools")]),
+            final("- School A", [name]), final(answer, [name,
+                claim(answer, 0.5, path="/data/records/0/distance_km")])))
+        self.assertEqual(response.status, "ok")
+        self.assertEqual(response.answer, answer)
+        self.assertEqual(response.validation_errors, ("missing_distance_claim",))
+        self.assertEqual(response.tool_calls, 1)
+        self.locations.attach_distances.assert_called_once()
+
+    def test_nearby_wording_does_not_replace_the_calculated_distance(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        answer = "School A is nearby."
+        claims = [claim(answer, "School A", path="/data/records/0/name"),
+                  claim(answer, 0.5, path="/data/records/0/distance_km")]
+        self.check_invalid(service, result, final(answer, claims), "missing_distance_claim")
+
+    def test_distance_listing_requires_each_centre_and_accepts_same_location_support(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**r, "distance_km": 0 if r["school_id"] == "CENTRE:A" else 0.75} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        answer = "School A: your postal code resolves to its recorded location. School B is 0.75 km from home."
+        claims = [
+            claim("School A", "School A", path="/data/records/0/name"),
+            claim("School A: your postal code resolves to its recorded location.", True,
+                  path="/data/records/0/same_location_as_postal_code"),
+            claim("School B", "School B", path="/data/records/1/name", school="CENTRE:B"),
+            claim("School B is 0.75 km from home.", 0.75, path="/data/records/1/distance_km", school="CENTRE:B"),
+        ]
+        self.assertEqual(validate_response(final(answer, claims).content, (result,), service.initial_context).answer, answer)
+        self.check_invalid(service, result, final(answer.replace(" is 0.75 km from home.", "."), claims[:-1]),
+                           "missing_distance_claim")
 
     def test_pending_acknowledgement_is_supported_but_missing_input_data_is_not(self):
         service = self.service()
@@ -134,6 +177,111 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ResponseValidationError, "missing_pending_question"):
             validate_response(final("Chinese remains required.").content, (), service.initial_context)
 
+    async def test_entered_family_details_have_zero_tool_scalar_support(self):
+        family = {"dob": "2022-06-01", "admission_date": "2026-11-01",
+                  "gross_household_income": 6000, "citizenship": "SC",
+                  "programme_type": "full_day", "working_hours_per_month": 160,
+                  "household_size": 4, "non_earning_dependants": 1,
+                  "special_approval": False}
+        service = self.service("what detail have i inputted?", family=family,
+                               home_postal_code="123456")
+        answer = "You entered household income of $6,000, household size 4, and postal code 123456."
+        claims = [claim("household income of $6,000", 6000.0,
+                        path="/data/family/gross_household_income", result="context:current", school=None),
+                  claim("household size 4", 4, path="/data/family/household_size",
+                        result="context:current", school=None),
+                  claim("postal code 123456", "123456", path="/data/home_postal_code",
+                        result="context:current", school=None)]
+        def respond(messages):
+            snapshot = json.loads(messages[1].content)["current_state_support"]
+            self.assertEqual(snapshot["data"]["family"]["gross_household_income"], 6000)
+            self.assertIn("/data/family/gross_household_income",
+                          [entry["path"] for entry in snapshot["claim_paths"]])
+            return final(answer, claims)
+        with patch.object(service, "invoke", side_effect=AssertionError("unnecessary tool")):
+            response = await self.run_response(service, ScriptedModel(respond))
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", answer, 0))
+        for field, value in service.initial_context.family.model_dump(mode="json").items():
+            span = f"You entered {field}: {value}."
+            supported = claim(span, value, path=f"/data/family/{field}",
+                              result="context:current", school=None)
+            self.assertEqual(validate_response(final(span, [supported]).content, (),
+                             service.initial_context).answer, span)
+
+    def test_family_support_rejects_invented_values_absent_inputs_and_school_claims(self):
+        service = self.service(family={"dob": "2022-06-01", "admission_date": "2026-11-01",
+                                       "gross_household_income": 6000},
+                               profile={"school_fee": 999})
+        span = "You entered income of $999."
+        supported = claim(span, 999, path="/data/family/gross_household_income",
+                          result="context:current", school=None)
+        cases = [(supported, "wrong_claim_value"),
+                 ({**supported, "path": "/data/profile/school_fee"}, "invalid_support_path"),
+                 ({**supported, "path": "/data/family/school_fee"}, "invalid_support_path"),
+                 ({**supported, "value": 6000, "school_id": "CENTRE:A"}, "cross_school_attribution")]
+        for wrong, category in cases:
+            with self.subTest(category=category), self.assertRaisesRegex(ResponseValidationError, category):
+                validate_response(final(span, [wrong]).content, (), service.initial_context)
+        with self.assertRaisesRegex(ResponseValidationError, "invalid_support_path"):
+            validate_response(final(span, [supported]).content, (), self.service().initial_context)
+
+    def test_family_input_remains_valid_after_mutation_but_old_preferences_do_not(self):
+        service = self.service(family={"dob": "2022-06-01", "admission_date": "2026-11-01",
+                                       "gross_household_income": 6000},
+                               profile={"hard_constraints": {"max_distance_km": 1}})
+        result = service.invoke("update_preferences", {"set": [
+            {"attribute": "language", "value": "Chinese", "importance": "required"}]})
+        span = "You entered household income of $6,000."
+        supported = claim(span, 6000, path="/data/family/gross_household_income",
+                          result="context:current", school=None)
+        self.assertEqual(validate_response(final(span, [supported]).content, (result,),
+                         service.initial_context).answer, span)
+        old = "The distance limit is 1 km."
+        with self.assertRaisesRegex(ResponseValidationError, "stale_state_claim"):
+            validate_response(final(old, [claim(old, 1, path="/data/profile/hard_constraints/max_distance_km",
+                              result="context:current", school=None)]).content, (result,), service.initial_context)
+
+    async def test_broad_preschool_list_uses_repository_names_with_individual_claims(self):
+        service = self.service("give me some singapore pre-school")
+        answer = "Here are some preschool options:\n- School A\n- School B\nWhat matters most to you?"
+        model = ScriptedModel(AIMessage(content="", tool_calls=[
+            call("search_rank_compare_schools", {"operation": "search", "limit": 3})]),
+            final(answer, [claim("School A", "School A", path="/data/records/0/name"),
+                           claim("School B", "School B", path="/data/records/1/name", school="CENTRE:B")]))
+        response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", answer, 1))
+        self.locations.attach_distances.assert_not_called()
+        self.assertFalse(response.profile.get("hard_constraints"))
+
+    def test_same_named_branches_include_grounded_addresses(self):
+        self.schools.catalogue_path.write_text(json.dumps([
+            {"school_id": "CENTRE:A", "name": "Example Preschool", "centre_address": "10 Alpha Road"},
+            {"school_id": "CENTRE:B", "name": "Example Preschool", "centre_address": "20 Beta Road"},
+        ]))
+        self.schools = SchoolRepository(self.schools.catalogue_path)
+        service = self.service("give me some singapore pre-school")
+        result = service.invoke("search_rank_compare_schools", {"limit": 3})
+        self.assertEqual([r["centre_address"] for r in result.data["records"]],
+                         ["10 Alpha Road", "20 Beta Road"])
+        answer = "Example Preschool is at 10 Alpha Road. Example Preschool is at 20 Beta Road."
+        claims = [claim("Example Preschool is at 10 Alpha Road.", "10 Alpha Road",
+                        path="/data/records/0/centre_address"),
+                  claim("Example Preschool is at 20 Beta Road.", "20 Beta Road",
+                        path="/data/records/1/centre_address", school="CENTRE:B")]
+        self.assertEqual(validate_response(final(answer, claims).content, (result,),
+                         service.initial_context).answer, answer)
+
+    async def test_repeated_bare_school_names_repair_without_replaying_search(self):
+        service = self.service("Give me preschool options")
+        supported = claim("School A", "School A", path="/data/records/0/name")
+        bad = "Here are preschool options:\n- School A\n- School A"
+        good = "One preschool option is School A. What matters most to you?"
+        model = ScriptedModel(AIMessage(content="", tool_calls=[call("search_rank_compare_schools", {"limit": 3})]),
+                              final(bad, [supported]), final(good, [supported]))
+        response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer, response.tool_calls), ("ok", good, 1))
+        self.assertEqual(response.validation_errors, ("duplicate_school_listing",))
+
     def evidence(self):
         return StructuredToolResult(
             result_id="result:1", tool_name="search_school_evidence", status="ok",
@@ -182,6 +330,27 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             response = await self.run_response(service, model)
         self.assertEqual((response.status, response.answer), ("ok", good))
         self.assertEqual((response.model_calls, response.tool_calls), (3, 1))
+        self.assertEqual(response.validation_errors, ("wrong_reported_number",))
+        export.assert_called_once()
+
+    async def test_fourth_repair_can_succeed_without_replaying_mutation(self):
+        service = self.service()
+        bad = final("Unsupported $999.")
+        good = "Chinese is now required."
+        model = ScriptedModel(
+            AIMessage(content="", tool_calls=[call("update_preferences", {"set": [
+                {"attribute": "language", "value": "Chinese", "importance": "required"}]})]),
+            *([bad] * 4),
+            final(good, [claim(good, "Chinese", path="/data/staged_profile/hard_constraints/language", school=None)]),
+        )
+        with patch.object(service, "invoke", wraps=service.invoke) as invoke, \
+                patch.object(service, "export_validated_state", wraps=service.export_validated_state) as export:
+            response = await self.run_response(service, model)
+        self.assertEqual((response.status, response.answer), ("ok", good))
+        self.assertEqual((response.model_calls, response.tool_calls), (6, 1))
+        self.assertEqual(response.validation_errors, ("unsupported_reported_number",) * 4)
+        self.assertEqual(response.profile["hard_constraints"]["language"], "Chinese")
+        invoke.assert_called_once()
         export.assert_called_once()
 
     async def test_model_authored_preference_acknowledgement_uses_latest_staged_state(self):
@@ -233,7 +402,8 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
     async def test_failure_and_exhausted_repairs_discard_staged_changes_no_fallback(self):
         for limits, tail in (
             (LoopLimits(), [RuntimeError("private provider detail")]),
-            (LoopLimits(), [final("Wrong $999.")] * 3),
+            (LoopLimits(), [final("Wrong $999.")] * 5),
+            (LoopLimits(repair_calls=2), [final("Wrong $999.")] * 3),
             (LoopLimits(repair_calls=0), [final("Wrong $999.")]),
             (LoopLimits(model_calls=2), [final("Wrong $999.")]),
             (LoopLimits(), [final("Wrong $999."), AIMessage(content="", tool_calls=[call("reset_continue_preferences", {"operation": "reset"}, "call:2")])]),
@@ -248,6 +418,9 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
             expected = COULD_NOT_VERIFY if response.failure_reason == "response_validation" else SERVICE_ERROR
             self.assertEqual((response.status, response.answer), ("unavailable", expected))
             self.assertIsNone(response.profile)
+            if response.failure_reason == "response_validation":
+                self.assertEqual(response.validation_errors, ("unsupported_reported_number",) * len(tail))
+                self.assertEqual(len(model.messages), 1 + len(tail))
             self.assertNotIn("private", response.answer)
             self.assertEqual(service.staged_profile, before)
             self.assertLessEqual(len(model.messages), limits.model_calls)
@@ -260,7 +433,7 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         bad = final("The centre has CCTV.", kind="grounded")
         response = await self.run_response(service, ScriptedModel(
             AIMessage(content="", tool_calls=[call("search_general_guidance", {"query": "CCTV"})]),
-            bad, bad, bad,
+            *([bad] * 5),
         ))
         self.assertEqual(response.failure_reason, "response_validation")
         self.assertEqual(response.answer, UNVERIFIED_ANSWER)

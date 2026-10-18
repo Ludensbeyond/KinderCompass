@@ -1,5 +1,140 @@
 # Backend conversation progress
 
+## Implemented maintenance — matching-school clarification, 2026-10-18
+
+The reported kindergarten/1 km/bilingual sequence lost requirements after
+language clarification. Instructions now save known constraints first. Typed
+`pending_school_inputs` carries missing care-level/language choices through the
+existing profile round trip, including when transcript consent is off. The
+minimal Step 2 integration was recorded in the active plan before implementation;
+optional preference-memory consent still controls persistence. Supplied language
+values clear their missing-value field while preserving pending strength. Later
+same-value explicit strength can resolve atomically with other supplied choices.
+Contradictions and newly staged decisions retain their existing protections.
+
+The tool rejects guessed K1/K2 values lacking an explicit current-message level
+reference; `1km` and bare confirmation cannot select K1. Missing requirements
+block search/readiness. Search exposes authoritative care levels, second
+languages and addresses. Distance-filtered school-record claims require a
+supported numeric distance with units (or the existing same-postal-location
+explanation), with bounded repair. These are programme/proximity facts, not
+eligibility or bilingual teaching-quality guarantees.
+
+Verification: final required discovery **609 tests in 50.415s, OK**,
+`/tmp/kindercompass-matching-backend-final.log`; earlier affected suite **75 in
+3.635s, OK**, `/tmp/kindercompass-matching-focused-final.log`. Final discovery
+includes the later provenance, numeric-distance and atomic-choice tests. Sandbox
+worker/provider attempts stalled; outside-sandbox checks completed. Whitespace
+review passes. No deployment or commit.
+
+Seven successive synthetic provider captures exposed and informed the changes;
+earlier captures are retained in `/tmp/kindercompass-matching-live-first.json`
+through `-sixth.json`. Final capture `/tmp/kindercompass-matching-live.json` and
+SHA-bound review `/tmp/kindercompass-matching-live-review.json`: **8/9 served,
+7/9 targeted task checks pass**. Initial radius and unresolved kindergarten
+state survive with history on/off; explicit K2/required Chinese returns only the
+matching nearby centre with its address and 0.5 km distance in the stateless
+sequence. The history-enabled final list exhausts response-format repairs and
+rolls back safely; the missing-postal case asks about an already supplied
+language. These remain live model reliability issues, not a passed quality gate.
+Synthetic catalogue/distances do not establish actual OneMap/Neo4j quality.
+Next remains rollout observation, including these response-format and missing-
+input issues; no new architecture step or legacy retirement is authorized here.
+
+## Completed maintenance — response repair allowance, 2026-10-18
+
+Increased the user-requested LLM-first response repair default and maximum from
+two to four. All repairs use existing evidence and share the eight-model-call
+and 30-second turn budgets; they cannot replay tools or mutations. Telemetry
+retains up to five allowlisted validation-error categories for the original
+answer plus four repairs. More attempts can increase latency and provider cost;
+this change does not establish live answer-quality improvement.
+
+Verification: focused loop/response/rollout tests **52 pass in 2.381s**
+(`/tmp/kindercompass-repair-focused.log`), including fourth-repair success with
+one mutation/export, exhaustion rollback and lower configured repair limits.
+Required discovery: **546 tests in 42.920s; 545 pass**, with only the documented
+unchanged `test_unknown_preference_keeps_match_below_one_hundred` failure
+(`/tmp/kindercompass-repair-backend.log`). Sandbox worker-thread checks stalled;
+outside-sandbox runs completed. Whitespace review passes. No deployment or
+commit; next remains rollout observation.
+
+## Completed maintenance — conversation relevance, 2026-10-17
+
+Completed the user-authorized correction for guidance versus catalogue examples,
+definitions and opt-in follow-up context. Model-selected distinct-name search
+groups cosmetic name variants before limiting examples; centre search/ranking/
+comparison retain their records. Bare repeated school bullets receive bounded
+repair. The browser now exposes independent chat/preference consent. Documented
+the minimal history integration in Step 2 before implementation; separate forget
+routes preserve the other store and protect in-flight writes. Local preference
+edits clear ephemeral state to avoid false stale-profile conflicts.
+See [implementation and evaluation](conversation-relevance.md).
+
+Verification:
+
+- Final provider capture and explicit answer/tool/state review: **8/8 cases pass**,
+  `/tmp/kindercompass-relevance-reviewed-live.json`, SHA-bound review
+  `/tmp/kindercompass-relevance-review.json`. The reported guidance receives a
+  cited checklist, both definitions explain a centre/location, examples show
+  distinct names, selected branches keep addresses, and mixed requests answer
+  both parts. Earlier captures exposed number/citation formatting failures,
+  punctuation variants and an unnecessary fee call; corrected before final
+  capture. No general model-quality or complete semantic entailment pass claimed.
+- Affected tests: **49 in 2.370s, OK**, outside sandbox,
+  `/tmp/kindercompass-relevance-focused-final.log`. Covers diversity before limit,
+  Chinese filtering, centre/comparison preservation, duplicate repair, real
+  history integration, independent forgetting and revoked in-flight writes.
+- Full discovery: **543 in 47.056s; 542 pass, one unchanged scoring failure**,
+  `/tmp/kindercompass-relevance-backend-final.log`. The earlier isolated failure
+  remains `test_unknown_preference_keeps_match_below_one_hundred`; no scoring
+  change made. The final guidance-only prompt refinement also passes focused
+  checks and the live capture.
+- Frontend production build passes; `/tmp/kindercompass-relevance-frontend-final.log`.
+  Playwright on the built UI passes opt-in/follow-up payloads, independent opt-out,
+  local preference edits and absence of browser errors with mocked API responses;
+  `/tmp/kindercompass-relevance-browser.log`. Sandbox worker/browser/server
+  restrictions required outside-sandbox checks. Diff/whitespace review passes.
+
+Maintenance complete; next remains rollout observation. No deployment, legacy
+retirement, persistent transcript storage or unrelated scoring change. No commit
+claimed while required discovery retains its pre-existing failure.
+
+## Rollout investigation — family summaries and school requests, 2026-10-17
+
+The user's `I couldn't verify` message means response validation exhausted its
+repairs, not that catalogue records are necessarily missing. A configured-provider
+trace with synthetic inputs reproduced the family-summary failure:
+`invalid_response_kind`, then `invalid_support_path` twice. Family fields reached
+the model but were absent from permitted `context:current` support.
+
+Model and validator now share typed family/postal input support and the existing
+restricted preference snapshot. It cannot supply school facts or eligibility;
+unchanged family inputs survive preference changes while old preference claims
+remain rejected. Broad-school prompts request catalogue examples first. Search
+records expose available branch addresses, with name/address attribution tests.
+Telemetry records fixed validation-error categories without private text.
+
+Post-fix synthetic provider sequence: **4/4 served turns**, covering family
+summary, school examples, pending Chinese and required Chinese. The synthetic
+broad-school request did not reproduce the original rejection. Actual-catalogue
+traces exposed repeated branch names and further claim-format repair failures;
+no general provider-quality pass is claimed. The browser still does not opt into
+transcript history; pending preference state explains why `required` works.
+
+Affected tests: **62 pass in 2.331s**, outside sandbox,
+`/tmp/kindercompass-chat-focused-final.log`. Full discovery also exposes the
+unchanged unknown-preference scoring expectation, which fails alone in 0.003s
+(`/tmp/kindercompass-chat-existing-failure.log`). Its scorer deliberately excludes
+unknown evidence from match-score denominators and reports confidence separately.
+Final discovery: **537 tests in 44.102s; 536 pass, one unchanged scoring failure**,
+`/tmp/kindercompass-chat-verified-regression.log`, outside sandbox. Corrected the
+new address test's cache setup and discovery-compatible import before this run.
+Sandbox worker-thread test/provider runs stalled and were stopped; outside-sandbox
+checks completed. Whitespace and diff review pass. No scoring,
+frontend consent, rollback or deployment change; rollout observation remains
+next and this investigation does not authorize legacy retirement.
+
 ## Active phase — LLM-first conversation, 2026-10-10
 
 The [repository plan](../../../../docs/llm-first-conversation-plan.md) governs
