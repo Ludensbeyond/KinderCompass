@@ -19,6 +19,7 @@ from ..pipeline.stage1.dialogue_manager import resolve_constraint_relaxation, re
 from ..pipeline.stage1.preference_schema import make_preference_item, sync_preference_schema
 from ..pipeline.stage1.scorer import rank_schools
 from ..pipeline.stage1.web_rag import retrieve
+from ..pipeline.stage2.engine import age_in_months, placement_for_age
 from ..repositories.school_repository import SchoolNotFoundError, SchoolRepository
 from .evaluation_service import EvaluationService
 from .location_service import LocationService
@@ -124,6 +125,38 @@ def _apply_choice(profile: dict, choice: PreferenceChoice) -> None:
         }
     if item["evidence_class"] != "unsupported":
         profile.setdefault("preference_items", []).append(item)
+
+
+def _explicit_language_choice(message: str) -> PreferenceChoice | None:
+    """Recover one plainly named supported language from a malformed missing-field call."""
+    matches = [
+        language for language in ("Chinese", "Malay", "Tamil")
+        if re.search(rf"(?<!\w){language}(?!\w)", message, re.IGNORECASE)
+    ]
+    if len(matches) != 1:
+        return None
+    language = matches[0]
+    if re.search(
+        rf"\b(?:not|without|avoid|exclude)\b[^.!?]{{0,30}}\b{language}\b",
+        message,
+        re.IGNORECASE,
+    ):
+        return None
+    required = re.search(
+        rf"(?:\b(?:must|need|needs|required|require|requires)\b|"
+        rf"\bshould\s+(?:also\s+)?have\b)[^.!?]{{0,60}}\b{language}\b|"
+        rf"\b{language}\b[^.!?]{{0,40}}\b(?:is\s+required|is\s+a\s+must)\b",
+        message,
+        re.IGNORECASE,
+    )
+    preferred = re.search(
+        rf"\b(?:prefer|preferred|ideally|nice\s+to\s+have)\b[^.!?]{{0,60}}\b{language}\b|"
+        rf"\b{language}\b[^.!?]{{0,40}}\b(?:preferred|would\s+be\s+nice)\b",
+        message,
+        re.IGNORECASE,
+    )
+    importance = "required" if required else "preferred" if preferred else None
+    return PreferenceChoice(attribute="language", value=language, importance=importance)
 
 
 class ConversationToolService:
@@ -283,6 +316,22 @@ class ConversationToolService:
             candidate.pop("pending")
         choices = list(request.set)
         missing_inputs = list(request.missing_school_inputs)
+        supplied_attributes = {choice.attribute for choice in choices}
+        if "care_level" in missing_inputs and "care_level" not in supplied_attributes and self._context.family:
+            months = age_in_months(self._context.family.dob, self._context.family.admission_date)
+            level, _ = placement_for_age(months)
+            if level:
+                choices.append(PreferenceChoice(
+                    attribute="care_level", value=level, importance="required",
+                ))
+                missing_inputs.remove("care_level")
+                supplied_attributes.add("care_level")
+        if "language" in missing_inputs and "language" not in supplied_attributes:
+            language = _explicit_language_choice(self._context.message)
+            unresolved_choices = sum(choice.importance is None for choice in choices)
+            if language and (language.importance is not None or unresolved_choices == 0):
+                choices.append(language)
+                missing_inputs.remove("language")
         # Validate a model-selected kindergarten value against an explicit
         # choice in the current user input. This never selects a tool or a level;
         # it prevents a radius ('1km') or bare confirmation from supplying one.

@@ -171,6 +171,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertNotIn("pending_school_inputs", supplied.staged_profile)
         supplied.invoke("update_preferences", {"missing_school_inputs": ["language"]})
         self.assertNotIn("pending_school_inputs", supplied.staged_profile)
+        self.context = self.context.model_copy(update={"family": None})
         service = self.service()
         result = service.invoke("update_preferences", {"missing_school_inputs": ["care_level"]})
         self.assertEqual(result.status, "needs_input")
@@ -178,6 +179,26 @@ class StructuredConversationToolsTests(unittest.TestCase):
         service.invoke("reset_continue_preferences", {"operation": "reset"})
         self.assertNotIn("pending_school_inputs", service.staged_profile)
         self.assertEqual(service.invoke("search_rank_compare_schools", {}).status, "ok")
+
+    def test_named_language_and_family_age_are_not_reasked_as_missing(self):
+        self.context = self.context.model_copy(update={
+            "message": "I am looking for a SPARK school within 3km. It should have Chinese as a 2nd language",
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+                {"attribute": "max_distance_km", "value": 3, "importance": "required"},
+            ],
+            "missing_school_inputs": ["care_level", "language"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+        self.assertEqual(service.staged_profile["hard_constraints"], {
+            "level": "Nursery (4 yrs old)",
+            "language": "Chinese",
+            "max_distance_km": 3,
+        })
 
     def test_kindergarten_choice_cannot_come_from_radius_or_bare_confirmation(self):
         for message in ("kindergarten 1km from my home, bilingual", "yes find me the list"):

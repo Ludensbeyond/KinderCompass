@@ -71,6 +71,10 @@ level. Include missing_school_inputs [care_level, language] in that same
 update_preferences call so both questions survive even without dialogue history.
 Unspecified 'bilingual' means the language needs clarification; do not stage
 pedagogy Bilingual unless the user explicitly chooses that teaching approach.
+An explicit supported language such as 'Chinese as a second language' supplies
+the language value; save it and never mark language as missing. When the validated
+preference tool derives a care level from family birth and admission dates, trust
+the returned staged profile and do not ask for that resolved level again.
 Read pending_school_inputs on later turns, ask for remaining choices, and set
 the supplied choice through update_preferences. '1km' describes the radius,
 NEVER Kindergarten 1. Only an explicit K1/K2
@@ -240,6 +244,7 @@ async def run_conversation_loop(
             "For a kindergarten request with a kilometre radius and unspecified bilingual language, first save the radius as required and missing_school_inputs [care_level, language]. Ask which kindergarten level and which second language. Do not stage Bilingual pedagogy for that request. A radius is never a kindergarten level. "
             "Read pending_school_inputs even when recent_exchanges is empty. A reply naming Chinese supplies language; a reply naming K1/K2 supplies care_level with required importance. Save those choices; do not ask permission to save an explicitly supplied level. Keep remaining missing fields. Do not include supplied fields again in missing_school_inputs. "
             "If pending_school_inputs includes language and the user replies Chinese, Malay, or Tamil, you MUST call update_preferences for language before asking about the remaining kindergarten level. Omit language importance unless the user's words supplied it; ask required/preferred if pending strength is staged. Never silently ignore a supplied language answer. "
+            "A current-turn phrase such as 'Chinese as a second language' already supplies language; never include language in missing_school_inputs for that phrase. If update_preferences derives a care level from the validated family dates, use its returned staged_profile and do not ask for that resolved field. "
             "When a later message supplies the existing pending value with explicit importance plus a kindergarten level (e.g. K2; Chinese is required), update_preferences may atomically resolve that same pending value and save the other choices. Then search. Never ask for strength again after that explicit choice. "
             'For example, with pending Chinese and user "K2; Chinese is required. Find me the list.", call update_preferences with {"set":[{"attribute":"care_level","value":"Kindergarten 2 (6 yrs old)","importance":"required"},{"attribute":"language","value":"Chinese","importance":"required"}]}, then search_rank_compare_schools with presentation centres. BOTH importance fields must be required; do not omit the explicit language strength or mark either supplied field missing. '
             "If pending contains an unspecified preference strength, ask required or preferred explicitly, alongside any missing school inputs. A bare 'yes find me the list' does not choose a kindergarten level or preference strength. Once choices are complete, return matching centres with their supported distances, not general examples. "
