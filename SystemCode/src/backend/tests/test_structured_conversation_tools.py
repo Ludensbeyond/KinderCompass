@@ -217,6 +217,85 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertNotIn("pending_school_inputs", service.staged_profile)
         self.assertNotIn("pending_contradiction", service.staged_profile)
 
+    def test_spark_k1_message_saves_level_when_model_only_marks_language_missing(self):
+        self.context = self.context.model_copy(update={
+            "message": "I am looking for spark certified K1 school",
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+            ],
+            "missing_school_inputs": ["language"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(
+            service.staged_profile["hard_constraints"]["level"],
+            "Kindergarten 1 (5 yrs old)",
+        )
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+
+    def test_nursery_message_saves_level_when_model_only_marks_language_missing(self):
+        self.context = self.context.model_copy(update={
+            "message": "SPARK nursery school near home",
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+            ],
+            "missing_school_inputs": ["language"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(
+            service.staged_profile["hard_constraints"]["level"],
+            "Nursery (4 yrs old)",
+        )
+
+    def test_pre_nursery_followup_does_not_reopen_saved_level(self):
+        self.context = self.context.model_copy(update={
+            "message": "I need pre-nursery with SPARK",
+        })
+        first = self.service()
+        first.invoke("update_preferences", {
+            "set": [{"attribute": "spark_certified", "value": True, "importance": "required"}],
+            "missing_school_inputs": ["language"],
+        })
+        profile = first.export_validated_state(response_validated=True)
+        self.context = self.context.model_copy(update={"message": "Malay", "profile": profile})
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [{"attribute": "language", "value": "Malay", "importance": "required"}],
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(
+            service.staged_profile["hard_constraints"]["level"],
+            "Pre-Nursery (3 yrs old)",
+        )
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
+
+    def test_chinese_followup_does_not_reopen_saved_k1(self):
+        self.context = self.context.model_copy(update={
+            "message": "I am looking for spark certified K1 school",
+        })
+        first = self.service()
+        first.invoke("update_preferences", {
+            "set": [{"attribute": "spark_certified", "value": True, "importance": "required"}],
+            "missing_school_inputs": ["language"],
+        })
+        profile = first.export_validated_state(response_validated=True)
+        self.context = self.context.model_copy(update={"message": "Chinese", "profile": profile})
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [{"attribute": "language", "value": "Chinese", "importance": "required"}],
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+        self.assertEqual(service.staged_profile["hard_constraints"]["level"], "Kindergarten 1 (5 yrs old)")
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Chinese")
+
     def test_spark_k2_message_saves_level_when_model_leaves_care_level_missing(self):
         self.context = self.context.model_copy(update={
             "message": "I am looking for a Spark kindergarten k2 school near my place.",
@@ -228,11 +307,23 @@ class StructuredConversationToolsTests(unittest.TestCase):
             ],
             "missing_school_inputs": ["care_level", "language"],
         })
-        self.assertEqual(result.status, "needs_input")
+        self.assertEqual(result.status, "ok")
         self.assertEqual(
             service.staged_profile["hard_constraints"]["level"],
             "Kindergarten 2 (6 yrs old)",
         )
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+
+    def test_bilingual_request_keeps_language_pending(self):
+        self.context = self.context.model_copy(update={
+            "message": "I want a bilingual SPARK K2 preschool",
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [{"attribute": "spark_certified", "value": True, "importance": "required"}],
+            "missing_school_inputs": ["language"],
+        })
+        self.assertEqual(result.status, "needs_input")
         self.assertEqual(service.staged_profile["pending_school_inputs"], ["language"])
 
     def test_tamil_followup_does_not_reopen_saved_k2(self):

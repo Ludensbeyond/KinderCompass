@@ -7,6 +7,7 @@ from stage1.distance_policy import NEAR_HOME_RADIUS_KM, distance_opt_out
 from stage1.preference_schema import make_preference_item, sync_preference_schema
 
 LEVEL_KEYWORDS = {
+    "infant care": "Infant (2 to 18 mths)",
     "infant": "Infant (2 to 18 mths)",
     "playgroup": "Playgroup (18 mths to 2 yrs old)",
     "pre-nursery": "Pre-Nursery (3 yrs old)",
@@ -17,6 +18,8 @@ LEVEL_KEYWORDS = {
     "kindergarten 2": "Kindergarten 2 (6 yrs old)",
     "k2": "Kindergarten 2 (6 yrs old)",
 }
+
+KINDERGARTEN_LEVEL_PHRASES = frozenset({"k1", "k2", "kindergarten 1", "kindergarten 2"})
 
 PEDAGOGY_KEYWORDS = {
     "montessori": "Montessori",

@@ -16,8 +16,12 @@ from ..agents.structured_contracts import (
 from ..agents.tools import GeneralKnowledgeRetriever
 from ..domain.models import FamilyDetails
 from ..pipeline.stage1.dialogue_manager import resolve_constraint_relaxation, resolve_contradiction
-from ..pipeline.stage1.distance_policy import effective_search_radius_km
-from ..pipeline.stage1.nlp_mapper import LEVEL_KEYWORDS
+from ..pipeline.stage1.care_level_parsing import (
+    care_level_supported_by_message,
+    explicit_care_level_from_message,
+    message_requests_language_followup,
+)
+from ..pipeline.stage1.distance_policy import explicit_search_radius_km
 from ..pipeline.stage1.preference_schema import make_preference_item, sync_preference_schema
 from ..pipeline.stage1.scorer import rank_schools
 from ..pipeline.stage1.web_rag import retrieve
@@ -140,23 +144,6 @@ def _saved_care_level(profile: dict) -> str | None:
     if pending and pending.get("kind") == "care_level":
         return pending["value"]
     return None
-
-
-def _explicit_care_level_from_message(message: str) -> str | None:
-    lowered = (message or "").strip().lower()
-    for phrase in sorted(LEVEL_KEYWORDS, key=len, reverse=True):
-        if re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", lowered):
-            return LEVEL_KEYWORDS[phrase]
-    return None
-
-
-def _kindergarten_level_mentioned(message: str, care_level_value: str) -> bool:
-    if not str(care_level_value).startswith("Kindergarten "):
-        return True
-    level = str(care_level_value).split()[1]
-    word = {"1": "one", "2": "two"}[level]
-    pattern = rf"(?<!\w)(?:k\s*{level}|kindergarten\s*(?:{level}|{word}))(?!\w)"
-    return bool(re.search(pattern, message, re.IGNORECASE))
 
 
 def _explicit_language_choice(message: str) -> PreferenceChoice | None:
@@ -349,19 +336,21 @@ class ConversationToolService:
         choices = list(request.set)
         missing_inputs = list(request.missing_school_inputs)
         supplied_attributes = {choice.attribute for choice in choices}
-        if "care_level" in missing_inputs and "care_level" not in supplied_attributes:
+        if "care_level" not in supplied_attributes:
             existing_level = _saved_care_level(candidate)
             if existing_level:
-                missing_inputs.remove("care_level")
+                if "care_level" in missing_inputs:
+                    missing_inputs.remove("care_level")
             else:
-                explicit_level = _explicit_care_level_from_message(self._context.message)
+                explicit_level = explicit_care_level_from_message(self._context.message)
                 if explicit_level:
                     choices.append(PreferenceChoice(
                         attribute="care_level", value=explicit_level, importance="required",
                     ))
-                    missing_inputs.remove("care_level")
                     supplied_attributes.add("care_level")
-                elif self._context.family:
+                    if "care_level" in missing_inputs:
+                        missing_inputs.remove("care_level")
+                elif "care_level" in missing_inputs and self._context.family:
                     months = age_in_months(self._context.family.dob, self._context.family.admission_date)
                     level, _ = placement_for_age(months)
                     if level:
@@ -370,23 +359,25 @@ class ConversationToolService:
                         ))
                         missing_inputs.remove("care_level")
                         supplied_attributes.add("care_level")
+        if "language" in missing_inputs and not message_requests_language_followup(self._context.message):
+            missing_inputs.remove("language")
         if "language" in missing_inputs and "language" not in supplied_attributes:
             language = _explicit_language_choice(self._context.message)
             unresolved_choices = sum(choice.importance is None for choice in choices)
             if language and (language.importance is not None or unresolved_choices == 0):
                 choices.append(language)
                 missing_inputs.remove("language")
-        # Validate a model-selected kindergarten value against an explicit
-        # choice in the current user input. This never selects a tool or a level;
-        # it prevents a radius ('1km') or bare confirmation from supplying one.
+        # Validate model-selected care levels against explicit user wording.
+        # This never selects a tool or a level; it blocks radius ('1km') and
+        # bare confirmations from supplying one, including for K1/K2.
         rejected = []
         saved_level = _saved_care_level(self._profile)
         for choice in request.set:
-            if choice.attribute != "care_level" or not str(choice.value).startswith("Kindergarten "):
+            if choice.attribute != "care_level":
                 continue
             if saved_level and choice.value == saved_level:
                 continue
-            if _kindergarten_level_mentioned(self._context.message, choice.value):
+            if care_level_supported_by_message(self._context.message, choice.value):
                 continue
             if choice in choices:
                 choices.remove(choice)
@@ -428,8 +419,12 @@ class ConversationToolService:
             known = {item["attribute"] for item in candidate.get("preference_items", [])}
             unresolved = list(dict.fromkeys(candidate.get("pending_school_inputs", []) +
                                            [field for field in missing_inputs if field not in known or field in rejected]))
+            if not message_requests_language_followup(self._context.message):
+                unresolved = [field for field in unresolved if field != "language"]
             if unresolved:
                 candidate["pending_school_inputs"] = unresolved
+            elif "pending_school_inputs" in candidate:
+                candidate.pop("pending_school_inputs", None)
         for choice in choices:
             if choice.importance is None:
                 candidate["pending"] = {"kind": choice.attribute, "value": choice.value,
@@ -507,7 +502,7 @@ class ConversationToolService:
                        {v.strip().casefold() for v in str(r.get("second_languages_offered") or "").split("|")}]
         if hard.get("max_distance_km") is not None and not self._context.home_postal_code:
             return None
-        radius_km = effective_search_radius_km(self._profile, self._context.home_postal_code)
+        radius_km = explicit_search_radius_km(self._profile)
         if radius_km is not None:
             if not self._context.home_postal_code:
                 return None
