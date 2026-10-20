@@ -48,6 +48,10 @@ Later tools read staged changes. Hypothetical scenarios do not save family input
 Resolve school IDs from current context or tool results; clarify ambiguous schools.
 Pending decisions require an explicit user choice before resolution. Do not guess
 preference importance. You may combine calls and use earlier results in later calls.
+'Keep current', 'keep existing', 'keep saved', and 'keep current level' explicitly
+resolve a pending contradiction by calling reset_continue_preferences with
+operation resolve_contradiction and choice keep_existing. Never ask the same
+contradiction again after one of these phrases.
 'I need', 'must', and 'required' supply importance required: include it in the patch.
 Do not ask required versus preferred after those words. 'I want' still omits importance.
 If the newest message names a DIFFERENT preference value, update that value;
@@ -254,6 +258,7 @@ async def run_conversation_loop(
             "If a named school's current fee is requested, retrieve it now; do not just offer to look it up. "
             "A hypothetical drop without an amount requires a question; NEVER assume zero income. "
             "Any pending choice must be answered with its question, and resolution needs the resolution tool. "
+            "If pending_contradiction exists and the newest message says 'keep current', 'keep existing', 'keep saved', or 'keep current level', you MUST call reset_continue_preferences with operation resolve_contradiction and choice keep_existing. Do not repeat the contradiction question. "
             "Unchanged preference acknowledgements can cite context:current as documented; changes require tools. "
             "If the user asks which preschool is closest and a home postal code is already in context, and the message names no SPARK, language, pedagogy, or other ranking attribute, call find_nearby_schools. Do not ask for school names or IDs first. "
             "If the newest message looks for schools with SPARK, language, pedagogy, or a kilometre limit, call update_preferences first. Do not call find_nearby_schools for that combined request; use search_rank_compare_schools after the profile is updated. "

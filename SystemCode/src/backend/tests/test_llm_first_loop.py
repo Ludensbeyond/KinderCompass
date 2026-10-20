@@ -339,6 +339,42 @@ class LlmFirstLoopTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(profile["hard_constraints"]["max_distance_km"], 3)
         self.assertIn("Show recommendations", candidate.answer)
 
+    async def test_keep_current_level_resolves_pending_care_level_contradiction(self):
+        initial = self.service("Kindergarten 1")
+        initial.invoke("update_preferences", {"set": [{
+            "attribute": "care_level",
+            "value": "Kindergarten 1 (5 yrs old)",
+            "importance": "required",
+        }]})
+        profile = initial.export_validated_state(response_validated=True)
+
+        conflicting = self.service("Use Pre-Nursery", profile=profile)
+        conflicting.invoke("update_preferences", {"set": [{
+            "attribute": "care_level",
+            "value": "Pre-Nursery (3 yrs old)",
+            "importance": "required",
+        }]})
+        profile = conflicting.export_validated_state(response_validated=True)
+        self.assertIn("pending_contradiction", profile)
+
+        service = self.service("Keep current level", profile=profile)
+        model = ScriptedModel(
+            AIMessage(content="", tool_calls=[call("reset_continue_preferences", {
+                "operation": "resolve_contradiction",
+                "choice": "keep_existing",
+            })]),
+            AIMessage(content="I kept Kindergarten 1 as the required care level."),
+        )
+        candidate = await self.run_loop(service, model)
+        instructions = "\n".join(
+            item.content for item in model.messages[0] if isinstance(getattr(item, "content", None), str)
+        )
+        self.assertIn("keep current level", instructions)
+        self.assertEqual(candidate.results[-1].status, "ok")
+        resolved = service.export_validated_state(response_validated=True)
+        self.assertEqual(resolved["hard_constraints"]["level"], "Kindergarten 1 (5 yrs old)")
+        self.assertNotIn("pending_contradiction", resolved)
+
     async def test_unavailable_evidence_is_structured_and_model_can_explain_gap(self):
         service = self.service("What is Montessori?")
         def explain(messages):

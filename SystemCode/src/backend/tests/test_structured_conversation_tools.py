@@ -200,6 +200,66 @@ class StructuredConversationToolsTests(unittest.TestCase):
             "max_distance_km": 3,
         })
 
+    def test_saved_care_level_precedes_family_age_default(self):
+        self.context = self.context.model_copy(update={
+            "message": "Keep my current care level",
+            "profile": {"hard_constraints": {"level": "Kindergarten 1 (5 yrs old)"}},
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(
+            service.staged_profile["hard_constraints"]["level"],
+            "Kindergarten 1 (5 yrs old)",
+        )
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+        self.assertNotIn("pending_contradiction", service.staged_profile)
+
+    def test_spark_k2_message_saves_level_when_model_leaves_care_level_missing(self):
+        self.context = self.context.model_copy(update={
+            "message": "I am looking for a Spark kindergarten k2 school near my place.",
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+            ],
+            "missing_school_inputs": ["care_level", "language"],
+        })
+        self.assertEqual(result.status, "needs_input")
+        self.assertEqual(
+            service.staged_profile["hard_constraints"]["level"],
+            "Kindergarten 2 (6 yrs old)",
+        )
+        self.assertEqual(service.staged_profile["pending_school_inputs"], ["language"])
+
+    def test_tamil_followup_does_not_reopen_saved_k2(self):
+        self.context = self.context.model_copy(update={
+            "message": "I am looking for a Spark kindergarten k2 school near my place.",
+        })
+        first = self.service()
+        first.invoke("update_preferences", {
+            "set": [
+                {"attribute": "spark_certified", "value": True, "importance": "required"},
+            ],
+            "missing_school_inputs": ["care_level", "language"],
+        })
+        profile = first.export_validated_state(response_validated=True)
+        self.context = self.context.model_copy(update={"message": "Tamil", "profile": profile})
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "language", "value": "Tamil", "importance": "required"},
+                {"attribute": "care_level", "value": "Kindergarten 2 (6 yrs old)", "importance": "required"},
+            ],
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Tamil")
+
     def test_kindergarten_choice_cannot_come_from_radius_or_bare_confirmation(self):
         for message in ("kindergarten 1km from my home, bilingual", "yes find me the list"):
             with self.subTest(message=message):
