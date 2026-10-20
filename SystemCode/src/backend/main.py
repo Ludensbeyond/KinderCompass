@@ -24,6 +24,7 @@ if str(POC_SRC) not in sys.path:
 load_dotenv(POC_ENV, override=True)
 
 from stage1.runner import run_from_profile  # noqa: E402
+from stage1.distance_policy import effective_search_radius_km  # noqa: E402
 from stage1.nlp_mapper import merge_preference_profile, summarize_profile  # noqa: E402
 from stage1.proximity import geocode_postal_code  # noqa: E402
 from stage1.dialogue_manager import describe_empty_search, propose_constraint_relaxation  # noqa: E402
@@ -104,7 +105,12 @@ def search(request: SearchRequest) -> dict[str, Any]:
         if request.message:
             profile = merge_preference_profile(profile, request.message)
         town = request.home_postal_code or request.town
-        centres, stage_trace = run_from_profile(profile, town=town, within_1km=request.within_1km, radius_km=request.radius_km, include_trace=True)
+        radius_km = request.radius_km
+        if radius_km is None:
+            radius_km = effective_search_radius_km(profile, request.home_postal_code)
+        centres, stage_trace = run_from_profile(
+            profile, town=town, within_1km=request.within_1km, radius_km=radius_km, include_trace=True,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
@@ -122,7 +128,7 @@ def search(request: SearchRequest) -> dict[str, Any]:
         "message": response_message,
         "centres": centres,
         "profile": profile,
-        "understood": summarize_profile(profile),
+        "understood": summarize_profile(profile, home_postal_code=request.home_postal_code),
         "trace": {"trace_id": trace_id, "ranking_method": "geometric_mean_match_and_evidence_completeness", **stage_trace},
     }
 
@@ -130,17 +136,28 @@ def search(request: SearchRequest) -> dict[str, Any]:
 def preferences(request: PreferenceRequest) -> dict[str, Any]:
     try:
         if "closest" in request.message.lower() and not request.home_postal_code:
-            raise HTTPException(status_code=422, detail="Enter a six-digit home postal code before asking for the nearest preschool.")
+            raise HTTPException(
+                status_code=422,
+                detail="Enter a six-digit home postal code before asking for the nearest preschool.",
+            )
         result = PREFERENCE_SERVICE.handle(
-            message=request.message, profile=request.profile,
+            message=request.message,
+            profile=request.profile,
             selected_school_ids=request.selected_school_ids,
             eligible_school_ids=request.eligible_school_ids,
             excluded_school_ids=request.excluded_school_ids,
-            family=request.family, home_postal_code=request.home_postal_code,
+            family=request.family,
+            home_postal_code=request.home_postal_code,
+        )
+        result["understood"] = summarize_profile(
+            result["profile"], home_postal_code=request.home_postal_code,
         )
         if request.remember_preferences:
             if request.anonymous_session_id is None:
-                raise HTTPException(status_code=422, detail="An anonymous session ID is required to remember preferences.")
+                raise HTTPException(
+                    status_code=422,
+                    detail="An anonymous session ID is required to remember preferences.",
+                )
             CONVERSATION_MEMORY_SERVICE.save(request.anonymous_session_id, result["profile"])
         result["answer_id"] = CHAT_FEEDBACK_SERVICE.record_answer(result)
         return result

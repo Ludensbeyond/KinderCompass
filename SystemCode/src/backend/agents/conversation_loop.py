@@ -262,6 +262,7 @@ async def run_conversation_loop(
             "Unchanged preference acknowledgements can cite context:current as documented; changes require tools. "
             "If the user asks which preschool is closest and a home postal code is already in context, and the message names no SPARK, language, pedagogy, or other ranking attribute, call find_nearby_schools. Do not ask for school names or IDs first. "
             "If the newest message looks for schools with SPARK, language, pedagogy, or a kilometre limit, call update_preferences first. Do not call find_nearby_schools for that combined request; use search_rank_compare_schools after the profile is updated. "
+            "When a home postal code is in context and the user has not opted out of distance, search results use 5 km by default; phrases like near home or near my place mean 1 km unless the user gives another kilometre limit. "
             "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
             "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
             "A question ABOUT the previous wording asks for an explanation, not an answer to its clarification. 'What is a preschool branch?' and 'what do you mean by branches?' require a definition, never another school list. "

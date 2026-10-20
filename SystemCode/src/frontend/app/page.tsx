@@ -463,7 +463,9 @@ export default function Home() {
       });
       setPreferenceProfile(result.profile); setUnderstood(result.understood);
       const distancePreference = result.profile.preference_items?.find((item) => item.attribute === "max_distance_km");
-      setDistanceFilter(distancePreference ? String(distancePreference.value) : "none");
+      setDistanceFilter(distancePreference
+        ? String(distancePreference.value)
+        : (/^\d{6}$/.test(homePostalCode) ? "5" : "none"));
       setReadyToSearch(result.ready_to_search);
       setMessages((items) => [...items, { role: "assistant", text: result.question, citations: result.citations, evidenceCategory: result.evidence_category, answerId: result.answer_id }]);
       setPreference("");
@@ -482,7 +484,8 @@ export default function Home() {
       const requestedRadius = distancePreference ? Number(distancePreference.value) : undefined;
       const searchResult = await post<{ centres: Centre[]; trace: { trace_id: string; [key: string]: unknown }; message: string; profile: PreferenceProfile }>("/api/search", {
         profile: preferenceProfile,
-        ...(requestedRadius ? { home_postal_code: homePostalCode, radius_km: requestedRadius } : {}),
+        ...(/^\d{6}$/.test(homePostalCode) ? { home_postal_code: homePostalCode } : {}),
+        ...(requestedRadius ? { radius_km: requestedRadius } : {}),
       });
       if (searchResult.centres.length === 0) {
         if (rememberDetails) await clearConversationContext();
@@ -507,6 +510,9 @@ export default function Home() {
       });
       const eligibleCentres = evaluationResult.centres.filter((centre) => centre.eligible);
       setEligible(eligibleCentres);
+      if (!distancePreference && /^\d{6}$/.test(homePostalCode)) {
+        setDistanceFilter("5");
+      }
       setResultsEmptyState(eligibleCentres.length === 0 ? "stage2" : "not_ready");
       setExcluded(evaluationResult.centres.filter((centre) => !centre.eligible).map((centre) => centre.school_id));
       setSelected([]); setRoutes({});

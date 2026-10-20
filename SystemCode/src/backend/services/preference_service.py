@@ -89,7 +89,8 @@ class PreferenceService:
             succeeded = response.status == "ok"
             profile = response.profile if succeeded else original
             result = {
-                "profile": profile, "understood": summarize_profile(profile),
+                "profile": profile,
+                "understood": summarize_profile(profile, home_postal_code=request.home_postal_code),
                 "ready_to_search": bool(profile.get("hard_constraints") or profile.get("preferences"))
                     and not any(profile.get(k) for k in ("pending", "pending_contradiction", "pending_relaxation", "pending_school_inputs")),
                 "question": response.answer,

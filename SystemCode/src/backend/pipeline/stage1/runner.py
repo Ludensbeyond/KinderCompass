@@ -5,6 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from stage1.kg_client import get_driver, run_query, verify_connectivity
+from stage1.distance_policy import effective_search_radius_km
 from stage1.nlp_mapper import map_text_to_filters
 from stage1.query_builder import build_stage1_query
 from stage1.scorer import individually_relaxable_required_preferences, rank_schools
@@ -42,6 +43,9 @@ def run_from_profile(filters: dict, town: str | None = None, output_path: str | 
                 "transport, halal food, full-day care, or a maximum home distance."
             )
         requested_radius = radius_km if radius_km is not None else 1.0 if within_1km else None
+        postal = town if town and str(town).isdigit() and len(str(town)) == 6 else None
+        if requested_radius is None:
+            requested_radius = effective_search_radius_km(filters, postal)
         if requested_radius is not None and requested_radius <= 0:
             raise ValueError("Distance must be greater than 0 km")
         if requested_radius is not None and (not town or not town.isdigit() or len(town) != 6):

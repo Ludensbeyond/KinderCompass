@@ -16,6 +16,7 @@ from ..agents.structured_contracts import (
 from ..agents.tools import GeneralKnowledgeRetriever
 from ..domain.models import FamilyDetails
 from ..pipeline.stage1.dialogue_manager import resolve_constraint_relaxation, resolve_contradiction
+from ..pipeline.stage1.distance_policy import effective_search_radius_km
 from ..pipeline.stage1.nlp_mapper import LEVEL_KEYWORDS
 from ..pipeline.stage1.preference_schema import make_preference_item, sync_preference_schema
 from ..pipeline.stage1.scorer import rank_schools
@@ -504,11 +505,17 @@ class ConversationToolService:
         if hard.get("language"):
             records = [r for r in records if hard["language"].casefold() in
                        {v.strip().casefold() for v in str(r.get("second_languages_offered") or "").split("|")}]
-        if hard.get("max_distance_km"):
+        if hard.get("max_distance_km") is not None and not self._context.home_postal_code:
+            return None
+        radius_km = effective_search_radius_km(self._profile, self._context.home_postal_code)
+        if radius_km is not None:
             if not self._context.home_postal_code:
                 return None
             records = self.locations.attach_distances(records, self._context.home_postal_code)
-            records = [r for r in records if r.get("distance_km") is not None and r["distance_km"] <= hard["max_distance_km"]]
+            records = [
+                r for r in records
+                if r.get("distance_km") is not None and r["distance_km"] <= radius_km
+            ]
         return rank_schools(self._profile, records, limit=len(records))
 
     def _search(self, request: SearchArguments):

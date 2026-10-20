@@ -3,6 +3,7 @@
 from copy import deepcopy
 import re
 
+from stage1.distance_policy import NEAR_HOME_RADIUS_KM, distance_opt_out
 from stage1.preference_schema import make_preference_item, sync_preference_schema
 
 LEVEL_KEYWORDS = {
@@ -175,6 +176,12 @@ def map_text_to_filters(text: str) -> dict:
     if distance_match and float(distance_match.group(1)) > 0:
         hard_constraints["max_distance_km"] = float(distance_match.group(1))
         recognized.append(f"within {distance_match.group(1)} km")
+    elif re.search(
+        r"\b(?:near(?:by)?|close to)\s+(?:my\s+)?(?:home|house|place)\b|\bnear\s+home\b|\bnear\s+my\s+place\b",
+        lowered,
+    ):
+        hard_constraints["max_distance_km"] = NEAR_HOME_RADIUS_KM
+        recognized.append("near home")
 
     seen_unsupported = set()
     for phrase, (attribute, value) in UNSUPPORTED_KEYWORDS.items():
@@ -189,6 +196,7 @@ def map_text_to_filters(text: str) -> dict:
         "unsupported_preferences": unsupported_preferences,
         "recognized": recognized,
         "source_text": text,
+        "skip_default_distance": distance_opt_out(lowered),
     })
     for item in profile["preference_items"]:
         key = f"language:{item['value']}" if item["attribute"] == "language" else item["attribute"]
@@ -213,6 +221,14 @@ def merge_preference_profile(current: dict | None, text: str) -> dict:
         (item["attribute"], str(item["value"])): item
         for item in merged.get("preference_items", [])
     }
+
+    if distance_opt_out(lowered):
+        merged["hard_constraints"].pop("max_distance_km", None)
+        merged["skip_default_distance"] = True
+    elif incoming["hard_constraints"].get("max_distance_km") is not None or any(
+        token in incoming.get("recognized", []) for token in ("near home",)
+    ):
+        merged.pop("skip_default_distance", None)
 
     for key, value in incoming["hard_constraints"].items():
         merged["hard_constraints"][key] = value
@@ -244,17 +260,21 @@ def merge_preference_profile(current: dict | None, text: str) -> dict:
     return sync_preference_schema(merged)
 
 
-def summarize_profile(profile: dict) -> list[str]:
+def summarize_profile(profile: dict, *, home_postal_code: str | None = None) -> list[str]:
     """Return concise user-facing descriptions of stored preferences."""
+    from stage1.distance_policy import DEFAULT_HOME_RADIUS_KM, effective_search_radius_km
+
     summary = []
     hard = profile.get("hard_constraints", {})
     if hard.get("level"):
         summary.append(f"Required care level: {hard['level']}")
     if hard.get("language"):
         summary.append(f"Required language: {hard['language']}")
-    if hard.get("max_distance_km"):
+    if hard.get("max_distance_km") is not None:
         distance = float(hard["max_distance_km"])
         summary.append(f"Required distance: within {distance:g} km from home")
+    elif effective_search_radius_km(profile, home_postal_code) == DEFAULT_HOME_RADIUS_KM:
+        summary.append(f"Distance (default): within {DEFAULT_HOME_RADIUS_KM:g} km from home")
     for attribute, preference in profile.get("preferences", {}).items():
         label = attribute.split(":", 1)[0].replace("_", " ").title()
         value = preference.get("value")
