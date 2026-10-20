@@ -82,6 +82,33 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
                   claim(answer, 0.5, path="/data/records/0/distance_km")]
         self.check_invalid(service, result, final(answer, claims), "missing_distance_claim")
 
+    def test_applied_radius_rejects_extra_nearby_bullets(self):
+        service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        self.assertEqual(result.data.get("applied_radius_km"), 1.0)
+        answer = (
+            "Centres near your home:\n"
+            "- School A at 10 Alpha Road.\n"
+            "- School A is nearby."
+        )
+        claims = [
+            claim("School A at 10 Alpha Road.", "10 Alpha Road", path="/data/records/0/centre_address"),
+            claim("School A is nearby.", "School A", path="/data/records/0/name"),
+        ]
+        self.check_invalid(service, result, final(answer, claims), "vague_distance_wording")
+
+    def test_applied_radius_accepts_combined_name_and_distance_bullet(self):
+        service = self.service(home_postal_code="123456")
+        self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]
+        result = service.invoke("search_rank_compare_schools", {})
+        answer = "- School A is 0.5 km from home."
+        claims = [
+            claim(answer, "School A", path="/data/records/0/name"),
+            claim(answer, 0.5, path="/data/records/0/distance_km"),
+        ]
+        self.assertEqual(validate_response(final(answer, claims).content, (result,), service.initial_context).answer, answer)
+
     def test_distance_listing_requires_each_centre_and_accepts_same_location_support(self):
         service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
         self.locations.attach_distances.side_effect = lambda records, postal: [

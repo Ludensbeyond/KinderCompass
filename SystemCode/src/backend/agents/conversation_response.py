@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .contracts import AnswerText, Identifier, InitialConversationContext, PublicCitation
 from .structured_contracts import StructuredToolResult
 from .conversation_loop import ConversationLoopError, LoopLimits, run_conversation_loop
+from ..pipeline.stage1.distance_policy import explicit_search_radius_km
 from ..services.conversation_tool_service import ConversationToolService
 from ..services.conversation_context_service import current_state_support
 
@@ -73,14 +74,18 @@ care, and booleans are yes/no. Claim values still use the exact supplied scalar.
 For a simple school list, each school name may be its own claim span supported by
 that record's /name; keep facts in separate claims. Use unnumbered bullets so list
 positions do not become unsupported numerical facts.
-For matching schools with a saved distance limit, every listed centre needs its
-own calculated /distance_km claim, repeating the full school name. A bare-name
-list is incomplete. Report the exact supplied distance; do not round it. For a
-zero distance with same_location_as_postal_code, explain that the postal code
-resolves to the centre's recorded location instead of saying it is zero km away;
-support that explanation with /same_location_as_postal_code. Care levels use
-/care_levels/0 (or the correct list index); language uses /second_languages_offered.
-These verify offered programmes/languages, not eligibility or teaching quality.
+For matching schools when the user saved max_distance_km (see profile_used or
+/data/applied_radius_km when it reflects that saved limit), use one bullet per listed centre
+that combines the full school name, centre_address when returned, and the exact
+calculated distance in km with a /distance_km claim. Do not add a second bullet
+that only says a school is nearby, near home, or close. Vague proximity wording
+without the supplied numeric distance is incomplete. Report the exact supplied
+distance; do not round it. For a zero distance with same_location_as_postal_code,
+explain in that same centre sentence that the postal code resolves to the
+centre's recorded location instead of saying it is zero km away; support that
+explanation with /same_location_as_postal_code. Care levels use /care_levels/0
+(or the correct list index); language uses /second_languages_offered. These
+verify offered programmes/languages, not eligibility or teaching quality.
 For branches sharing a name, copy centre_address exactly as returned, including
 unit numbers and punctuation. Support the name/address sentence with that
 record's centre_address scalar. Do not shorten or reformat address numbers.
@@ -91,6 +96,14 @@ explanations. Do not introduce framework years, age ranges or subsidy thresholds
 unless the user asks about them. Do not convert spelled-out source numbers into
 digits. Every sourced sentence must keep its [chunk_id] within its exact claim
 span, including when accompanied by an unsourced conversational question.
+For yes/no questions about transport, food, halal, languages, or similar services,
+answer each preschool directly from the facts. Do not begin with Yes or No unless
+that word applies to the whole question. If no selected school offers the asked
+language, say No or that none offer it; never open with Yes before 'not Malay',
+'not Chinese', 'not Tamil', or 'offers X, not Y'. If every school does not
+provide the service, say so plainly (for example 'Neither selected preschool
+provides transport') and list each school's supported fact; never open with Yes
+before does not provide sentences.
 """
 
 
@@ -126,11 +139,35 @@ VALIDATION_CATEGORIES = frozenset({
     "unknown_validation_error",
     "duplicate_school_listing",
     "missing_distance_claim",
+    "vague_distance_wording",
+    "contradictory_yes_no_lead",
 })
 
 
+def _contradictory_yes_no_lead(answer: str) -> bool:
+    stripped = (answer or "").strip()
+    if not re.match(r"(?i)yes\b", stripped):
+        return False
+    return bool(re.search(
+        r"\b(?:does not|do not|don't|doesn't|did not|neither)\b[^.?!]{0,80}\b(?:provide|offer|have)\b|"
+        r"\bno transport\b|\bwithout transport\b|"
+        r"\bnot\s+(?:malay|chinese|tamil|english)(?:\s+language)?\b|"
+        r"\boffers?\s+[^.?!]{0,120},\s*not\s+(?:malay|chinese|tamil|english)\b",
+        stripped,
+        re.IGNORECASE,
+    ))
+
+
+def _search_distance_listing_required(result: StructuredToolResult) -> bool:
+    # In-chat 1 km filtering may still run silently; require km claims only when
+    # the parent explicitly saved a distance limit, not for the default radius.
+    return explicit_search_radius_km(result.data.get("profile_used")) is not None
+
+
 REPAIR_GUIDANCE = {
-    "missing_distance_claim": "For every listed matching centre, include its exact calculated distance in a separate sentence with the full school name and a claim for that record's /distance_km. For same_location_as_postal_code true, explain that the postal code resolves to the centre's recorded location and cite that boolean. Keep the saved radius and existing verified results; do not call tools.",
+    "missing_distance_claim": "For every listed matching centre, use one bullet that includes the full school name, supported centre_address when present, and the exact calculated distance in km with a claim for that record's /distance_km. For same_location_as_postal_code true, explain that the postal code resolves to the centre's recorded location in that same bullet and cite that boolean. Do not add extra bullets that only say nearby or near home. Keep the saved radius and existing verified results; do not call tools.",
+    "vague_distance_wording": "Remove separate 'is nearby' or 'near home' bullets. Put the exact supplied distance in km in the same bullet as the school name and address, with a /distance_km claim for each listed centre. Keep existing verified results; do not call tools.",
+    "contradictory_yes_no_lead": "Remove a leading Yes or No that contradicts the supported facts. For language questions, use Yes only when second_languages_offered includes the asked language; otherwise start with No or 'None of the selected preschools offer …'. Do not write 'Yes' before 'not Malay/Chinese/Tamil' or 'offers X, not Y'. Keep existing claims and results; do not call tools.",
     "duplicate_school_listing": "Do not repeat identical bare preschool names in a list. Mention the organisation once, or include supported addresses to distinguish its locations. Keep the existing verified records and claims.",
     "missing_pending_question": "A staged decision remains unresolved. Ask required or preferred for pending strength; ask keep existing or use incoming for a conflict; ask for the remaining pending_school_inputs (kindergarten level or language). Include this question alongside supported guidance.",
     "wrong_reported_number": "Split claims into shorter exact spans so each span contains only its supported number. Remove other numbers from that span and support them separately.",
@@ -152,6 +189,20 @@ _CITATION = re.compile(r"\[([^\[\]\n]+)\]")
 
 def _numbers(text: str) -> list[Decimal]:
     return [Decimal(m.group().replace(",", "")) for m in _NUMBER.finditer(text)]
+
+
+def _name_appears_in_span(name: str, span: str) -> bool:
+    if not name or not span:
+        return False
+    if name.casefold() in span.casefold():
+        return True
+    compact_name = "".join(ch for ch in name.casefold() if ch.isalnum())
+    compact_span = "".join(ch for ch in span.casefold() if ch.isalnum())
+    if not compact_name:
+        return False
+    if compact_name in compact_span:
+        return True
+    return len(compact_name) >= 10 and compact_name[:20] in compact_span
 
 
 def _resolve(result: StructuredToolResult, path: str):
@@ -203,6 +254,8 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             citations[citation.citation_id] = citation
     if response.kind == "grounded" and not response.claims:
         raise ResponseValidationError("missing_claim_support")
+    if _contradictory_yes_no_lead(response.answer):
+        raise ResponseValidationError("contradictory_yes_no_lead")
     known_names = {name.casefold() for name in names.values()}
     listed_names = [line.strip().casefold() for line in re.findall(r"(?m)^\s*[-*]\s+([^\n]+)$", response.answer)
                     if line.strip().casefold() in known_names]
@@ -252,7 +305,7 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
             raise ResponseValidationError("cross_school_attribution")
         if school_id:
             name = names.get(school_id)
-            if not name or name.casefold() not in claim.span.casefold():
+            if not name or not _name_appears_in_span(name, claim.span):
                 raise ResponseValidationError("missing_school_attribution")
             if any(other != school_id and other_name.casefold() in claim.span.casefold()
                    for other, other_name in names.items() if other_name != name):
@@ -286,6 +339,29 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     clean_answer = _CITATION.sub("", response.answer)
     for name in names.values():
         clean_answer = clean_answer.replace(name, "")
+    for claim in response.claims:
+        if not claim.path.endswith("/centre_address") or claim.value in (None, ""):
+            continue
+        address = str(claim.value)
+        covered_numbers.extend(_numbers(address))
+        if address in clean_answer:
+            clean_answer = clean_answer.replace(address, " ")
+        elif claim.span in clean_answer:
+            clean_answer = clean_answer.replace(claim.span, " ")
+    bullet_lines = re.findall(r"(?m)^\s*[-*]\s+([^\n]+)$", response.answer)
+    for claim in response.claims:
+        if not claim.path.endswith("/name") or not claim.school_id:
+            continue
+        name = names.get(claim.school_id)
+        if not name:
+            continue
+        for line in bullet_lines:
+            if not _name_appears_in_span(name, line):
+                continue
+            covered_numbers.extend(_numbers(line))
+            if line in clean_answer:
+                clean_answer = clean_answer.replace(line, " ")
+            break
     from collections import Counter
     if Counter(_numbers(clean_answer)) - Counter(covered_numbers):
         raise ResponseValidationError("unsupported_reported_number")
@@ -294,8 +370,12 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     for result in results:
         if (result.tool_name != "search_rank_compare_schools" or result.status != "ok"
                 or result.state_revision != latest_revision
-                or not result.data.get("profile_used", {}).get("hard_constraints", {}).get("max_distance_km")):
+                or not _search_distance_listing_required(result)):
             continue
+        if any(record.get("distance_km") is not None for record in result.data.get("records", [])):
+            for bullet in re.findall(r"(?m)^\s*[-*]\s+([^\n]+)$", response.answer):
+                if re.search(r"\bis nearby\b|\bnear home\b|\bis close\b", bullet, re.IGNORECASE):
+                    raise ResponseValidationError("vague_distance_wording")
         for index, record in enumerate(result.data.get("records", [])):
             prefix = f"/data/records/{index}/"
             claims = [c for c in response.claims if c.result_id == result.result_id
@@ -323,8 +403,10 @@ COULD_NOT_VERIFY = "I couldn't verify that answer from KinderCompass records. Pl
 def user_message_for_loop_failure(reason: str, evidence: str = "unknown") -> str:
     if reason == "response_validation" and evidence == "absent":
         return UNVERIFIED_ANSWER
-    if reason == "response_validation":
+    if reason in {"response_validation", "repair_tool_call", "model_limit"}:
         return COULD_NOT_VERIFY
+    if reason == "execution_error":
+        return SERVICE_ERROR
     return SERVICE_ERROR
 
 

@@ -51,7 +51,10 @@ class PreferenceService:
         from SystemCode.src.backend.agents.model_factory import create_conversation_agent_model
         from SystemCode.src.backend.domain.models import PreferenceResponse
         from SystemCode.src.backend.services.conversation_context_service import ConversationContextService
-        from SystemCode.src.backend.services.conversation_tool_service import ConversationToolService
+        from SystemCode.src.backend.services.conversation_tool_service import (
+            ConversationToolService,
+            pending_strength_reply,
+        )
 
         from SystemCode.src.backend.agents.conversation_telemetry import TurnTelemetry
 
@@ -78,6 +81,27 @@ class PreferenceService:
                 general_retriever_loader=lambda: self._knowledge_retriever(load_json(
                     self.repo_root / "SystemCode/src/backend/resources/web_rag/general_knowledge_index.json")),
             )
+            strength = pending_strength_reply(request.message)
+            if strength and original.get("pending"):
+                resolved = tools.invoke("reset_continue_preferences", {
+                    "operation": "resolve_strength",
+                    "choice": strength,
+                })
+                if resolved.status == "ok":
+                    original = tools.export_validated_state(response_validated=True)
+                    context = ConversationContextService(self.schools).build(
+                        message=request.message, profile=original,
+                        selected_school_ids=request.selected_school_ids,
+                        family=request.family, home_postal_code=request.home_postal_code,
+                        history=lease,
+                    )
+                    tools = ConversationToolService(
+                        context, self.schools, self.evaluation, self.locations,
+                        school_index_loader=lambda: load_json(Path(os.getenv("WEB_RAG_INDEX_PATH") or
+                            self.repo_root / "SystemCode/src/backend/output/web_rag_pilot_index.json")),
+                        general_retriever_loader=lambda: self._knowledge_retriever(load_json(
+                            self.repo_root / "SystemCode/src/backend/resources/web_rag/general_knowledge_index.json")),
+                    )
             try:
                 # Explicit staged path uses configured provider even in legacy rollback mode.
                 model = model_factory() if model_factory else create_conversation_agent_model(

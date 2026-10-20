@@ -102,7 +102,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
 
     def test_contract_rejections_discard_prior_changes(self):
         invalid = [
-            ("read_school_facts", {"school_ids": ["CENTRE:UNKNOWN"], "operation": "fees"}, SchoolNotFoundError),
+            ("read_school_facts", {"school_ids": ["CENTRE:UNKNOWN"], "operation": "fees"}, "needs_input"),
             ("read_school_facts", {"school_ids": ["CENTRE:A"], "operation": "secret"}, ValidationError),
             ("read_school_facts", {"school_ids": ["CENTRE:A"], "operation": "fees", "base_fee": 1}, ValidationError),
             ("update_preferences", {"profile": {"hard_constraints": {}}}, ValidationError),
@@ -113,7 +113,7 @@ class StructuredConversationToolsTests(unittest.TestCase):
             ("update_preferences", {"set": [{"attribute": "language", "value": "Chinese"},
                                                    {"attribute": "pedagogy", "value": "Montessori"}]}, ValidationError),
             ("update_preferences", {"set": [{"attribute": "max_distance_km", "value": 1}]}, ValidationError),
-            ("update_preferences", {"set": [{"attribute": "language", "value": "Malay"}]}, ValueError),
+            ("update_preferences", {"set": [{"attribute": "language", "value": "Malay"}]}, "needs_input"),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"gross_household_income": float("nan")}}, ValidationError),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"base_fee": 1}}, ValidationError),
             ("calculate_fees_scenario", {"school_ids": ["CENTRE:A"], "overrides": {"citizenship": None}}, ValidationError),
@@ -122,11 +122,23 @@ class StructuredConversationToolsTests(unittest.TestCase):
         for name, arguments, error in invalid:
             with self.subTest(name=name, arguments=arguments):
                 service = self.service()
-                original = service.staged_profile
                 self.update(service)
-                with self.assertRaises(error):
-                    service.invoke(name, arguments)
-                self.assertEqual(service.staged_profile, original)
+                original = deepcopy(service.staged_profile)
+                if error == "needs_input":
+                    result = service.invoke(name, arguments)
+                    self.assertEqual(result.status, "needs_input")
+                    if name == "read_school_facts":
+                        self.assertEqual(service.staged_profile, original)
+                    else:
+                        self.assertEqual(
+                            service.staged_profile.get("hard_constraints", {}).get("language"),
+                            original.get("hard_constraints", {}).get("language"),
+                        )
+                        self.assertIn("pending", service.staged_profile)
+                else:
+                    with self.assertRaises(error):
+                        service.invoke(name, arguments)
+                    self.assertEqual(service.staged_profile, original)
                 with self.assertRaises(ValueError):
                     service.export_validated_state(response_validated=True)
 
@@ -326,6 +338,63 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertEqual(result.status, "needs_input")
         self.assertEqual(service.staged_profile["pending_school_inputs"], ["language"])
 
+    def test_malay_distance_search_sets_required_language_and_keeps_k2(self):
+        k2 = "Kindergarten 2 (6 yrs old)"
+        self.context = self.context.model_copy(update={
+            "message": "Is there any school that offer Malay language within 2km?",
+            "profile": {"hard_constraints": {"level": k2, "language": "Chinese"}},
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [{"attribute": "language", "value": "Malay"}],
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(service.staged_profile["hard_constraints"]["level"], k2)
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
+        self.assertEqual(service.staged_profile["hard_constraints"]["max_distance_km"], 2)
+        self.assertNotIn("pending", service.staged_profile)
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+
+    def test_required_reply_resolves_pending_language_without_tools(self):
+        self.context = self.context.model_copy(update={
+            "message": "required",
+            "profile": {"pending": {"kind": "language", "value": "Malay", "desired": True}},
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {"set": []})
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
+        self.assertNotIn("pending", service.staged_profile)
+
+    def test_malay_and_distance_followup_does_not_reopen_saved_k2(self):
+        k2 = "Kindergarten 2 (6 yrs old)"
+        self.context = self.context.model_copy(update={
+            "message": "Any school with malay language within 2km",
+            "profile": {
+                "hard_constraints": {
+                    "level": k2,
+                    "language": "Chinese",
+                    "spark_certified": True,
+                },
+                "preferences": {"spark_certified": {"value": True, "importance": "required"}},
+            },
+        })
+        service = self.service()
+        result = service.invoke("update_preferences", {
+            "set": [
+                {"attribute": "language", "value": "Malay", "importance": "required"},
+                {"attribute": "max_distance_km", "value": 2, "importance": "required"},
+                {"attribute": "care_level", "value": k2, "importance": "required"},
+            ],
+            "missing_school_inputs": ["care_level"],
+        })
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(service.staged_profile["hard_constraints"]["level"], k2)
+        self.assertEqual(service.staged_profile["hard_constraints"]["language"], "Malay")
+        self.assertEqual(service.staged_profile["hard_constraints"]["max_distance_km"], 2)
+        self.assertNotIn("pending_school_inputs", service.staged_profile)
+
     def test_tamil_followup_does_not_reopen_saved_k2(self):
         self.context = self.context.model_copy(update={
             "message": "I am looking for a Spark kindergarten k2 school near my place.",
@@ -380,6 +449,21 @@ class StructuredConversationToolsTests(unittest.TestCase):
         self.assertNotIn("records", result.data)
         self.assertEqual(service.staged_profile["hard_constraints"]["max_distance_km"], 1)
         self.locations.attach_distances.assert_not_called()
+
+    def test_chat_search_defaults_to_one_km_from_home_without_saved_distance(self):
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**record, "distance_km": 0.5 if record["school_id"] == "CENTRE:A" else 2.0}
+            for record in records
+        ]
+        self.context = self.context.model_copy(update={"home_postal_code": "123456"})
+        service = self.service()
+        self.update(service)
+        result = service.invoke("search_rank_compare_schools", {})
+        self.assertEqual(result.status, "ok")
+        self.assertEqual([record["school_id"] for record in result.data["records"]], ["CENTRE:A"])
+        self.assertEqual(result.data["records"][0]["distance_km"], 0.5)
+        self.assertEqual(result.data.get("applied_radius_km"), 1.0)
+        self.locations.attach_distances.assert_called()
 
     def test_pending_choice_preserves_direction_and_blocks_other_mutations(self):
         service = self.service()

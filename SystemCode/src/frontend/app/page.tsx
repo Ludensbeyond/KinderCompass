@@ -350,11 +350,14 @@ export default function Home() {
         ...comparisons.map(([schoolId, comparison]) => ({
           ...comparison.schedule[1],
           postal_code: schoolById.get(schoolId)?.postal_code,
+          distance_km: distances[schoolId]
+            ?? comparison.total_distance_km
+            ?? comparison.schedule[1]?.leg_distance_km,
         })),
       ];
     }
     return homePoint ? [homePoint] : [];
-  }, [eligible, homePoint, routes]);
+  }, [distances, eligible, homePoint, routes]);
 
   const visibleEligible = useMemo(() => {
     if (distanceFilter === "none") return eligible;

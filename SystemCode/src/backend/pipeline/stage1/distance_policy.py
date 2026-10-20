@@ -47,3 +47,15 @@ def effective_search_radius_km(profile: dict | None, home_postal_code: str | Non
     if explicit is not None:
         return explicit
     return DEFAULT_HOME_RADIUS_KM
+
+
+def chat_search_radius_km(profile: dict | None, home_postal_code: str | None = None) -> float | None:
+    """Radius for in-chat school listings: explicit user limit, else 1 km from home."""
+    explicit = explicit_search_radius_km(profile)
+    if explicit is not None:
+        return explicit
+    if profile and profile.get("skip_default_distance"):
+        return None
+    if home_postal_code and len(str(home_postal_code)) == 6 and str(home_postal_code).isdigit():
+        return NEAR_HOME_RADIUS_KM
+    return None

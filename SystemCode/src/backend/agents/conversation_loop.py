@@ -2,6 +2,8 @@
 
 import asyncio
 import json
+import logging
+import re
 from dataclasses import dataclass
 from time import monotonic
 from typing import Any, Callable, Literal
@@ -11,7 +13,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .contracts import InitialConversationContext, Identifier
 from .structured_contracts import StructuredToolResult
+from ..repositories.school_repository import SchoolNotFoundError
 from ..services.conversation_tool_service import ConversationToolService
+
+_LOOP_LOGGER = logging.getLogger("kindercompass.llm_first")
 from ..services.conversation_context_service import current_state_support
 
 
@@ -44,6 +49,16 @@ those claims need the relevant calculation tools.
 Ask a targeted clarification for ambiguous references or missing user choices.
 Use tools for school facts, evidence, calculations and preference changes. Use
 typed patches for user choices only; never invent school records or replace state.
+Questions about what a selected preschool offers (languages taught, fees, food,
+hours, transport) are read_school_facts lookups on selected school_ids, not
+preference updates and not catalogue search. Wording like 'what language does
+the selected school provide' asks for programmes/second_languages_offered facts.
+When selected_schools lists one or more preschools, they/them/these/it in a
+factual question refers to those selected schools (all of them when more than
+one). Call read_school_facts for every relevant selected school_id; do not ask
+which school unless no school is selected. For whether they provide transport,
+food, or similar services, answer from the facts per school; do not start with
+Yes when the records show they do not provide it.
 Later tools read staged changes. Hypothetical scenarios do not save family inputs.
 Resolve school IDs from current context or tool results; clarify ambiguous schools.
 Pending decisions require an explicit user choice before resolution. Do not guess
@@ -88,8 +103,10 @@ supplies the missing language or level, update that choice and continue the
 original matching-school request, retaining its saved radius and other choices.
 For 'yes find me the list', search using the current profile, not generic examples.
 Use presentation centres for matching/nearby requests and include returned
-addresses, requested care levels and calculated distances. If required information
-is still missing, ask for it instead of offering unrelated preschool examples.
+addresses, requested care levels and exact calculated distances in km. Use one
+list item per centre (name, address, distance together); do not add extra lines
+that only say a school is nearby. If required information is still missing, ask
+for it instead of offering unrelated preschool examples.
 Language-offered evidence does not establish bilingual teaching quality.
 Looking for / find me / I want a preschool with named attributes (SPARK, language,
 pedagogy, transport, food, full-day, operator) is a preference update. Always call
@@ -157,6 +174,129 @@ def _evidence_label(results: list[StructuredToolResult]) -> str:
     if statuses and statuses <= {"no_evidence"}:
         return "absent"
     return "unknown"
+
+
+_BOTH_DISAMBIGUATION_REPLIES = frozenset({
+    "both", "all", "both of them", "all of them", "both schools", "all schools",
+    "both selected", "all selected", "them both", "the both",
+})
+_DISAMBIGUATION_QUESTION_MARKERS = (
+    "which selected school",
+    "which school do you mean",
+    "which school you mean",
+    "do you mean:",
+    "do you want me to check",
+    "check that",
+    " or both",
+)
+
+
+def _facts_operation_for_question(text: str) -> str:
+    lowered = (text or "").casefold()
+    if any(word in lowered for word in ("fee", "cost", "price", "subsidy")):
+        return "fees"
+    if any(word in lowered for word in (
+        "food", "meal", "lunch", "halal", "diet", "pork", "lard", "snack",
+    )):
+        return "food"
+    if any(word in lowered for word in ("hour", "open", "close", "timing")):
+        return "operating_hours"
+    if any(word in lowered for word in ("transport", "bus")):
+        return "transport"
+    if any(word in lowered for word in ("vacancy", "slot", "place")):
+        return "vacancy"
+    if any(word in lowered for word in ("language", "programme", "curriculum", "pedagogy", "k1", "k2", "nursery")):
+        return "programmes"
+    return "programmes"
+
+
+def _results_ready_for_answer(results: list[StructuredToolResult]) -> bool:
+    return any(
+        result.status == "ok" and result.tool_name in {
+            "search_rank_compare_schools",
+            "read_school_facts",
+            "update_preferences",
+            "calculate_fees_scenario",
+            "find_nearby_schools",
+        }
+        for result in results
+    )
+
+
+def _looks_like_factual_school_question(message: str) -> bool:
+    lowered = (message or "").casefold()
+    return bool(re.search(
+        r"\b(?:provide|offer|have|serve|cost|fee|halal|meal|language|programme|hour|transport|vacancy)\b",
+        lowered,
+    ))
+
+
+def _selected_schools_list_question_hint(context: InitialConversationContext) -> str:
+    """Filter questions about the current selection, not a new catalogue search."""
+    if not context.selected_schools or not _looks_like_factual_school_question(context.message):
+        return ""
+    lowered = re.sub(r"\s+", " ", context.message.strip().casefold())
+    if not re.search(
+        r"\b(?:in the list|on the list|from the list|in my list|any of the(?:se)? schools|"
+        r"(?:any|some)\s+school(?:s)?\s+in the list|schools in the list|"
+        r"which of (?:the )?schools)\b",
+        lowered,
+    ):
+        return ""
+    school_ids = [school.school_id for school in context.selected_schools]
+    operation = _facts_operation_for_question(context.message)
+    return (
+        "'The list' means the preschools already selected in context, not the full catalogue. "
+        f"Call read_school_facts with operation {operation} and school_ids {school_ids!r} "
+        "and answer from second_languages_offered / programmes facts. "
+        "For 'any school … Malay/Chinese/Tamil', answer Yes only if at least one record "
+        "includes that language; otherwise say No or that none of the selected schools offer it. "
+        "Do not open with Yes when the facts show a different language only. "
+        "Do not call update_preferences or search_rank_compare_schools for this question."
+    )
+
+
+def _selected_schools_pronoun_hint(context: InitialConversationContext) -> str:
+    if not context.selected_schools or not _looks_like_factual_school_question(context.message):
+        return ""
+    if not re.search(r"\b(?:they|them|their|these|those|it)\b", context.message, re.IGNORECASE):
+        return ""
+    school_ids = [school.school_id for school in context.selected_schools]
+    operation = _facts_operation_for_question(context.message)
+    if len(context.selected_schools) == 1:
+        school = context.selected_schools[0]
+        return (
+            f"'They/them/it' refers to the selected preschool {school.name!r}. "
+            f"Call read_school_facts with operation {operation} and school_ids {[school.school_id]!r} "
+            "before answering."
+        )
+    return (
+        "With multiple selected preschools, 'they/them/these' means every selected school. "
+        f"Call read_school_facts with operation {operation} and school_ids {school_ids!r} "
+        "before answering. Do not ask which school."
+    )
+
+
+def _selected_school_disambiguation_hint(context: InitialConversationContext) -> str:
+    """When the user answers a which-school clarification with both/all, steer to facts."""
+    if len(context.selected_schools) < 2 or not context.recent_exchanges:
+        return ""
+    reply = re.sub(r"\s+", " ", context.message.strip().casefold())
+    if reply not in _BOTH_DISAMBIGUATION_REPLIES and not re.fullmatch(r"both(?:\s+(?:schools|of them))?", reply):
+        return ""
+    last_assistant = context.recent_exchanges[-1].assistant.casefold()
+    if not any(marker in last_assistant for marker in _DISAMBIGUATION_QUESTION_MARKERS):
+        return ""
+    school_ids = [school.school_id for school in context.selected_schools]
+    prior_user = context.recent_exchanges[-1].user
+    operation = _facts_operation_for_question(prior_user)
+    return (
+        "The newest message answers your which-school clarification for every "
+        f"selected preschool. Re-answer the prior user question using read_school_facts "
+        f"with operation {operation} and school_ids {school_ids!r}. Do not call "
+        "update_preferences or search_rank_compare_schools for that follow-up unless "
+        "the prior question explicitly asked to find or filter new schools."
+    )
 
 
 def _support_index(result: StructuredToolResult) -> list[dict]:
@@ -243,12 +383,12 @@ async def run_conversation_loop(
         for exchange in context.recent_exchanges:
             messages.extend([HumanMessage(content=exchange.user), AIMessage(content=exchange.assistant)])
         messages.append(HumanMessage(content=context.message))
-        messages.append(SystemMessage(content=
+        turn_guidance = (
             "Before acting, resolve references from the actual recent speaker turns. "
             "For a kindergarten request with a kilometre radius and unspecified bilingual language, first save the radius as required and missing_school_inputs [care_level, language]. Ask which kindergarten level and which second language. Do not stage Bilingual pedagogy for that request. A radius is never a kindergarten level. "
             "Read pending_school_inputs even when recent_exchanges is empty. A reply naming Chinese supplies language; a reply naming infant, playgroup, pre-nursery, nursery, K1, or K2 supplies care_level with required importance. Save those choices; do not ask permission to save an explicitly supplied level. Keep remaining missing fields. Do not include supplied fields again in missing_school_inputs. "
-            "When the user already named a care level in an earlier turn (for example SPARK-certified K1 or nursery), do not ask for that level again after they answer language; the backend keeps that level once saved. "
-            "If pending_school_inputs includes language and the user replies Chinese, Malay, or Tamil, you MUST call update_preferences for language before asking about the remaining kindergarten level. Omit language importance unless the user's words supplied it; ask required/preferred if pending strength is staged. Never silently ignore a supplied language answer. "
+            "When the user already named a care level in an earlier turn (for example SPARK-certified K1 or nursery), do not ask for that level again after they change language, distance, or other preferences; the backend keeps that level once saved. Do not include care_level in missing_school_inputs when updating language or max_distance_km alone. "
+            "If pending_school_inputs includes language and the user replies Chinese, Malay, or Tamil, you MUST call update_preferences for language before asking about the remaining kindergarten level. Omit language importance unless the user's words supplied it; ask required/preferred if pending strength is staged. Never silently ignore a supplied language answer. When the user replies required or preferred to that strength question, call reset_continue_preferences with operation resolve_strength and that choice, or update_preferences with the same pending value and explicit importance. "
             "A current-turn phrase such as 'Chinese as a second language' already supplies language; never include language in missing_school_inputs for that phrase. If update_preferences derives a care level from the validated family dates, use its returned staged_profile and do not ask for that resolved field. "
             "When a later message supplies the existing pending value with explicit importance plus a kindergarten level (e.g. K2; Chinese is required), update_preferences may atomically resolve that same pending value and save the other choices. Then search. Never ask for strength again after that explicit choice. "
             'For example, with pending Chinese and user "K2; Chinese is required. Find me the list.", call update_preferences with {"set":[{"attribute":"care_level","value":"Kindergarten 2 (6 yrs old)","importance":"required"},{"attribute":"language","value":"Chinese","importance":"required"}]}, then search_rank_compare_schools with presentation centres. BOTH importance fields must be required; do not omit the explicit language strength or mark either supplied field missing. '
@@ -262,14 +402,34 @@ async def run_conversation_loop(
             "If pending_contradiction exists and the newest message says 'keep current', 'keep existing', 'keep saved', or 'keep current level', you MUST call reset_continue_preferences with operation resolve_contradiction and choice keep_existing. Do not repeat the contradiction question. "
             "Unchanged preference acknowledgements can cite context:current as documented; changes require tools. "
             "If the user asks which preschool is closest and a home postal code is already in context, and the message names no SPARK, language, pedagogy, or other ranking attribute, call find_nearby_schools. Do not ask for school names or IDs first. "
-            "If the newest message looks for schools with SPARK, language, pedagogy, or a kilometre limit, call update_preferences first. Do not call find_nearby_schools for that combined request; use search_rank_compare_schools after the profile is updated. "
-            "Do not save max_distance_km unless the user stated a kilometre limit or near-home wording; Show recommendations applies a 5 km default separately. "
+            "If the newest message asks to find, filter, or match preschools by SPARK, a language preference, pedagogy, or a kilometre limit, call update_preferences first. Factual questions about languages already offered at selected schools are not that pattern. Do not call find_nearby_schools for a combined find request; use search_rank_compare_schools after the profile is updated. "
+            "Do not save max_distance_km unless the user stated a kilometre limit or near-home wording. In-chat school search still limits to 1 km from home when a postal code is in context unless the user opted out of distance or named another radius. Show recommendations applies a 5 km default separately. "
             "Do not mark language as a missing_school_input unless the user asked for bilingual or named a language. "
             "If a nearby result has same_location_as_postal_code, say the postal code resolves to that centre's recorded location. Do not say it is 0 km away. "
-            "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees or another fact unless the newest message asks for it. "
+            "If the previous assistant message asked a clarification, the newest user message answers that question. Continue the original request. Do not switch to fees, search, or profile updates unless the newest message asks for it. A reply of both or all to a which-selected-school question means answer the original factual question for every selected school_id. "
             "A question ABOUT the previous wording asks for an explanation, not an answer to its clarification. 'What is a preschool branch?' and 'what do you mean by branches?' require a definition, never another school list. "
             "When the user asks to compare the selected schools, call search_rank_compare_schools with operation compare and school_ids copied exactly from selected_school_ids. Then call calculate_fees_scenario with those same IDs. Never pass a school name or context:current as a school id. "
-            "'I need', 'must', and 'it must' set importance required. Do not ask required versus preferred after those words."))
+            "'I need', 'must', and 'it must' set importance required. Do not ask required versus preferred after those words."
+        )
+        list_hint = _selected_schools_list_question_hint(context)
+        if list_hint:
+            turn_guidance += " " + list_hint
+        pronoun_hint = _selected_schools_pronoun_hint(context)
+        if pronoun_hint:
+            turn_guidance += " " + pronoun_hint
+        disambiguation_hint = _selected_school_disambiguation_hint(context)
+        if disambiguation_hint:
+            turn_guidance += " " + disambiguation_hint
+        if (
+            re.search(r"\b\d+(?:\.\d+)?\s*(?:km|kilometres?|kilometers?)\b", context.message, re.IGNORECASE)
+            and not context.home_postal_code
+        ):
+            turn_guidance += (
+                " The user named a distance but no home postal code is in context. "
+                "After saving max_distance_km, either ask for their home postal code or "
+                "explain that distance matching needs it; do not invent distances."
+            )
+        messages.append(SystemMessage(content=turn_guidance))
         results: list[StructuredToolResult] = []
         used_ids: set[str] = set()
         repairs = 0
@@ -309,9 +469,24 @@ async def run_conversation_loop(
                 elif len(response.content.strip()) > 800:
                     raise ConversationLoopError("invalid_answer")
                 return ConversationLoopCandidate(response.content.strip(), tuple(results), iteration, len(results))
-            if repairs:
-                raise ConversationLoopError("repair_tool_call")
             calls = [ModelToolCall.model_validate(c) for c in response.tool_calls]
+            if repairs:
+                prefetch_facts = (
+                    not results
+                    and len(calls) == 1
+                    and calls[0].name == "read_school_facts"
+                )
+                if prefetch_facts:
+                    pass
+                elif _results_ready_for_answer(results):
+                    messages.append(response)
+                    messages.append(HumanMessage(content=(
+                        "Tool calls are blocked during answer repair. Return corrected "
+                        "final JSON using only the tool results already returned in this turn."
+                    )))
+                    continue
+                else:
+                    raise ConversationLoopError("repair_tool_call")
             if any(c.name not in names or c.id in used_ids for c in calls) or len({c.id for c in calls}) != len(calls):
                 raise ConversationLoopError("invalid_tool_call")
             if len(used_ids) + len(calls) > limits.tool_calls:
@@ -337,7 +512,25 @@ async def run_conversation_loop(
                         "instruction": "No tool executed. Correct arguments once or ask the user. Omit null overrides. Set and remove must be disjoint. Missing scenario income requires a question, not a calculation.",
                     }), tool_call_id=call.id, name=call.name))
                     continue
-                result = await bounded(tools.invoke, call.name, call.args)
+                try:
+                    result = await bounded(tools.invoke, call.name, call.args)
+                except ValueError as error:
+                    messages.append(ToolMessage(content=json.dumps({
+                        "status": "needs_input",
+                        "error": str(error),
+                        "instruction": (
+                            "No tool state was saved. Fix arguments, ask the user, or use a "
+                            "different permitted tool."
+                        ),
+                    }, ensure_ascii=False), tool_call_id=call.id, name=call.name))
+                    continue
+                except SchoolNotFoundError:
+                    messages.append(ToolMessage(content=json.dumps({
+                        "status": "needs_input",
+                        "missing_inputs": ["school_ids"],
+                        "instruction": "Use school_id values from context or prior tool results.",
+                    }, ensure_ascii=False), tool_call_id=call.id, name=call.name))
+                    continue
                 results.append(result)
                 payload = result.model_dump(mode="json")
                 if final_validator:
@@ -349,4 +542,8 @@ async def run_conversation_loop(
         tools.abort()
         if isinstance(error, (ConversationLoopError, asyncio.CancelledError, KeyboardInterrupt, SystemExit)):
             raise
+        try:
+            _LOOP_LOGGER.exception("conversation_loop_execution_error")
+        except Exception:
+            pass
         raise ConversationLoopError("execution_error") from None

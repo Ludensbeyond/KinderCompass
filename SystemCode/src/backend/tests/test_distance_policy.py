@@ -3,6 +3,7 @@ import unittest
 from stage1.distance_policy import (
     DEFAULT_HOME_RADIUS_KM,
     NEAR_HOME_RADIUS_KM,
+    chat_search_radius_km,
     distance_opt_out,
     effective_search_radius_km,
     explicit_search_radius_km,
@@ -30,6 +31,16 @@ class DistancePolicyTests(unittest.TestCase):
         self.assertIsNone(profile["hard_constraints"].get("max_distance_km"))
         self.assertIsNone(explicit_search_radius_km(profile))
         self.assertEqual(effective_search_radius_km(profile, "570301"), DEFAULT_HOME_RADIUS_KM)
+        self.assertEqual(chat_search_radius_km(profile, "570301"), NEAR_HOME_RADIUS_KM)
+
+    def test_chat_search_uses_explicit_radius_and_respects_opt_out(self):
+        profile = map_text_to_filters("SPARK within 3 km")
+        self.assertEqual(chat_search_radius_km(profile, "570301"), 3.0)
+        self.assertEqual(chat_search_radius_km(profile, None), 3.0)
+        opted_out = merge_preference_profile(profile, "anywhere in Singapore")
+        self.assertIsNone(chat_search_radius_km(opted_out, "570301"))
+        no_distance = map_text_to_filters("SPARK is required")
+        self.assertIsNone(chat_search_radius_km(no_distance, None))
 
     def test_opt_out_disables_default_radius(self):
         profile = merge_preference_profile(

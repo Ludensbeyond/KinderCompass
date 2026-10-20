@@ -9,6 +9,7 @@ export type MapPoint = {
   latitude: number;
   longitude: number;
   postal_code?: number | string | null;
+  distance_km?: number | null;
 };
 
 export default function LiveMap({ points }: { points: MapPoint[] }) {
@@ -42,6 +43,12 @@ export default function LiveMap({ points }: { points: MapPoint[] }) {
         const postalCode = String(point.postal_code ?? "").replace(/\D/g, "").padStart(6, "0");
         if (point.type === "preschool" && postalCode !== "000000") {
           popup.append(document.createElement("br"), document.createTextNode(`Postal code: ${postalCode}`));
+        }
+        if (point.type === "preschool" && point.distance_km != null && Number.isFinite(point.distance_km)) {
+          popup.append(
+            document.createElement("br"),
+            document.createTextNode(`Distance: ${point.distance_km.toFixed(2)} km`),
+          );
         }
         L.circleMarker([point.latitude, point.longitude], {
           radius: 8,
