@@ -8,6 +8,7 @@ from typing import Any, Literal
 from pydantic import ValidationError
 
 from SystemCode.src.backend.domain.catalogue import SchoolRecord
+from SystemCode.src.backend.domain.fee_units import is_monthly_programme_fee
 
 
 StructuredSchoolFactOperation = Literal[
@@ -31,7 +32,6 @@ STRUCTURED_SCHOOL_FACT_FIELDS: dict[StructuredSchoolFactOperation, tuple[str, ..
     ),
     "location": ("centre_address", "postal_code", "town", "geometry"),
 }
-
 
 class SchoolNotFoundError(LookupError):
     def __init__(self, school_ids: list[str]):
@@ -80,6 +80,17 @@ class SchoolRepository:
                 "care_levels": record.get("care_levels") or [],
                 "services_menu": record.get("services_menu") or [],
             }
+            monthly_fees = [
+                item.get("fees") for item in normalized["services_menu"]
+                if isinstance(item, dict)
+                and is_monthly_programme_fee(item)
+                and isinstance(item.get("fees"), (int, float))
+            ]
+            if normalized["services_menu"]:
+                # Older processed catalogues set base_fee to the minimum of all
+                # service rows, which could be an hourly Emergency Care charge.
+                normalized["base_fee"] = min(monthly_fees) if monthly_fees else None
+                normalized["has_fee_data"] = bool(monthly_fees)
             try:
                 by_id[school_id] = SchoolRecord.model_validate(normalized)
             except ValidationError as exc:

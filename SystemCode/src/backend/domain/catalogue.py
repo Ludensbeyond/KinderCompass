@@ -32,6 +32,7 @@ class SchoolService(MappingModel):
     type_of_citizenship: Literal["SC", "SPR", "Others"]
     fees: float = Field(ge=0)
     last_updated: dt.date | None = None
+    remarks: str | None = None
 
 
 class SchoolRecord(MappingModel):

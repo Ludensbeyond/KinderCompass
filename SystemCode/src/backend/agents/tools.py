@@ -384,8 +384,8 @@ def _structured_fact_answer(records: list[dict[str, Any]], operation: str) -> st
             detail = "current-month " + ", ".join(current) if current else "vacancy data is present"
         elif operation == "fees":
             detail = (
-                f"base fee ${float(facts['base_fee']):,.0f}"
-                if facts.get("base_fee") is not None else "fee schedule is available"
+                f"lowest listed monthly programme fee ${float(facts['base_fee']):,.0f}"
+                if facts.get("base_fee") is not None else "monthly programme fee data is unavailable"
             )
         elif operation == "programmes":
             levels = facts.get("care_levels") or []
