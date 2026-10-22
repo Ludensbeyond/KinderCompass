@@ -10,6 +10,8 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 
+from SystemCode.src.backend.domain.fee_units import is_monthly_programme_fee
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RAW_DIR = REPO_ROOT / "SystemCode" / "data" / "raw"
@@ -93,16 +95,22 @@ def prepare_catalogue(raw_dir: str | Path = DEFAULT_RAW_DIR) -> pd.DataFrame:
     ]
     service_summary = (
         services.groupby("centre_code")
-        .agg(
-            base_fee=("fees", "min"),
-            care_levels=("levels_offered", lambda values: sorted(set(values.dropna()))),
-        )
+        .agg(care_levels=("levels_offered", lambda values: sorted(set(values.dropna()))))
         .reset_index()
+    )
+    monthly_fee_summary = (
+        services[services.apply(is_monthly_programme_fee, axis=1)]
+        .groupby("centre_code", as_index=False)["fees"]
+        .min()
+        .rename(columns={"fees": "base_fee"})
+    )
+    service_summary = service_summary.merge(
+        monthly_fee_summary, on="centre_code", how="left", validate="one_to_one"
     )
     services_json = (
         services.groupby("centre_code")[[
             "class_of_licence", "levels_offered", "type_of_service",
-            "type_of_citizenship", "fees", "last_updated"
+            "type_of_citizenship", "fees", "last_updated", "remarks"
         ]]
         .apply(lambda frame: frame.to_dict(orient="records"), include_groups=False)
         .reset_index(name="services_menu")

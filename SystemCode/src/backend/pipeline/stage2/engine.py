@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from SystemCode.src.backend.repositories.policy_repository import PolicyRepository
+from SystemCode.src.backend.domain.fee_units import is_monthly_programme_fee
 
 
 POLICY_PATH = Path(__file__).resolve().parents[2] / "resources" / "policy" / "ecda_preschool_subsidies_2025-01-01.json"
@@ -74,6 +75,8 @@ def _select_service(menu: Iterable[Mapping[str, Any]], *, level: str, citizenshi
                     programme: str, service_type: str | None = None) -> dict[str, Any] | None:
     candidates = []
     for item in menu:
+        if not is_monthly_programme_fee(item):
+            continue
         if item.get("levels_offered") != level or item.get("type_of_citizenship") != citizenship:
             continue
         if service_type and item.get("type_of_service") != service_type:
