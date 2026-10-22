@@ -12,6 +12,8 @@ MONTHLY_FEE_SERVICE_TYPES = frozenset({
     "Half Day AM",
     "Half Day PM",
     "Flexi Care 1",
+    "Flexi Care 1 AM",
+    "Flexi Care 1 PM",
     "Flexi Care 2",
     "Flexi Care 3",
 })

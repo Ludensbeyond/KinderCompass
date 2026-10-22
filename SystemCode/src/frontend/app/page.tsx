@@ -120,22 +120,31 @@ function appliedFilters(profile: PreferenceProfile | null): string[] {
   return filters;
 }
 
+function programmeOptionLabel(option: ProgrammeOption): string {
+  if (option.status === "manual_review") {
+    return `${option.service_label} — ${money.format(option.fee_before_subsidy)}/month before subsidy assessment`;
+  }
+  return `${option.service_label} — ${money.format(option.net_monthly_fee)}/month estimated net (${money.format(option.fee_before_subsidy)} before subsidy)`;
+}
+
 function FeeNotes({ centre }: { centre: Centre }) {
   const fee = getParentFeeBreakdown(centre);
   const hasBreakdown = [fee.fee, fee.basic, fee.additional, fee.maximumAdditional].some(Number.isFinite);
+  const hasSubsidy = Number(fee.basic ?? 0) > 0 || Number(fee.additional ?? 0) > 0;
   const notes = [
     ...(centre.status === "manual_review" && centre.reason ? [centre.reason] : []),
     ...(centre.warnings ?? []).filter((note) => !note.toLowerCase().includes("not an ecda subsidy approval")),
   ];
   if (fee.net == null && !hasBreakdown && notes.length === 0 && !centre.policy_source) return null;
   return <div className="feeNotes">
-    {fee.net != null && <strong className="feeEstimate">Estimated monthly fee: {money.format(fee.net)}</strong>}
+    {fee.net != null && <strong className="feeEstimate">Estimated amount payable: {money.format(fee.net)}/month</strong>}
     {hasBreakdown && <p className="feeBreakdown">{fee.fee != null && <>Fee before subsidy: {money.format(fee.fee)}</>}{fee.basic != null && <> · Basic subsidy: −{money.format(fee.basic)}</>}{fee.additional != null && <> · Additional subsidy applied: −{money.format(fee.additional)}</>}{fee.maximumAdditional != null && <> · Maximum additional subsidy: up to {money.format(fee.maximumAdditional)}</>}</p>}
+    {hasSubsidy && <p className="subsidyExplanation">Subsidies differ by programme. Full-day care can therefore have a lower estimated amount payable than a shorter programme.</p>}
     {fee.additional == null && fee.maximumAdditional != null && <p>This response includes the maximum additional subsidy but not the amount actually applied, so the breakdown cannot be fully reconciled.</p>}
     {fee.minimumApplied && fee.minimum != null && <p>A minimum monthly co-payment of {money.format(fee.minimum)} applies under this estimate.</p>}
     {fee.reconciles === false && <p className="feeWarning">The returned fee estimate does not reconcile with the displayed fee and subsidy figures. Confirm the estimate before relying on this breakdown.</p>}
     {centre.policy_source && <p>Policy source: <a href={centre.policy_source.source_url} target="_blank" rel="noreferrer">{centre.policy_source.authority} · effective {sourceDateLabel(centre.policy_source.effective_from)}</a></p>}
-    <p>This is an estimate based on the family details provided, not ECDA approval. Confirm current fees and eligibility with the preschool; GST treatment and additional charges may vary.</p>
+    <p>This estimate uses the family details provided and is not ECDA approval. Confirm subsidy eligibility with ECDA and current fees, GST treatment, and additional charges with the preschool.</p>
     {notes.map((note) => <p key={note}>{note}</p>)}
   </div>;
 }
@@ -719,7 +728,7 @@ export default function Home() {
                     {routes[centre.school_id] && <div className="schoolMetrics"><strong className="distanceMetric">{routes[centre.school_id].total_distance_km.toFixed(2)} km<small>route from home</small></strong></div>}
                   </button>
                   <RecommendationExplanation centre={centre} profile={preferenceProfile} distanceKm={distances[centre.school_id]} />
-                  {centre.programme_options && centre.programme_options.length > 0 && <div className="programmePicker"><label>Programme<select value={centre.programme_id ?? ""} disabled={programmeBusy === centre.school_id} onChange={(event) => void changeProgramme(centre.school_id, event.target.value as ProgrammeId)}>{centre.programme_options.map((option) => <option value={option.programme_id} key={option.programme_id}>{option.service_label} — {money.format(option.net_monthly_fee)}/month</option>)}</select></label>{centre.preferred_programme_available === false && <small>Your preferred programme is unavailable at this school; the lowest-fee available option is shown.</small>}</div>}
+                  {centre.programme_options && centre.programme_options.length > 0 && <div className="programmePicker"><label>Programme and estimated monthly cost<select value={centre.programme_id ?? ""} disabled={programmeBusy === centre.school_id} onChange={(event) => void changeProgramme(centre.school_id, event.target.value as ProgrammeId)}>{centre.programme_options.map((option) => <option value={option.programme_id} key={option.programme_id}>{programmeOptionLabel(option)}</option>)}</select></label><div className="programmeHelp"><small>Estimated net amounts include programme-specific subsidies based on your family details.</small>{centre.preferred_programme_available === false && <small>Your preferred programme is unavailable at this school; the lowest-fee available option is shown.</small>}</div></div>}
                   <FeeNotes centre={centre} />
                   <ParentMentionLinks centre={centre} />
                   <SchoolRatingPanel centre={centre} sessionId={anonymousSessionId} onRated={updateParentRating} />
