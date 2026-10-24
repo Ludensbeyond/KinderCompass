@@ -10,7 +10,7 @@ agent charges; no judge call):
 
 ```bash
 PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-  .venv/bin/python docs/examples/ragas/capture_one.py --staged \
+  .venv/bin/python SystemCode/src/backend/evaluation/ragas/capture_one.py --staged \
   --output /tmp/kindercompass-ragas-nel-age-live.jsonl
 ```
 
@@ -103,7 +103,7 @@ The real capture passed `score.py --validate-only` against a temporary
 one-case subset of the frozen dataset:
 
 ```bash
-.venv/bin/python docs/examples/ragas/score.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --cases /tmp/kindercompass-ragas-nel-age-cases.jsonl \
   --runs /tmp/kindercompass-ragas-nel-age-live.jsonl --validate-only
 ```

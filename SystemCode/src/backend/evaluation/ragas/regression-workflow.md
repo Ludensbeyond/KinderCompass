@@ -33,7 +33,7 @@ Install the isolated judge environment once using the lock file:
 
 ```bash
 python3.12 -m venv /tmp/kindercompass-ragas-venv
-/tmp/kindercompass-ragas-venv/bin/python -m pip install -r docs/examples/ragas/requirements.lock.txt
+/tmp/kindercompass-ragas-venv/bin/python -m pip install -r SystemCode/src/backend/evaluation/ragas/requirements.lock.txt
 /tmp/kindercompass-ragas-venv/bin/python -m pip check
 ```
 
@@ -41,14 +41,14 @@ Capture and validate, using backend provider credentials from the root `.env`:
 
 ```bash
 mkdir -p /tmp/kindercompass-ragas-candidate
-.venv/bin/python docs/examples/ragas/select_cases.py \
-  --dataset-dir docs/examples/ragas/expanded --split tuning \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/select_cases.py \
+  --dataset-dir SystemCode/src/backend/evaluation/ragas/expanded --split tuning \
   --output /tmp/kindercompass-ragas-candidate/cases.jsonl
 PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-  .venv/bin/python docs/examples/ragas/capture_dataset.py --staged \
-  --dataset-dir docs/examples/ragas/expanded --split tuning \
+  .venv/bin/python SystemCode/src/backend/evaluation/ragas/capture_dataset.py --staged \
+  --dataset-dir SystemCode/src/backend/evaluation/ragas/expanded --split tuning \
   --output /tmp/kindercompass-ragas-candidate/runs.jsonl
-.venv/bin/python docs/examples/ragas/score.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --cases /tmp/kindercompass-ragas-candidate/cases.jsonl \
   --runs /tmp/kindercompass-ragas-candidate/runs.jsonl --validate-only
 ```
@@ -72,7 +72,7 @@ not replace semantic review.
 Score with the pinned judge setting **OpenAI `gpt-4o-mini`, temperature 0**:
 
 ```bash
-/tmp/kindercompass-ragas-venv/bin/python docs/examples/ragas/score.py \
+/tmp/kindercompass-ragas-venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --cases /tmp/kindercompass-ragas-candidate/cases.jsonl \
   --runs /tmp/kindercompass-ragas-candidate/runs.jsonl \
   --reviews /tmp/kindercompass-ragas-candidate/reviews.json \
@@ -89,9 +89,9 @@ snapshot hashes. Empty evidence stays empty; undefined scores stay null.
 Freeze the reviewed candidate (including explicit failed execution rows):
 
 ```bash
-.venv/bin/python docs/examples/ragas/baseline.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/baseline.py \
   --cases /tmp/kindercompass-ragas-candidate/cases.jsonl \
-  --dataset-manifest docs/examples/ragas/expanded/manifest.json \
+  --dataset-manifest SystemCode/src/backend/evaluation/ragas/expanded/manifest.json \
   --runs /tmp/kindercompass-ragas-candidate/runs.jsonl \
   --run-manifest /tmp/kindercompass-ragas-candidate/runs.manifest.json \
   --scores /tmp/kindercompass-ragas-candidate/scores.csv \
@@ -105,7 +105,7 @@ For the first run, retain this as the new baseline outside Git. For subsequent
 runs, compare with the previous reviewed bundle:
 
 ```bash
-.venv/bin/python docs/examples/ragas/compare.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/compare.py \
   --baseline /tmp/kindercompass-ragas-baseline/baseline.tar.gz \
   --candidate /tmp/kindercompass-ragas-candidate/candidate.tar.gz \
   --output /tmp/kindercompass-ragas-candidate/comparison.json

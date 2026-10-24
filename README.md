@@ -1,6 +1,6 @@
 # [ Practice Module ] KinderCompass — Preschool Recommender System
 
-**[ Naming Convention ]** `IRS-PM-YYYY-MM-DD-STKxx-GRP-TeamName-KinderCompass.zip`
+**[ Naming Convention ]** `IRS-PM-2026-07-GRP2-KinderCompass.zip`
 
 **GitHub:** https://github.com/Ludensbeyond/KinderCompass
 
@@ -25,7 +25,9 @@ supporting evidence. Existing search tools provide useful catalogue information
 but offer limited conversational preference handling, explainable matching, and
 integrated comparison support.
 
-KinderCompass organises its recommendation process into three principal stages, although conversational tools may invoke the underlying capabilities independently according to the user’s request.:
+KinderCompass organises its recommendation process into three principal stages.
+The conversational tools may invoke the underlying capabilities independently
+according to the user's request.
 
 | Stage | Capability |
 |---|---|
@@ -58,8 +60,8 @@ delivered through a FastAPI backend and Next.js frontend.
 
 | Video | File | Status |
 |---|---|---|
-| Promotion (5 min) | `Video/KinderCompass-promotion.mp4` | Pending |
-| System design (5 min) | `Video/KinderCompass-system.mp4` | Pending |
+| Promotion (5 min) | `Video/KinderCompass-promotion.mp4` | Completed |
+| System design (5 min) | `Video/KinderCompass-system.mp4` | Completed |
 
 > Upload both videos to the `Video/` folder before final submission.  
 > Note: AI-generated presentation speech is **not allowed**.
@@ -68,125 +70,127 @@ delivered through a FastAPI backend and Next.js frontend.
 
 ## SECTION 5 : Project Setup
 
-See the detailed [KinderCompass PoC 1 guide](docs/poc1/Readme.md) and the latest
-project report in `ProjectReport/`.
+The commands below target Windows PowerShell and must be run from the repository
+root. For implementation details, see the
+[implementation guide](docs/impl.md) and
+[offline pipeline guide](SystemCode/src/scripts/README.md).
 
-### [ 1 ] Prerequisites
+### 5.1 Prerequisites
 
 - Python 3.11+
 - Node.js 18+ with npm
-- Neo4j database for Stage 1 knowledge-graph search
-- OneMap credentials for postal-code and distance features
-- OpenAI API credentials for the default LLM-first conversation flow, or an
-  explicit legacy deterministic configuration
+- A Neo4j database
+- OneMap credentials for geocoding and distance features
+- An OpenAI API key for the default LLM-first conversation flow
 
-Create a `.env` file in the repository root and add your environment-specific
-credentials:
+### 5.2 Configure backend services
+
+Create `.env` in the repository root. For the default LLM-first flow, configure
+Neo4j, one supported OneMap authentication method, and OpenAI:
 
 ```dotenv
-# Required for Stage 1 graph search
+# Required by the launcher and Stage 1 graph search
 NEO4J_URI=
 NEO4J_USERNAME=
 NEO4J_PASSWORD=
-NEO4J_DATABASE=neo4j
 
-# Required for postal-code and distance features
+# Required for location features: use email/password...
 ONEMAP_EMAIL=
 ONEMAP_PASSWORD=
 
-# Required for the default LLM-first conversation flow
+# ...or use an existing token instead
+# ONEMAP_TOKEN=
+
+# Required by the default LLM-first conversation flow
 OPENAI_API_KEY=
-
-# Conversation rollout: llm-first (default), shadow, or legacy
-CONVERSATION_FLOW_MODE=llm-first
-
-# Optional retrieval and retained legacy-flow settings
-GENERAL_KNOWLEDGE_RETRIEVAL_MODE=curated
-OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
-OPENAI_INTENT_CLASSIFICATION_ENABLED=false
-OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
-OPENAI_WEB_RAG_ANSWERS_ENABLED=false
-
-OPENAI_WEB_RAG_MODEL=gpt-4o-mini
-OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
-ONEMAP_TOKEN=
-WEB_RAG_ANSWER_MODE=agent
-CONVERSATION_AGENT_MODE=agent
 ```
 
-Replace the blank values with your credentials. `ONEMAP_TOKEN` can be used
-instead of email/password when a valid token is already available. Do not commit
-`.env` or place backend credentials in the frontend `.env.local` file.
+The following settings are optional because the application already provides
+these defaults. Add only the values that you need to override or make explicit:
 
-`CONVERSATION_FLOW_MODE` controls the `/api/preferences` rollout. Its default,
-`llm-first`, requires a valid OpenAI configuration. Set it to `legacy` to serve
-the retained legacy controller, or `shadow` to serve the legacy response while
-observing the LLM-first path. Invalid values fail visibly instead of silently
-selecting another flow. `CONVERSATION_AGENT_MODE` configures the retained legacy
-supervisor and is separate from this HTTP rollout.
+```dotenv
+NEO4J_DATABASE=neo4j
+CONVERSATION_FLOW_MODE=llm-first
+GENERAL_KNOWLEDGE_RETRIEVAL_MODE=curated
+CONVERSATION_AGENT_MODE=agent
+WEB_RAG_ANSWER_MODE=deterministic
+OPENAI_PREFERENCE_EXTRACTION_ENABLED=false
+OPENAI_INTENT_CLASSIFICATION_ENABLED=true
+OPENAI_GROUNDED_EXPLANATIONS_ENABLED=false
+OPENAI_WEB_RAG_ANSWERS_ENABLED=true
+OPENAI_WEB_RAG_MODEL=gpt-4o-mini
+OPENAI_WEB_RAG_TIMEOUT_SECONDS=8
+```
 
-### [ 2 ] Python dependencies
+Do not commit `.env`, and never put backend credentials in the frontend
+environment. `AURA_INSTANCEID` and `AURA_INSTANCENAME` are not used by the
+application and are therefore unnecessary. The launcher validates the three
+Neo4j keys; OneMap and OpenAI configuration is checked when those integrations
+are used.
 
-Create the repository virtual environment if it does not already exist, then
-install the complete Python environment:
+`CONVERSATION_FLOW_MODE=legacy` runs the retained controller; `shadow` serves
+the legacy response while observing the LLM-first path. A fully deterministic
+legacy configuration can omit `OPENAI_API_KEY`, but its OpenAI-backed features
+and agent modes must also be disabled explicitly.
+
+### 5.3 Install dependencies
+
+Create the virtual environment and install the complete development toolchain:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+npm install --prefix SystemCode/src/frontend
 ```
 
-This installs the FastAPI backend, reusable Stage 1–3 packages, offline data
-pipeline, evaluation utilities, and notebook dependencies.
+The root Python requirements include the backend, data pipeline, evaluation, and
+notebook dependencies. The launcher's `-InstallDependencies` option installs the
+backend runtime subset plus frontend packages.
 
-### [ 3 ] Initialize or refresh the data pipeline when required
+### 5.4 Generate the catalogue and load Neo4j
 
-You do **not** run this step for every application launch. Run it only when:
-
-- setting up an empty Neo4j database for the first time;
-- replacing or refreshing files under `SystemCode/data/raw/`; or
-- changing catalogue preparation or graph-loading logic.
-
-Prepare the catalogue first, then update Neo4j:
+The backend requires
+`SystemCode/data/processed/kindercompass_master.json`. On a fresh checkout,
+generate it before starting the application, then load the graph:
 
 ```powershell
 .\.venv\Scripts\python.exe -m SystemCode.src.scripts.prepare_data
 .\.venv\Scripts\python.exe -m SystemCode.src.scripts.build_knowledge_graph
 ```
 
-If `SystemCode/data/processed/kindercompass_master.json` is current and the
-configured Neo4j database is already populated, skip this step. The application
-launcher does not rebuild the catalogue or graph.
-
-Raw datasets are stored in `SystemCode/data/raw/`; the generated catalogue is
-written to `SystemCode/data/processed/kindercompass_master.json`. Graph updates
-are non-destructive by default. See the
-[offline pipeline guide](SystemCode/src/scripts/README.md) before using the
-explicit destructive rebuild option. The
+Repeat these commands only after replacing raw data or changing preparation or
+graph-loading logic. Graph updates are non-destructive by default. Review the
 [knowledge graph schema](SystemCode/src/scripts/KNOWLEDGE_GRAPH_SCHEMA.md)
-documents which features are properties or nodes, their relationships, source
-mapping, constraints, and current limitations.
+before using the pipeline's explicit destructive rebuild option.
 
-Programme-fee normalisation retains supported Full Day, Half Day, and Flexi
-Care monthly variants. Emergency Care and rates explicitly described as hourly,
-daily, per-session, termly, or annual are excluded from monthly fee comparisons.
+### 5.5 Configure and launch the frontend
 
-### [ 4 ] Run locally
+Create `SystemCode/src/frontend/.env.local` if it does not exist:
 
-For the first application launch, install the frontend and backend runtime
-dependencies and start both services:
-
-```powershell
-.\run_poc1.ps1 -InstallDependencies
+```dotenv
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-For normal subsequent launches:
+This value is public and must not contain credentials. Start both services:
 
 ```powershell
 .\run_poc1.ps1
 ```
 
-In short: initialize the data only when Neo4j or the source catalogue needs it;
-otherwise start directly with `run_poc1.ps1`.
+If only the runtime dependencies still need to be installed, use:
+
+```powershell
+.\run_poc1.ps1 -InstallDependencies
+```
+
+Open:
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://127.0.0.1:8000`
+- Interactive API documentation: `http://127.0.0.1:8000/docs`
+
+Use `-BackendPort <port>` to choose another backend port. Press `Ctrl+C` in each
+server window to stop the application.
 
 ## SECTION 6 : User Guide
 
@@ -209,9 +213,9 @@ In the **Form** tab, enter:
 | Household size | `4` |
 | Non-earning dependants | `2` |
 | Home postal code | Any valid six-digit Singapore postal code |
-| Special Approval | Unchecked |
+| My circumstances may require ECDA Special Approval | Unchecked |
 
-Click **Save and continue to chat**. The chat input should become available.
+Click **Save and continue to chat →**. The chat input should become available.
 After recommendations are generated, eligible schools should show
 **Pre-Nursery (3 yrs old)** because the child is exactly 36 completed months old
 on the admission date.
@@ -233,16 +237,18 @@ It must be within 2 km from my home.
 
 Check the **Understood preferences** panel after each message. Chinese,
 Montessori, transport, and the 2 km limit should accumulate instead of replacing
-one another. Use the importance selectors to change Montessori between
-**Preferred**, **High priority**, or **Nice to have**.
+one another. Under **Adjust ranking importance**, preferences can be set to
+**Required**, **High priority**, **Preferred**, or **Nice to have**. Montessori
+should initially remain **Preferred** unless you change it.
 
 Click **Show recommendations**. The Results tab should:
 
 - exclude schools with a verified failure of the required transport preference;
 - preserve schools whose transport evidence is genuinely unknown, with reduced
   evidence confidence;
-- rank the remaining schools by the geometric mean of verified preference match
-  and weighted evidence completeness; and
+- rank the remaining schools by the geometric mean of preference match
+  percentage, which uses verified catalogue evidence, and weighted evidence
+  completeness, which may include partial or inferred evidence; and
 - retain only schools within the requested 2 km limit when location evidence is
   available.
 
@@ -260,11 +266,11 @@ form values:
 |---|---|---|
 | Working SC applicant | Citizenship `Singapore Citizen`, full day, income `4500`, working hours `56` | Uses the matching SC full-day fee and the applicable Basic and Additional Subsidy tables. |
 | Working-hours boundary | Change working hours from `56` to `55` | Treats the applicant as non-working; Additional Subsidy becomes unavailable and the estimate increases. |
-| Qualifying larger household | Income `8000`, household size `6`, non-earning dependants `3` | Uses the qualifying per-capita-income assessment; PCI is approximately `$1,333.33`. |
+| Qualifying larger household | Income `8000`, household size `6`, non-earning dependants `3` | Uses a PCI of approximately `$1,333.33` internally for the subsidy estimate. Confirm the effect through the displayed subsidies and estimated amount payable; PCI itself is not shown. |
 | Permanent Resident child | Citizenship `Permanent Resident` | Uses the matching SPR programme fee and applies no SC Basic or Additional Subsidy. |
 | Flexi-care 1 or 3 | Select the corresponding flexi-care programme | Uses a matching centre fee and programme-specific policy table when offered. Flexi Care 1 AM and PM are retained as monthly variants. A school without the requested programme remains visible with a fallback warning and its lowest-fee supported option. |
 | Flexi-care 2 | Select `Flexi-care 2 (confirm hours with centre)` | Uses a matching Flexi-care 2 fee when offered, but requires manual review and does not invent a subsidy. Otherwise, the school shows its lowest-fee supported option with a fallback warning. |
-| Potential Special Approval | Check the Special Approval box | Reports that ECDA review may be required instead of presenting an approved subsidy amount. |
+| Potential Special Approval | Check **My circumstances may require ECDA Special Approval** | Reports that ECDA review may be required instead of presenting an approved subsidy amount. |
 
 The programme selector distinguishes the estimated net amount from the fee
 before subsidy. The selected card separately shows the programme fee, Basic
@@ -279,9 +285,11 @@ treatment or additional centre charges may differ.
 
 After clicking **Show recommendations**:
 
-1. Open the **Results** tab and confirm that each card shows match percentage,
-   evidence confidence, eligible level, estimated fee, and home distance where
-   location data is available.
+1. Open the **Results** tab. Confirm the eligible level in each card header, the
+   **Estimated amount payable** and subsidy breakdown in the fee notes, and,
+   where coordinates are available, **Distance from home** under
+   **Information available**. Expand **Optional ranking details** to see
+   preference match, evidence completeness, and the combined ranking score.
 2. Find a school card with more than one entry in its **Programme and estimated
    monthly cost** selector. The list should contain only programmes offered by
    that school for the child's eligible level and citizenship. Estimated options
@@ -312,12 +320,13 @@ After clicking **Show recommendations**:
 6. On the same card, **Parent mentions online** should offer Google Maps, Google
    reviews, and Reddit search links for that school name and postal code. They
    open a web search; they are not a verified listing and do not change ranking.
-   Directly below, **Parent ratings on KinderCompass** should let you submit a
-   1–5 rating and your experience (`Researching`, `Applied`, `Visited`, or
-   `Enrolled`). Leave consent unchecked and **Submit school rating** stays
-   disabled. After consent and submit, the card should show the updated average
-   and count. These ratings are first-party parent sentiment and do not change
-   ranking. Local development ratings are written to the ignored file:
+   Directly below, **School Ratings by Other Kinder Compass users** should let
+   you submit a 1–5 rating and select **Your experience**: **Researching the
+   school**, **Applied the school**, **Visited the school**, or **Enrolled the
+   school**. Leave consent unchecked and **Submit school rating** stays disabled.
+   After consent and submit, the card should show the updated average and count.
+   These ratings are first-party parent sentiment and do not change ranking.
+   Local development ratings are written to the ignored file:
 
    ```text
    SystemCode/src/backend/output/school_ratings.sqlite3
@@ -358,8 +367,9 @@ do not change ranking.
    Preschools legend. The legend is hidden when the window is narrower than
    600 pixels.
 4. Open **Form** after recommendations. **Edit family details** should be
-   available so hours, citizenship, care programme, and Special Approval can
-   be changed. Save, then click **Show recommendations** again.
+   available so hours, citizenship, care programme, and
+   **My circumstances may require ECDA Special Approval** can be changed. Save,
+   then click **Show recommendations** again.
 
 ### 6.6 Test conversation continuity and lost-in-the-middle handling
 
@@ -370,24 +380,32 @@ do not change ranking.
 3. Change an earlier preference. Confirm that **Understood preferences** shows
    the latest value rather than the superseded one.
 4. Create a contradiction, such as requiring Chinese and then requiring Malay.
-   Do not resolve it yet. Refresh the browser. After completing the family form,
-   answer the restored contradiction; the chat should continue the unresolved
-   decision instead of silently replacing either requirement.
-5. Enter more than six exchanges. The in-memory conversation window should
-   remain bounded while the latest confirmed structured preferences continue to
-   appear in **Understood preferences**.
+   Do not resolve it yet. Refresh the browser and complete the family form again.
+   **Understood preferences** and the unresolved contradiction should restore
+   from the saved structured state. Compass should continue the unresolved
+   decision instead of silently replacing either requirement. Previous chat
+   messages do not reappear in the panel.
+5. Enter more than six exchanges. Older turns should be removed from the
+   server-side LLM context as its six-exchange or 8,000-character limit is
+   reached. This bounded context is not displayed in the GUI; the latest
+   confirmed structured preferences should continue to appear in
+   **Understood preferences**.
 6. Disable **Remember my conversation and preferences**, then refresh. The
-   retained conversation and stored structured profile should no longer return.
+   stored structured profile and unresolved decision should no longer return.
 
-With consent enabled, recent user and assistant messages are retained in
-process-local memory for 30 minutes of inactivity, with a maximum of six
-exchanges and 8,000 characters. The structured preference profile is stored in
-SQLite for up to 180 days. The persistent profile excludes raw chat, family
-details, postal codes, and selected schools; however, users should avoid placing
-unnecessary personal information in chat because recent messages may contain
-details they type.
+With consent enabled, recent user and assistant messages are retained as
+server-side, process-local LLM context for 30 minutes of inactivity, with a
+maximum of six exchanges and 8,000 characters. This transcript is not restored
+to the visible chat panel after a refresh. The structured preference profile is
+stored in SQLite for up to 180 days. The persistent profile excludes raw chat,
+family details, postal codes, and selected schools; however, users should avoid
+placing unnecessary personal information in chat because the temporary context
+may contain details they type.
 
 ## SECTION 7 : Validation
+
+The generated catalogue must exist before importing the backend. If it is
+missing, run the preparation command from Section 5.4 first.
 
 Set the backend import paths, then run the automated backend suite:
 
@@ -411,6 +429,12 @@ Validate the production frontend build with:
 npm --prefix SystemCode/src/frontend run build
 ```
 
+Validate the offline preparation and graph-loading pipeline with:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s SystemCode/src/scripts/tests -v
+```
+
 Evaluation artefacts under `SystemCode/src/backend/evaluation/` and
 `SystemCode/src/backend/output/` describe specific recorded snapshots. Do not
 combine figures from different snapshots unless their catalogue, configuration,
@@ -421,18 +445,22 @@ model, and run identifiers match.
 ```text
 KinderCompass/
 ├── README.md                 # Project overview, setup, user guide, and validation
+├── requirements.txt          # Complete Python development environment
+├── run_poc1.ps1              # Windows backend and frontend launcher
+├── Makefile                  # Evaluation convenience targets
 ├── member-github.txt         # Group info for Canvas submission
 ├── SystemCode/               # Runnable system
 │   ├── src/
 │   │   ├── scripts/          # Offline data pipeline
-│   │   ├── backend/          # FastAPI three-stage workflow
+│   │   ├── backend/          # FastAPI, agents, Stage 1–3, RAG, and tests
 │   │   └── frontend/         # Next.js website
-│   ├── data/
-│   │   ├── raw/              # Original datasets
-│   │   └── processed/        # Cleaned data and graph inputs
-│   └── notebooks/            # Exploration and demonstrations
+│   └── data/
+│       ├── raw/              # Original datasets
+│       ├── processed/        # Generated catalogue and graph inputs
+│       └── vectors/          # Local retrieval indexes
 ├── ProjectReport/            # Report documents, presentations, and supporting files
 ├── Video/                    # Promotion and system design videos
-├── Miscellaneous/            # Supporting files
-└── docs/                     # PoC documentation and working drafts
+├── Miscellaneous/            # Non-runnable supporting submission material
+│   └── notebooks/            # Interactive pipeline demonstrations
+└── docs/                     # Architecture, PoC, and evaluation documentation
 ```

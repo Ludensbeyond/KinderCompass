@@ -1,6 +1,6 @@
 # SystemCode
 
-Runnable application code, offline pipelines, notebooks, and project data for
+Runnable application code, offline pipelines, and project data for
 KinderCompass.
 
 ## Structure
@@ -14,7 +14,6 @@ SystemCode/
 |-- data/
 |   |-- raw/           # Source CSV and GeoJSON datasets
 |   `-- processed/     # Reproducible processed catalogue
-`-- notebooks/         # Interactive demonstrations using shared modules
 ```
 
 ## Data and application flow
@@ -30,4 +29,5 @@ data/raw
 ```
 
 Use [src/scripts/README.md](src/scripts/README.md) for the offline pipeline and
-[the PoC 1 guide](../docs/poc1/Readme.md) for application setup and operation.
+[the implementation guide](../docs/impl.md) for application setup and
+operation.

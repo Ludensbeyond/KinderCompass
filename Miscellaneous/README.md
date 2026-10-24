@@ -1,15 +1,11 @@
 # Miscellaneous
 
-Supporting files that are not part of the runnable system but referenced in the report.
+Supporting submission material that is not part of the runnable application
+belongs in this directory.
 
-## Planned contents
+[`notebooks/`](notebooks/README.md) contains interactive demonstrations of the
+offline data pipeline. They call the shared modules under
+`SystemCode/src/scripts/` and are not application entry points.
 
-| File | Description |
-|---|---|
-| `data-sources.txt` | Links to data.gov.sg datasets |
-| Survey results | Parent preference survey (if conducted) |
-| Experiment outputs | Charts and evaluation results for the report |
-
-## Data sources
-
-See `data-sources.txt` for ECDA dataset URLs. Raw files are stored in `SystemCode/data/raw/`.
+Data-source URLs and raw dataset provenance are maintained in
+[`SystemCode/data/raw/README.md`](../SystemCode/data/raw/README.md).

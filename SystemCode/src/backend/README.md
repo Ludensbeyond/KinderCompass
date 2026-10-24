@@ -301,8 +301,9 @@ The build extension is complete through Step 3; runtime retrieval is deferred.
 | `audit_web_rag_readiness.py` | Measure labelled identity, fetch, retrieval, and citation readiness gates. |
 | `review_web_rag_audit.py` | Export human-review CSV packets and import validated labels. |
 
-The Phase 9 commands, review workflow, and quality gates are documented in
-[PHASE9_WEBPAGE_RAG.md](../../../docs/poc1/PHASE9_WEBPAGE_RAG.md).
+The webpage-RAG workflow, quality gates, and current readiness status are
+summarised in the
+[implementation guide](../../../docs/impl.md#93-official-webpage-evidence).
 
 Run the selected-school agent comparison deliberately with agent mode enabled:
 
@@ -438,8 +439,8 @@ from being silently used.
 - **Port 8000 is already in use:** stop the existing backend process before
   launching another development server.
 
-See the [PoC 1 guide](../../../docs/poc1/Readme.md) for the full application
-workflow, frontend launch, demonstration inputs, and system limitations.
+See the [implementation guide](../../../docs/impl.md) for the full
+application workflow, frontend launch, and system limitations.
 
 The [standalone parent-guide retrieval guide](doc/file-vector-retrieval.md) documents
 step 4 query commands, relevance calibration, dated constraints and fallback.

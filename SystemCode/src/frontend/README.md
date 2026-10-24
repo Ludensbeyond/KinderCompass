@@ -39,7 +39,7 @@ Prerequisites:
 - Node.js with npm;
 - the repository Python environment at `.venv`;
 - the backend dependencies and repository-level `.env` described in the
-  [PoC 1 guide](../../../docs/poc1/Readme.md).
+  [implementation guide](../../../docs/impl.md).
 
 Install the exact dependency versions recorded in `package-lock.json`:
 
@@ -141,5 +141,6 @@ backend `.env`, never in `.env.local` or browser code.
   public tile service; recommendation and distance data can still be returned by
   the backend.
 
-See the [PoC 1 guide](../../../docs/poc1/Readme.md) for the complete system setup,
+See the [implementation guide](../../../docs/impl.md) for the complete
+system setup,
 pipeline behavior, tests, and limitations.

@@ -155,17 +155,17 @@ metric. Preserve all observations and obtain human calibration.
 Using the retained local Step 4/5 artifacts and repeat outputs:
 
 ```bash
-.venv/bin/python docs/examples/ragas/baseline.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/baseline.py \
   --runs /tmp/kindercompass-ragas-step4-live.jsonl \
   --run-manifest /tmp/kindercompass-ragas-step4-live.manifest.json \
   --scores /tmp/kindercompass-ragas-step5-live.csv \
   --score-report /tmp/kindercompass-ragas-step5-live.report.json \
   --reviews /tmp/kindercompass-ragas-step5-reviews.json \
-  --notes docs/examples/ragas/baseline-report.md \
+  --notes SystemCode/src/backend/evaluation/ragas/baseline-report.md \
   --repeat-dir /tmp/kindercompass-ragas-step6-repeats \
   --output .local/evaluation-baselines/starter-v1.0.0-2026-10-09.tar.gz
 
-.venv/bin/python docs/examples/ragas/baseline.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/baseline.py \
   --verify .local/evaluation-baselines/starter-v1.0.0-2026-10-09.tar.gz
 ```
 

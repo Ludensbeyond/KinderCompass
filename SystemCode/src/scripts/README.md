@@ -13,7 +13,7 @@ does not execute them during web requests.
 | `KNOWLEDGE_GRAPH_SCHEMA.md` | Authoritative nodes, properties, relationships, constraints, sources, and modelling decisions. |
 | `tests/` | Offline-pipeline tests, including catalogue invariants and destructive-operation safeguards. |
 
-The notebooks in `SystemCode/notebooks/` import these modules for interactive
+The notebooks in `Miscellaneous/notebooks/` import these modules for interactive
 inspection. The notebooks are demonstrations, not separate implementations.
 
 ## Prepare the catalogue

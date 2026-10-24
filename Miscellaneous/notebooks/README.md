@@ -14,4 +14,5 @@ operational demonstrations import their implementation from
 `SystemCode/src/scripts/`; backend reasoning remains under
 `SystemCode/src/backend/`.
 
-See [the PoC 1 guide](../../docs/poc1/Readme.md) for setup and the complete flow.
+See [the implementation guide](../../docs/impl.md) for setup and the
+complete flow.

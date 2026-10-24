@@ -34,7 +34,8 @@ Verification results:
 - Imports succeeded: `ChatOpenAI`, `EvaluationDataset`, `evaluate`,
   `LangchainLLMWrapper`, `Faithfulness`, `LLMContextPrecisionWithReference`,
   and `LLMContextRecall`.
-- `python docs/examples/ragas/smoke.py --validate-only`: validated one RAGAS
+- `python SystemCode/src/backend/evaluation/ragas/smoke.py --validate-only`:
+  validated one RAGAS
   fixture and zero behaviour cases, using no optional dependencies or model calls.
 - Paid check: `smoke.py --judge-model gpt-4o-mini --env-file .env` completed
   all three metrics and verified a one-row CSV export with finite scores.

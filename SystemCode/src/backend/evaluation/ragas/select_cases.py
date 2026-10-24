@@ -17,7 +17,7 @@ def select_cases(directory, split, output):
     cases = [case for case in read_jsonl(path) if case['case_id'] in ids]
     if len(cases) != len(ids):
         raise ValueError('Frozen split case count mismatch')
-    if output.resolve().is_relative_to(Path(__file__).resolve().parents[3]):
+    if output.resolve().is_relative_to(Path(__file__).resolve().parents[5]):
         raise ValueError('Write generated split files outside the repository')
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(''.join(json.dumps(case) + '\n' for case in cases))

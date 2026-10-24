@@ -13,7 +13,7 @@ as retrieved contexts.
 From the repository root, using the previously verified isolated environment:
 
 ```bash
-/tmp/kindercompass-ragas-venv/bin/python docs/examples/ragas/score.py \
+/tmp/kindercompass-ragas-venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --runs /tmp/kindercompass-ragas-step4-live.jsonl \
   --judge-model gpt-4o-mini --env-file .env \
   --reviews /tmp/kindercompass-ragas-step5-reviews.json \

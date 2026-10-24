@@ -12,8 +12,8 @@ are preserved for compatible reruns.
 From the repository root, the complete offline evaluation suite passes:
 
 ```bash
-PYTHONPATH=.:docs/examples/ragas:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-  .venv/bin/python -m unittest discover -s docs/examples/ragas -p 'test_*.py' -q
+PYTHONPATH=.:SystemCode/src/backend/evaluation/ragas:SystemCode/src/backend:SystemCode/src/backend/pipeline \
+  .venv/bin/python -m unittest discover -s SystemCode/src/backend/evaluation/ragas -p 'test_*.py' -q
 ```
 
 22 tests pass, including five new coverage tests. They verify all frozen dataset
@@ -45,8 +45,8 @@ not substitute for those reviews or determine RAGAS scores.
 
 ```bash
 PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-  .venv/bin/python docs/examples/ragas/capture_dataset.py --staged \
-  --dataset-dir docs/examples/ragas/expanded --split tuning \
+  .venv/bin/python SystemCode/src/backend/evaluation/ragas/capture_dataset.py --staged \
+  --dataset-dir SystemCode/src/backend/evaluation/ragas/expanded --split tuning \
   --output /tmp/kindercompass-ragas-expanded-tuning.jsonl
 ```
 

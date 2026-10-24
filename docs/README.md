@@ -6,13 +6,11 @@ Working drafts and reference materials — not part of the final IRS submission 
 
 | File | Purpose |
 |---|---|
+| [impl.md](impl.md) | Current architecture, recommendation stages, evidence, API, configuration, and verification |
 | [ragas-evaluation-plan.md](ragas-evaluation-plan.md) | Step-by-step RAGAS implementation plan, completion criteria and progress checklist |
-| [examples/ragas/README.md](examples/ragas/README.md) | RAGAS starter dataset, capture format and scoring instructions |
-| [agents-architecture.md](agents-architecture.md) | Mermaid diagram of agent orchestration, tools, rollout modes, and fallback |
+| [Backend RAGAS evaluation](../SystemCode/src/backend/evaluation/ragas/README.md) | RAGAS datasets, capture tools, scoring, and regression workflow |
 | [llm-first-conversation-plan.md](llm-first-conversation-plan.md) | Proposed migration to LLM-controlled conversation, structured tools, bounded history, and grounded responses |
 | [file-vector-store-plan.md](file-vector-store-plan.md) | File-based parent-guide embeddings, retrieval, agent integration, and evaluation plan |
-| `KinderCompass_Proposal Draft1.docx` | Group project proposal (working draft) |
-| `NUS ISS ILS Practice Module Ideas.pptx` | IRS idea selection reference (Idea 3) |
 
 ## At final submission
 

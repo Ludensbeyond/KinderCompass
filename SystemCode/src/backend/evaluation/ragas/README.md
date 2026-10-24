@@ -43,14 +43,14 @@ an answer uses evidence from the wrong preschool.
 
    ```bash
    PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-     .venv/bin/python docs/examples/ragas/capture_dataset.py --staged \
+     .venv/bin/python SystemCode/src/backend/evaluation/ragas/capture_dataset.py --staged \
      --output /tmp/kindercompass-ragas-runs.jsonl
    ```
 
 3. Validate a complete capture without model calls:
 
    ```bash
-   .venv/bin/python docs/examples/ragas/score.py \
+   .venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
      --runs /tmp/kindercompass-ragas-runs.jsonl --validate-only
    ```
 
@@ -113,16 +113,16 @@ From the repository root:
 
 ```bash
 python3.12 -m venv /tmp/kindercompass-ragas-venv
-/tmp/kindercompass-ragas-venv/bin/python -m pip install -r docs/examples/ragas/requirements.lock.txt
+/tmp/kindercompass-ragas-venv/bin/python -m pip install -r SystemCode/src/backend/evaluation/ragas/requirements.lock.txt
 /tmp/kindercompass-ragas-venv/bin/python -m pip check
 
 # Check capture format without dependencies, credentials or model calls.
-python docs/examples/ragas/score.py --runs /tmp/kindercompass-ragas-runs.jsonl --validate-only
+python SystemCode/src/backend/evaluation/ragas/score.py --runs /tmp/kindercompass-ragas-runs.jsonl --validate-only
 
 # Set OPENAI_API_KEY through your usual secret-management mechanism first.
 # Replace YOUR_JUDGE_MODEL with a model available in your evaluation account.
 # This command sends captures to the judge and incurs API charges.
-/tmp/kindercompass-ragas-venv/bin/python docs/examples/ragas/score.py \
+/tmp/kindercompass-ragas-venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --runs /tmp/kindercompass-ragas-runs.jsonl \
   --judge-model YOUR_JUDGE_MODEL \
   --output /tmp/kindercompass-ragas.csv
@@ -136,11 +136,11 @@ Before scoring real captures, verify the scorer with a single synthetic case:
 
 ```bash
 # Dependency-free format check; writes a clearly labelled temporary fixture.
-python docs/examples/ragas/smoke.py --validate-only
+python SystemCode/src/backend/evaluation/ragas/smoke.py --validate-only
 
 # Paid provider check using an explicit judge model and local credentials.
 # --env-file is optional when OPENAI_API_KEY is already exported.
-/tmp/kindercompass-ragas-venv/bin/python docs/examples/ragas/smoke.py \
+/tmp/kindercompass-ragas-venv/bin/python SystemCode/src/backend/evaluation/ragas/smoke.py \
   --judge-model gpt-4o-mini --env-file .env
 ```
 

@@ -1,5 +1,11 @@
 # Offline recommendation evaluation
 
+Recommendation metrics, synthetic fixtures, and benchmark datasets live in this
+directory. The separate [RAGAS evaluation toolkit](ragas/README.md) contains
+evidence-answer datasets, capture tools, scoring, baselines, and regression
+tests. From the repository root, `make eval-check` runs its offline tests and
+format-only smoke check without provider calls.
+
 ## Ranking score semantics
 
 Stage 1 keeps its weighted match calculation, importance multipliers, and

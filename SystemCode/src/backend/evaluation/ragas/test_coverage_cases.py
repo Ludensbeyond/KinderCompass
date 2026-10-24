@@ -15,7 +15,7 @@ from SystemCode.src.backend.services.evaluation_service import EvaluationService
 from SystemCode.src.backend.services.location_service import LocationService
 from SystemCode.src.backend.services.preference_service import PreferenceService
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[5]
 DIRECTORY = Path(__file__).with_name('expanded')
 
 

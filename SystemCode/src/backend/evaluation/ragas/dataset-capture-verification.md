@@ -90,9 +90,9 @@ case state and failure denominator retention, unobserved evidence rejection, and
 
 ```bash
 PYTHONPATH=.:SystemCode/src/backend:SystemCode/src/backend/pipeline \
-  .venv/bin/python -m unittest discover -s docs/examples/ragas -p 'test_*.py' -v
+  .venv/bin/python -m unittest discover -s SystemCode/src/backend/evaluation/ragas -p 'test_*.py' -v
 
-.venv/bin/python docs/examples/ragas/score.py \
+.venv/bin/python SystemCode/src/backend/evaluation/ragas/score.py \
   --runs /tmp/kindercompass-ragas-step4-live.jsonl --validate-only
 ```
 

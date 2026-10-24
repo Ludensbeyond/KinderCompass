@@ -3,5 +3,5 @@
 PYTHON ?= .venv/bin/python
 
 eval-check:
-	PYTHONPATH=.:docs/examples/ragas:SystemCode/src/backend:SystemCode/src/backend/pipeline $(PYTHON) -m unittest discover -s docs/examples/ragas -p 'test_*.py' -q
-	$(PYTHON) docs/examples/ragas/smoke.py --validate-only
+	PYTHONPATH=.:SystemCode/src/backend/evaluation/ragas:SystemCode/src/backend:SystemCode/src/backend/pipeline $(PYTHON) -m unittest discover -s SystemCode/src/backend/evaluation/ragas -p 'test_*.py' -q
+	$(PYTHON) SystemCode/src/backend/evaluation/ragas/smoke.py --validate-only
