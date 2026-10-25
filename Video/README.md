@@ -6,23 +6,8 @@ Two 5-minute videos required for final IRS submission.
 
 | File | Content | Status |
 |---|---|---|
-| `KinderCompass-promotion.mp4` | Business pain & value, use case demo, pricing | Pending |
-| `KinderCompass-system.mp4` | System design, technical explanation of use cases | Pending |
-
-## Naming convention (final Canvas zip)
-
-```
-IRS-PM-YYYY-MM-DD-STKxx-GRP-TeamName-KinderCompass-promotion.mp4
-IRS-PM-YYYY-MM-DD-STKxx-GRP-TeamName-KinderCompass-system.mp4
-```
-
-## Presentation slides (proposal / final)
-
-Slide decks and demo scripts can be stored here or in `docs/`:
-
-- `proposal.pptx` — group project proposal
-- `final.pptx` — final presentation
-- `demo-script.md` — live demo walkthrough notes
+| `KinderCompass_Business_Video_Presentation.mp4` | Business pain & value, use case demo, pricing | Completed |
+| `KinderCompass_Technical_Video_Presentation.mp4` | System design, technical explanation of use cases | Completed |
 
 ## Rules
 
