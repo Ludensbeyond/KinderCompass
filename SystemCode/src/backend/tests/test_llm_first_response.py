@@ -73,6 +73,30 @@ class LlmFirstResponseTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.tool_calls, 1)
         self.locations.attach_distances.assert_called_once()
 
+    async def test_exhausted_distance_reply_uses_catalogue_listing(self):
+        service = self.service(
+            "find schools within 1 km",
+            profile={"hard_constraints": {"max_distance_km": 1, "language": "Chinese"},
+                     "preferences": {"pedagogy": {"value": "Montessori", "weight": 4, "desired": True}}},
+            home_postal_code="123456",
+        )
+        self.locations.attach_distances.side_effect = lambda records, postal: [
+            {**record, "distance_km": 0.5} for record in records
+        ]
+        bad = final("School A is nearby.", [claim("School A is nearby.", "School A", path="/data/missing")])
+        response = await self.run_response(
+            service,
+            ScriptedModel(AIMessage(content="", tool_calls=[call("search_rank_compare_schools")]), bad),
+            limits=LoopLimits(repair_calls=0),
+        )
+        self.assertEqual(response.status, "ok")
+        self.assertIn("School A — 0.5 km", response.answer)
+        self.assertIn("Matching preschools within 1 km.", response.answer)
+        self.assertIn("Chinese is required.", response.answer)
+        self.assertIn("Montessori is preferred.", response.answer)
+        self.assertEqual(response.profile["hard_constraints"]["language"], "Chinese")
+        self.assertEqual(response.tool_calls, 1)
+
     def test_nearby_wording_does_not_replace_the_calculated_distance(self):
         service = self.service(profile={"hard_constraints": {"max_distance_km": 1}}, home_postal_code="123456")
         self.locations.attach_distances.side_effect = lambda records, postal: [{**r, "distance_km": 0.5} for r in records]

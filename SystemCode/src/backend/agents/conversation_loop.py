@@ -455,6 +455,17 @@ async def run_conversation_loop(
                         await bounded(final_validator, response.content.strip(), tuple(results))
                     except ResponseValidationError as error:
                         if repairs >= limits.repair_calls or iteration == limits.model_calls:
+                            from .conversation_response import grounded_search_reply
+                            composed = grounded_search_reply(tuple(results))
+                            if composed:
+                                try:
+                                    await bounded(final_validator, composed, tuple(results))
+                                except ResponseValidationError:
+                                    composed = None
+                            if composed:
+                                return ConversationLoopCandidate(
+                                    composed, tuple(results), iteration, len(results),
+                                )
                             raise ConversationLoopError(
                                 "response_validation", evidence=_evidence_label(results),
                             ) from None

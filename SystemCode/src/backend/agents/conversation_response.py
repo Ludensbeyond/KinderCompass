@@ -395,6 +395,101 @@ def validate_response(content: str, results: tuple[StructuredToolResult, ...],
     return response
 
 
+def _plain_number(value: int | float) -> str:
+    number = float(value)
+    if number.is_integer():
+        return str(int(number))
+    return format(number, "f").rstrip("0").rstrip(".")
+
+
+def grounded_search_reply(results: tuple[StructuredToolResult, ...]) -> str | None:
+    """Build a claim-checked distance listing from the latest catalogue search.
+
+    Used only after the model cannot repair its own reply. Every sentence is
+    copied from that search result, so the normal response validator still applies.
+    """
+    if not results:
+        return None
+    search = results[-1]
+    if search.tool_name != "search_rank_compare_schools" or search.status != "ok":
+        return None
+    records = [record for record in search.data.get("records", []) if isinstance(record, dict)]
+    profile = search.data.get("profile_used") if isinstance(search.data.get("profile_used"), dict) else {}
+    radius = search.data.get("applied_radius_km")
+    radius_path = "/data/applied_radius_km"
+    if radius is None:
+        radius = (profile.get("hard_constraints") or {}).get("max_distance_km")
+        radius_path = "/data/profile_used/hard_constraints/max_distance_km"
+    if radius is None or explicit_search_radius_km(profile) is None or not records:
+        return None
+    intro = f"Matching preschools within {_plain_number(radius)} km."
+    claims: list[dict[str, Any]] = [{
+        "span": intro, "result_id": search.result_id, "path": radius_path,
+        "value": radius, "school_id": None, "citation_ids": [],
+    }]
+    lines = [intro]
+    for index, record in enumerate(records):
+        name = str(record.get("name") or "")
+        school_id = record.get("school_id")
+        if not name or not school_id:
+            return None
+        prefix = f"/data/records/{index}/"
+        if record.get("same_location_as_postal_code") is True and record.get("distance_km") in (None, 0, 0.0):
+            bullet = f"{name} — your postal code resolves to its recorded location."
+            claims.append({
+                "span": bullet, "result_id": search.result_id,
+                "path": prefix + "same_location_as_postal_code", "value": True,
+                "school_id": school_id, "citation_ids": [],
+            })
+        else:
+            distance = record.get("distance_km")
+            if isinstance(distance, bool) or not isinstance(distance, (int, float)):
+                return None
+            address = str(record.get("centre_address") or "")
+            bullet = f"{name}, {address} — {_plain_number(distance)} km" if address else f"{name} — {_plain_number(distance)} km"
+            claims.append({
+                "span": bullet, "result_id": search.result_id, "path": prefix + "name",
+                "value": name, "school_id": school_id, "citation_ids": [],
+            })
+            if address:
+                claims.append({
+                    "span": bullet, "result_id": search.result_id, "path": prefix + "centre_address",
+                    "value": address, "school_id": school_id, "citation_ids": [],
+                })
+            claims.append({
+                "span": bullet, "result_id": search.result_id, "path": prefix + "distance_km",
+                "value": distance, "school_id": school_id, "citation_ids": [],
+            })
+        lines.append("- " + bullet)
+    for index, item in enumerate(profile.get("preference_items") or []):
+        if not isinstance(item, dict) or item.get("attribute") == "max_distance_km":
+            continue
+        importance = item.get("importance")
+        value = item.get("value")
+        attribute = item.get("attribute")
+        if importance not in {"required", "high_priority", "preferred", "nice_to_have"}:
+            continue
+        if attribute == "transport" and value is True:
+            sentence = f"Transport is {importance}."
+            claim_path = f"/data/profile_used/preference_items/{index}/importance"
+            claim_value = importance
+        elif attribute in {"language", "pedagogy"} and isinstance(value, str) and value:
+            sentence = f"{value} is {importance}."
+            claim_path = f"/data/profile_used/preference_items/{index}/value"
+            claim_value = value
+        else:
+            continue
+        lines.append(sentence)
+        claims.append({
+            "span": sentence, "result_id": search.result_id, "path": claim_path,
+            "value": claim_value, "school_id": None, "citation_ids": [],
+        })
+    answer = "\n".join(lines)
+    if len(answer) > 800:
+        return None
+    return json.dumps({"answer": answer, "kind": "grounded", "claims": claims}, ensure_ascii=False)
+
+
 SERVICE_ERROR = "The conversation service is unavailable. Please try again."
 UNVERIFIED_ANSWER = "That question is outside what KinderCompass can answer from its preschool records and parent-guide sources."
 COULD_NOT_VERIFY = "I couldn't verify that answer from KinderCompass records. Please ask again."

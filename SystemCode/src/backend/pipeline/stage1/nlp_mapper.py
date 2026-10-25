@@ -285,7 +285,12 @@ def summarize_profile(profile: dict, *, home_postal_code: str | None = None) -> 
         if attribute.startswith("language:"):
             summary.append(f"Preferred language: {value}")
         elif isinstance(value, bool):
-            summary.append(f"{label}: {'preferred' if desired else 'not preferred'}")
+            stored = next((
+                item.get("importance") for item in profile.get("preference_items", [])
+                if item.get("attribute") == attribute and item.get("value") is value
+            ), None)
+            strength = stored.replace("_", " ") if isinstance(stored, str) else ("preferred" if desired else "not preferred")
+            summary.append(f"{label}: {strength}")
         else:
             summary.append(f"{label}: {value}{'' if desired else ' (avoid)'}")
     for item in profile.get("unsupported_preferences", []):
